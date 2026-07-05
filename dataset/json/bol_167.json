@@ -1,0 +1,382 @@
+{
+  "template": "funsd_public",
+  "source": "82837252",
+  "fields": {
+    "date": "8/ 10/ 90",
+    "time": "",
+    "manufacturer": "B & W",
+    "cc": "J. J. Tatulli L. H. Kersh J. R. Slater S. T. Jones R S. Goldbrenner E. R. Harrow",
+    "reported_by": "BOBBY MILLS, REGIONAL SALES MGR., INDIANAPOLIS, IN",
+    "source_of_information": "HALL RODECAP, NOBLESVILLE, IN",
+    "brand_name": "VICEROY KING BOX AND VICEROY LIGHTS KING BOX",
+    "type_of_product": "",
+    "size_or_sizes": "",
+    "list_price": "",
+    "extent_of_distribution": "",
+    "other_information": "SEE ATTACHED INFORMATION SHEET"
+  },
+  "field_details": {
+    "date": {
+      "value": "8/ 10/ 90",
+      "anchor": "DATE",
+      "bbox": [
+        140,
+        186,
+        179,
+        200
+      ]
+    },
+    "time": {
+      "value": "",
+      "anchor": "TIME",
+      "bbox": [
+        256,
+        186,
+        292,
+        201
+      ]
+    },
+    "manufacturer": {
+      "value": "B & W",
+      "anchor": "MANUFACTURER",
+      "bbox": [
+        91,
+        288,
+        204,
+        302
+      ]
+    },
+    "cc": {
+      "value": "J. J. Tatulli L. H. Kersh J. R. Slater S. T. Jones R S. Goldbrenner E. R. Harrow",
+      "anchor": "CC",
+      "bbox": [
+        94,
+        771,
+        114,
+        781
+      ]
+    },
+    "reported_by": {
+      "value": "BOBBY MILLS, REGIONAL SALES MGR., INDIANAPOLIS, IN",
+      "anchor": "REPORTED BY",
+      "bbox": [
+        91,
+        148,
+        187,
+        163
+      ]
+    },
+    "source_of_information": {
+      "value": "HALL RODECAP, NOBLESVILLE, IN",
+      "anchor": "SOURCE OF INFORMATION",
+      "bbox": [
+        91,
+        229,
+        186,
+        259
+      ]
+    },
+    "brand_name": {
+      "value": "VICEROY KING BOX AND VICEROY LIGHTS KING BOX",
+      "anchor": "BRAND NAME",
+      "bbox": [
+        91,
+        331,
+        180,
+        346
+      ]
+    },
+    "type_of_product": {
+      "value": "",
+      "anchor": "TYPE OF PRODUCT",
+      "bbox": [
+        89,
+        374,
+        157,
+        404
+      ]
+    },
+    "size_or_sizes": {
+      "value": "",
+      "anchor": "SIZE OR SIZES",
+      "bbox": [
+        92,
+        433,
+        186,
+        448
+      ]
+    },
+    "list_price": {
+      "value": "",
+      "anchor": "LIST PRICE",
+      "bbox": [
+        91,
+        476,
+        165,
+        490
+      ]
+    },
+    "extent_of_distribution": {
+      "value": "",
+      "anchor": "EXTENT OF DISTRIBUTION",
+      "bbox": [
+        92,
+        520,
+        187,
+        549
+      ]
+    },
+    "other_information": {
+      "value": "SEE ATTACHED INFORMATION SHEET",
+      "anchor": "OTHER INFORMATION",
+      "bbox": [
+        92,
+        615,
+        184,
+        646
+      ]
+    }
+  },
+  "ocr_blocks": [
+    {
+      "text": "DATE:",
+      "label": "question",
+      "bbox": [
+        140,
+        186,
+        179,
+        200
+      ]
+    },
+    {
+      "text": "TIME:",
+      "label": "question",
+      "bbox": [
+        256,
+        186,
+        292,
+        201
+      ]
+    },
+    {
+      "text": "MRA",
+      "label": "other",
+      "bbox": [
+        581,
+        91,
+        638,
+        123
+      ]
+    },
+    {
+      "text": "MANUFACTURER:",
+      "label": "question",
+      "bbox": [
+        91,
+        288,
+        204,
+        302
+      ]
+    },
+    {
+      "text": "cc:",
+      "label": "question",
+      "bbox": [
+        94,
+        771,
+        114,
+        781
+      ]
+    },
+    {
+      "text": "82837252",
+      "label": "other",
+      "bbox": [
+        672,
+        792,
+        693,
+        884
+      ]
+    },
+    {
+      "text": "NEW COMPETITIVE PRODUCTS",
+      "label": "header",
+      "bbox": [
+        302,
+        94,
+        501,
+        111
+      ]
+    },
+    {
+      "text": "REPORTED BY:",
+      "label": "question",
+      "bbox": [
+        91,
+        148,
+        187,
+        163
+      ]
+    },
+    {
+      "text": "BOBBY MILLS, REGIONAL SALES MGR., INDIANAPOLIS, IN",
+      "label": "answer",
+      "bbox": [
+        235,
+        140,
+        578,
+        157
+      ]
+    },
+    {
+      "text": "8/ 10/ 90",
+      "label": "answer",
+      "bbox": [
+        189,
+        183,
+        240,
+        197
+      ]
+    },
+    {
+      "text": "SOURCE OF INFORMATION:",
+      "label": "question",
+      "bbox": [
+        91,
+        229,
+        186,
+        259
+      ]
+    },
+    {
+      "text": "HALL RODECAP, NOBLESVILLE, IN",
+      "label": "answer",
+      "bbox": [
+        236,
+        236,
+        437,
+        254
+      ]
+    },
+    {
+      "text": "B & W",
+      "label": "answer",
+      "bbox": [
+        250,
+        278,
+        288,
+        292
+      ]
+    },
+    {
+      "text": "VICEROY KING BOX AND VICEROY LIGHTS KING BOX",
+      "label": "answer",
+      "bbox": [
+        194,
+        324,
+        497,
+        341
+      ]
+    },
+    {
+      "text": "BRAND NAME:",
+      "label": "question",
+      "bbox": [
+        91,
+        331,
+        180,
+        346
+      ]
+    },
+    {
+      "text": "TYPE OF PRODUCT:",
+      "label": "question",
+      "bbox": [
+        89,
+        374,
+        157,
+        404
+      ]
+    },
+    {
+      "text": "SIZE OR SIZES:",
+      "label": "question",
+      "bbox": [
+        92,
+        433,
+        186,
+        448
+      ]
+    },
+    {
+      "text": "LIST PRICE:",
+      "label": "question",
+      "bbox": [
+        91,
+        476,
+        165,
+        490
+      ]
+    },
+    {
+      "text": "EXTENT OF DISTRIBUTION:",
+      "label": "question",
+      "bbox": [
+        92,
+        520,
+        187,
+        549
+      ]
+    },
+    {
+      "text": "SEE ATTACHED INFORMATION SHEET",
+      "label": "answer",
+      "bbox": [
+        242,
+        624,
+        447,
+        641
+      ]
+    },
+    {
+      "text": "OTHER INFORMATION:",
+      "label": "question",
+      "bbox": [
+        92,
+        615,
+        184,
+        646
+      ]
+    },
+    {
+      "text": "G. Telford F. J. Schultz A. W. Spears N. P. Ruffalo T. Achey P. J. McCann A. J. Giacolo",
+      "label": "answer",
+      "bbox": [
+        232,
+        781,
+        312,
+        883
+      ]
+    },
+    {
+      "text": "J. J. Tatulli L. H. Kersh J. R. Slater S. T. Jones R S. Goldbrenner E. R. Harrow",
+      "label": "answer",
+      "bbox": [
+        346,
+        782,
+        451,
+        884
+      ]
+    },
+    {
+      "text": "A. H. Tisch R. H. Orcutt M. A. Peterson T. H. Mau L. Gordon J. P. Mastandrea",
+      "label": "answer",
+      "bbox": [
+        92,
+        782,
+        187,
+        869
+      ]
+    }
+  ]
+}

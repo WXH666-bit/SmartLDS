@@ -1,0 +1,722 @@
+{
+  "template": "funsd_public",
+  "source": "82254765",
+  "fields": {
+    "recipient": "K. A. SPARROW",
+    "sender": "S. Reindel",
+    "items": "WATER BOTTLES",
+    "date_to_nyo": "1/24/97",
+    "div._name__no": "Nassau/ 107",
+    "name_of_event": "H. Levinson Tradeshow",
+    "\"date_of_event": "3/18/97",
+    "samples__items_required": "SAMPLE 10'S (400 PACKS PER CASE)",
+    "newport_k._s.": "2",
+    "newport_100's": "",
+    "newport_lts_k._s.": "1",
+    "newport_lts._100": "",
+    "kent_iii_k._s.": "",
+    "kent_gl_lts_k._s.": "",
+    "gl_100": "",
+    "kent_iii_100": "",
+    "true_k._s.": "1",
+    "kent_k._s.": "1",
+    "kent_100": "",
+    "quantity_required": "500",
+    "customer_shipping_number": "198- 1160006",
+    "date_forwarded_to_promotion_services": "zbulan"
+  },
+  "field_details": {
+    "recipient": {
+      "value": "K. A. SPARROW",
+      "anchor": "TO",
+      "bbox": [
+        78,
+        124,
+        100,
+        139
+      ]
+    },
+    "sender": {
+      "value": "S. Reindel",
+      "anchor": "FROM",
+      "bbox": [
+        77,
+        152,
+        122,
+        166
+      ]
+    },
+    "items": {
+      "value": "WATER BOTTLES",
+      "anchor": "ITEMS",
+      "bbox": [
+        306,
+        563,
+        348,
+        576
+      ]
+    },
+    "date_to_nyo": {
+      "value": "1/24/97",
+      "anchor": "DATE TO NYO",
+      "bbox": [
+        499,
+        126,
+        584,
+        141
+      ]
+    },
+    "div._name__no": {
+      "value": "Nassau/ 107",
+      "anchor": "DIV. NAME/ NO",
+      "bbox": [
+        78,
+        177,
+        179,
+        193
+      ]
+    },
+    "name_of_event": {
+      "value": "H. Levinson Tradeshow",
+      "anchor": "NAME OF EVENT",
+      "bbox": [
+        77,
+        288,
+        185,
+        302
+      ]
+    },
+    "\"date_of_event": {
+      "value": "3/18/97",
+      "anchor": "\"DATE OF EVENT",
+      "bbox": [
+        81,
+        314,
+        188,
+        330
+      ]
+    },
+    "samples__items_required": {
+      "value": "SAMPLE 10'S (400 PACKS PER CASE)",
+      "anchor": "SAMPLES/ ITEMS REQUIRED",
+      "bbox": [
+        75,
+        372,
+        260,
+        385
+      ]
+    },
+    "newport_k._s.": {
+      "value": "2",
+      "anchor": "NEWPORT K. S.",
+      "bbox": [
+        74,
+        453,
+        159,
+        466
+      ]
+    },
+    "newport_100's": {
+      "value": "",
+      "anchor": "NEWPORT 100'S",
+      "bbox": [
+        75,
+        468,
+        167,
+        481
+      ]
+    },
+    "newport_lts_k._s.": {
+      "value": "1",
+      "anchor": "NEWPORT LTS K. S.",
+      "bbox": [
+        77,
+        480,
+        186,
+        494
+      ]
+    },
+    "newport_lts._100": {
+      "value": "",
+      "anchor": "NEWPORT LTS. 100",
+      "bbox": [
+        77,
+        494,
+        184,
+        507
+      ]
+    },
+    "kent_iii_k._s.": {
+      "value": "",
+      "anchor": "KENT III K. S.",
+      "bbox": [
+        306,
+        454,
+        379,
+        465
+      ]
+    },
+    "kent_gl_lts_k._s.": {
+      "value": "",
+      "anchor": "KENT GL LTS K. S.",
+      "bbox": [
+        496,
+        453,
+        595,
+        467
+      ]
+    },
+    "gl_100": {
+      "value": "",
+      "anchor": "GL 100",
+      "bbox": [
+        497,
+        468,
+        573,
+        479
+      ]
+    },
+    "kent_iii_100": {
+      "value": "",
+      "anchor": "KENT III 100",
+      "bbox": [
+        306,
+        466,
+        376,
+        479
+      ]
+    },
+    "true_k._s.": {
+      "value": "1",
+      "anchor": "TRUE K. S.",
+      "bbox": [
+        306,
+        480,
+        363,
+        493
+      ]
+    },
+    "kent_k._s.": {
+      "value": "1",
+      "anchor": "KENT K. S.",
+      "bbox": [
+        306,
+        496,
+        363,
+        508
+      ]
+    },
+    "kent_100": {
+      "value": "",
+      "anchor": "KENT 100",
+      "bbox": [
+        306,
+        508,
+        362,
+        519
+      ]
+    },
+    "quantity_required": {
+      "value": "500",
+      "anchor": "QUANTITY REQUIRED",
+      "bbox": [
+        499,
+        564,
+        634,
+        575
+      ]
+    },
+    "customer_shipping_number": {
+      "value": "198- 1160006",
+      "anchor": "CUSTOMER SHIPPING NUMBER",
+      "bbox": [
+        78,
+        756,
+        257,
+        767
+      ]
+    },
+    "date_forwarded_to_promotion_services": {
+      "value": "zbulan",
+      "anchor": "DATE FORWARDED TO PROMOTION SERVICES",
+      "bbox": [
+        74,
+        823,
+        345,
+        836
+      ]
+    }
+  },
+  "ocr_blocks": [
+    {
+      "text": "TO:",
+      "label": "question",
+      "bbox": [
+        78,
+        124,
+        100,
+        139
+      ]
+    },
+    {
+      "text": "FROM:",
+      "label": "question",
+      "bbox": [
+        77,
+        152,
+        122,
+        166
+      ]
+    },
+    {
+      "text": "1/24/97",
+      "label": "answer",
+      "bbox": [
+        608,
+        126,
+        664,
+        139
+      ]
+    },
+    {
+      "text": "2",
+      "label": "answer",
+      "bbox": [
+        233,
+        453,
+        244,
+        464
+      ]
+    },
+    {
+      "text": "1",
+      "label": "answer",
+      "bbox": [
+        233,
+        480,
+        244,
+        493
+      ]
+    },
+    {
+      "text": "1",
+      "label": "answer",
+      "bbox": [
+        429,
+        482,
+        440,
+        495
+      ]
+    },
+    {
+      "text": "1",
+      "label": "answer",
+      "bbox": [
+        430,
+        494,
+        440,
+        507
+      ]
+    },
+    {
+      "text": "ITEMS",
+      "label": "question",
+      "bbox": [
+        306,
+        563,
+        348,
+        576
+      ]
+    },
+    {
+      "text": "zbulan",
+      "label": "answer",
+      "bbox": [
+        413,
+        811,
+        462,
+        836
+      ]
+    },
+    {
+      "text": "82254765",
+      "label": "other",
+      "bbox": [
+        676,
+        768,
+        698,
+        870
+      ]
+    },
+    {
+      "text": "01/17/97",
+      "label": "other",
+      "bbox": [
+        640,
+        934,
+        683,
+        947
+      ]
+    },
+    {
+      "text": "REQFORM",
+      "label": "other",
+      "bbox": [
+        50,
+        934,
+        110,
+        948
+      ]
+    },
+    {
+      "text": "1500",
+      "label": "answer",
+      "bbox": [
+        541,
+        589,
+        575,
+        602
+      ]
+    },
+    {
+      "text": "500",
+      "label": "answer",
+      "bbox": [
+        549,
+        615,
+        576,
+        630
+      ]
+    },
+    {
+      "text": "K. A. SPARROW",
+      "label": "answer",
+      "bbox": [
+        215,
+        124,
+        304,
+        139
+      ]
+    },
+    {
+      "text": "DATE TO NYO:",
+      "label": "question",
+      "bbox": [
+        499,
+        126,
+        584,
+        141
+      ]
+    },
+    {
+      "text": "S. Reindel",
+      "label": "answer",
+      "bbox": [
+        216,
+        149,
+        298,
+        166
+      ]
+    },
+    {
+      "text": "Nassau/ 107",
+      "label": "answer",
+      "bbox": [
+        216,
+        179,
+        319,
+        194
+      ]
+    },
+    {
+      "text": "DIV. NAME/ NO:",
+      "label": "question",
+      "bbox": [
+        78,
+        177,
+        179,
+        193
+      ]
+    },
+    {
+      "text": "1997 SPECIAL EVENT REQUEST FORM",
+      "label": "header",
+      "bbox": [
+        258,
+        233,
+        485,
+        247
+      ]
+    },
+    {
+      "text": "NAME OF EVENT:",
+      "label": "question",
+      "bbox": [
+        77,
+        288,
+        185,
+        302
+      ]
+    },
+    {
+      "text": "\"DATE OF EVENT:",
+      "label": "question",
+      "bbox": [
+        81,
+        314,
+        188,
+        330
+      ]
+    },
+    {
+      "text": "3/18/97",
+      "label": "answer",
+      "bbox": [
+        228,
+        314,
+        285,
+        328
+      ]
+    },
+    {
+      "text": "H. Levinson Tradeshow",
+      "label": "answer",
+      "bbox": [
+        216,
+        286,
+        395,
+        303
+      ]
+    },
+    {
+      "text": "SAMPLE 10'S (400 PACKS PER CASE)",
+      "label": "answer",
+      "bbox": [
+        272,
+        370,
+        471,
+        386
+      ]
+    },
+    {
+      "text": "SAMPLES/ ITEMS REQUIRED:",
+      "label": "question",
+      "bbox": [
+        75,
+        372,
+        260,
+        385
+      ]
+    },
+    {
+      "text": "NEWPORT K. S.",
+      "label": "question",
+      "bbox": [
+        74,
+        453,
+        159,
+        466
+      ]
+    },
+    {
+      "text": "NEWPORT 100's",
+      "label": "question",
+      "bbox": [
+        75,
+        468,
+        167,
+        481
+      ]
+    },
+    {
+      "text": "NEWPORT LTS K. S.",
+      "label": "question",
+      "bbox": [
+        77,
+        480,
+        186,
+        494
+      ]
+    },
+    {
+      "text": "NEWPORT LTS. 100",
+      "label": "question",
+      "bbox": [
+        77,
+        494,
+        184,
+        507
+      ]
+    },
+    {
+      "text": "KENT III K. S.",
+      "label": "question",
+      "bbox": [
+        306,
+        454,
+        379,
+        465
+      ]
+    },
+    {
+      "text": "# CASES",
+      "label": "other",
+      "bbox": [
+        307,
+        426,
+        359,
+        439
+      ]
+    },
+    {
+      "text": "KENT GL LTS K. S.",
+      "label": "question",
+      "bbox": [
+        496,
+        453,
+        595,
+        467
+      ]
+    },
+    {
+      "text": "GL 100",
+      "label": "question",
+      "bbox": [
+        497,
+        468,
+        573,
+        479
+      ]
+    },
+    {
+      "text": "KENT III 100",
+      "label": "question",
+      "bbox": [
+        306,
+        466,
+        376,
+        479
+      ]
+    },
+    {
+      "text": "TRUE K. S.",
+      "label": "question",
+      "bbox": [
+        306,
+        480,
+        363,
+        493
+      ]
+    },
+    {
+      "text": "KENT K. S.",
+      "label": "question",
+      "bbox": [
+        306,
+        496,
+        363,
+        508
+      ]
+    },
+    {
+      "text": "KENT 100",
+      "label": "question",
+      "bbox": [
+        306,
+        508,
+        362,
+        519
+      ]
+    },
+    {
+      "text": "QUANTITY REQUIRED",
+      "label": "question",
+      "bbox": [
+        499,
+        564,
+        634,
+        575
+      ]
+    },
+    {
+      "text": "BASEBALL CAP",
+      "label": "answer",
+      "bbox": [
+        304,
+        589,
+        400,
+        603
+      ]
+    },
+    {
+      "text": "WATER BOTTLES",
+      "label": "answer",
+      "bbox": [
+        307,
+        620,
+        413,
+        633
+      ]
+    },
+    {
+      "text": "SHIP TO:",
+      "label": "header",
+      "bbox": [
+        77,
+        728,
+        131,
+        741
+      ]
+    },
+    {
+      "text": "CUSTOMER SHIPPING NUMBER",
+      "label": "question",
+      "bbox": [
+        78,
+        756,
+        257,
+        767
+      ]
+    },
+    {
+      "text": "198- 1160006",
+      "label": "answer",
+      "bbox": [
+        324,
+        754,
+        405,
+        768
+      ]
+    },
+    {
+      "text": "NYO ONLY:",
+      "label": "header",
+      "bbox": [
+        77,
+        796,
+        151,
+        808
+      ]
+    },
+    {
+      "text": "DATE FORWARDED TO PROMOTION SERVICES:",
+      "label": "question",
+      "bbox": [
+        74,
+        823,
+        345,
+        836
+      ]
+    },
+    {
+      "text": "PLEASE ALLOW 6 WEEKS FOR PROCESSING OF YOUR REQUEST",
+      "label": "other",
+      "bbox": [
+        77,
+        877,
+        472,
+        893
+      ]
+    }
+  ]
+}

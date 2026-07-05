@@ -1,0 +1,15 @@
+{
+  "template": "real_scan",
+  "category": "express",
+  "courier": "韵达快递",
+  "tracking_no": "465455618779229",
+  "sender": "张哲",
+  "sender_phone": "13237329756",
+  "sender_addr": "湖南省长沙市长沙县",
+  "recipient": "魏毅",
+  "recipient_phone": "17284464145转8707",
+  "recipient_addr": "辽宁省大连市金州区图强路321号大连理工大学软件学院生活区",
+  "item": "晏子食品 泡椒臭干子20g*60",
+  "print_time": "2020/06/24 14:02:21",
+  "service_line": "95546"
+}

@@ -1,0 +1,557 @@
+{
+  "template": "funsd_public",
+  "source": "82250337_0338",
+  "fields": {
+    "recipient": "Sam Zolot",
+    "sender": "D. J. Landro",
+    "date": "2- Dec- 97",
+    "manufacturer": "B&W",
+    "brand": "Kool Waterfall",
+    "oct.": "",
+    "dec.": "",
+    "jan.": "",
+    "nov.": "X",
+    "type_of_packings": "All Packings",
+    "test_market_geography": "Divisions 621 and 627 wisconsin",
+    "price_point": "FULLS $ P/ V $",
+    "sales_force_involvement": "They have crew- worked distribution, and it is reported that they may crew- work it again Sales force has been busy promoting old style backs to clean up inventory. All POS is being converted to \"B\" Kool.",
+    "distributors_acceptance_intro_terms_intro_deals_involvement": "All accounts have the new packaging. It was not a problem obtaining new distribution. All accounts appear to have 100% distribution of new packings.",
+    "chains_acceptance__merchandising": "This has not been a problem. New packaging is just following on the old \"packaging\".",
+    "independents_acceptance__merchandising": "Very well received. The packs are peing consolidated and promoted in select retail locations at 40 off $4 00 off cartons.",
+    "advertising_effectiveness_of_p._o._s.": "The theme \"B\" Kool has replaced all previous POS. They have effectively replaced all old POS. New door signage, hour signs, poster mats, and clocks have the new design. \"B\" Kool also appears on billboards in llinois."
+  },
+  "field_details": {
+    "recipient": {
+      "value": "Sam Zolot",
+      "anchor": "TO",
+      "bbox": [
+        94,
+        200,
+        114,
+        214
+      ]
+    },
+    "sender": {
+      "value": "D. J. Landro",
+      "anchor": "FROM",
+      "bbox": [
+        92,
+        219,
+        128,
+        232
+      ]
+    },
+    "date": {
+      "value": "2- Dec- 97",
+      "anchor": "DATE",
+      "bbox": [
+        95,
+        236,
+        129,
+        250
+      ]
+    },
+    "manufacturer": {
+      "value": "B&W",
+      "anchor": "MANUFACTURER",
+      "bbox": [
+        313,
+        200,
+        408,
+        214
+      ]
+    },
+    "brand": {
+      "value": "Kool Waterfall",
+      "anchor": "BRAND",
+      "bbox": [
+        313,
+        218,
+        356,
+        231
+      ]
+    },
+    "oct.": {
+      "value": "",
+      "anchor": "OCT.",
+      "bbox": [
+        278,
+        268,
+        299,
+        282
+      ]
+    },
+    "dec.": {
+      "value": "",
+      "anchor": "DEC.",
+      "bbox": [
+        461,
+        268,
+        485,
+        281
+      ]
+    },
+    "jan.": {
+      "value": "",
+      "anchor": "JAN.",
+      "bbox": [
+        553,
+        268,
+        575,
+        279
+      ]
+    },
+    "nov.": {
+      "value": "X",
+      "anchor": "NOV.",
+      "bbox": [
+        369,
+        270,
+        393,
+        281
+      ]
+    },
+    "type_of_packings": {
+      "value": "All Packings",
+      "anchor": "TYPE OF PACKINGS",
+      "bbox": [
+        314,
+        235,
+        419,
+        248
+      ]
+    },
+    "test_market_geography": {
+      "value": "Divisions 621 and 627 wisconsin",
+      "anchor": "TEST MARKET GEOGRAPHY",
+      "bbox": [
+        95,
+        321,
+        244,
+        335
+      ]
+    },
+    "price_point": {
+      "value": "FULLS $ P/ V $",
+      "anchor": "PRICE POINT",
+      "bbox": [
+        92,
+        358,
+        166,
+        371
+      ]
+    },
+    "sales_force_involvement": {
+      "value": "They have crew- worked distribution, and it is reported that they may crew- work it again Sales force has been busy promoting old style backs to clean up inventory. All POS is being converted to \"B\" Kool.",
+      "anchor": "SALES FORCE INVOLVEMENT",
+      "bbox": [
+        94,
+        392,
+        254,
+        406
+      ]
+    },
+    "distributors_acceptance_intro_terms_intro_deals_involvement": {
+      "value": "All accounts have the new packaging. It was not a problem obtaining new distribution. All accounts appear to have 100% distribution of new packings.",
+      "anchor": "DISTRIBUTORS ACCEPTANCE INTRO TERMS INTRO DEALS INVOLVEMENT",
+      "bbox": [
+        94,
+        500,
+        493,
+        515
+      ]
+    },
+    "chains_acceptance__merchandising": {
+      "value": "This has not been a problem. New packaging is just following on the old \"packaging\".",
+      "anchor": "CHAINS ACCEPTANCE/ MERCHANDISING",
+      "bbox": [
+        92,
+        609,
+        317,
+        623
+      ]
+    },
+    "independents_acceptance__merchandising": {
+      "value": "Very well received. The packs are peing consolidated and promoted in select retail locations at 40 off $4 00 off cartons.",
+      "anchor": "INDEPENDENTS ACCEPTANCE/ MERCHANDISING",
+      "bbox": [
+        92,
+        716,
+        359,
+        731
+      ]
+    },
+    "advertising_effectiveness_of_p._o._s.": {
+      "value": "The theme \"B\" Kool has replaced all previous POS. They have effectively replaced all old POS. New door signage, hour signs, poster mats, and clocks have the new design. \"B\" Kool also appears on billboards in llinois.",
+      "anchor": "ADVERTISING EFFECTIVENESS OF P. O. S.",
+      "bbox": [
+        94,
+        824,
+        321,
+        839
+      ]
+    }
+  },
+  "ocr_blocks": [
+    {
+      "text": "TO:",
+      "label": "question",
+      "bbox": [
+        94,
+        200,
+        114,
+        214
+      ]
+    },
+    {
+      "text": "FROM:",
+      "label": "question",
+      "bbox": [
+        92,
+        219,
+        128,
+        232
+      ]
+    },
+    {
+      "text": "DATE:",
+      "label": "question",
+      "bbox": [
+        95,
+        236,
+        129,
+        250
+      ]
+    },
+    {
+      "text": "MANUFACTURER:",
+      "label": "question",
+      "bbox": [
+        313,
+        200,
+        408,
+        214
+      ]
+    },
+    {
+      "text": "BRAND:",
+      "label": "question",
+      "bbox": [
+        313,
+        218,
+        356,
+        231
+      ]
+    },
+    {
+      "text": "Oct.",
+      "label": "question",
+      "bbox": [
+        278,
+        268,
+        299,
+        282
+      ]
+    },
+    {
+      "text": "Dec.",
+      "label": "question",
+      "bbox": [
+        461,
+        268,
+        485,
+        281
+      ]
+    },
+    {
+      "text": "Jan.",
+      "label": "question",
+      "bbox": [
+        553,
+        268,
+        575,
+        279
+      ]
+    },
+    {
+      "text": "Nov.",
+      "label": "question",
+      "bbox": [
+        369,
+        270,
+        393,
+        281
+      ]
+    },
+    {
+      "text": "X",
+      "label": "answer",
+      "bbox": [
+        404,
+        270,
+        414,
+        280
+      ]
+    },
+    {
+      "text": "B&W",
+      "label": "answer",
+      "bbox": [
+        451,
+        198,
+        476,
+        212
+      ]
+    },
+    {
+      "text": "82250337",
+      "label": "other",
+      "bbox": [
+        680,
+        814,
+        698,
+        917
+      ]
+    },
+    {
+      "text": "COMPETITIVE PRODUCT INTRODUCTION PROGRESS REPORT",
+      "label": "header",
+      "bbox": [
+        221,
+        133,
+        505,
+        168
+      ]
+    },
+    {
+      "text": "Sam Zolot",
+      "label": "answer",
+      "bbox": [
+        140,
+        201,
+        193,
+        214
+      ]
+    },
+    {
+      "text": "Kool Waterfall",
+      "label": "answer",
+      "bbox": [
+        405,
+        218,
+        472,
+        228
+      ]
+    },
+    {
+      "text": "All Packings",
+      "label": "answer",
+      "bbox": [
+        451,
+        235,
+        509,
+        248
+      ]
+    },
+    {
+      "text": "TYPE OF PACKINGS:",
+      "label": "question",
+      "bbox": [
+        314,
+        235,
+        419,
+        248
+      ]
+    },
+    {
+      "text": "D. J. Landro",
+      "label": "answer",
+      "bbox": [
+        140,
+        219,
+        199,
+        230
+      ]
+    },
+    {
+      "text": "2- Dec- 97",
+      "label": "answer",
+      "bbox": [
+        138,
+        237,
+        184,
+        247
+      ]
+    },
+    {
+      "text": "REPORTING PERIODS:",
+      "label": "header",
+      "bbox": [
+        94,
+        271,
+        213,
+        285
+      ]
+    },
+    {
+      "text": "TEST MARKET GEOGRAPHY:",
+      "label": "question",
+      "bbox": [
+        95,
+        321,
+        244,
+        335
+      ]
+    },
+    {
+      "text": "Divisions 621 and 627 wisconsin",
+      "label": "answer",
+      "bbox": [
+        313,
+        318,
+        543,
+        334
+      ]
+    },
+    {
+      "text": "PRICE POINT:",
+      "label": "question",
+      "bbox": [
+        92,
+        358,
+        166,
+        371
+      ]
+    },
+    {
+      "text": "FULLS $ P/ V $",
+      "label": "answer",
+      "bbox": [
+        180,
+        358,
+        285,
+        369
+      ]
+    },
+    {
+      "text": "(Indicate Distributor's Cost Per Carton)",
+      "label": "other",
+      "bbox": [
+        321,
+        355,
+        513,
+        369
+      ]
+    },
+    {
+      "text": "SALES FORCE INVOLVEMENT:",
+      "label": "question",
+      "bbox": [
+        94,
+        392,
+        254,
+        406
+      ]
+    },
+    {
+      "text": "They have crew- worked distribution, and it is reported that they may crew- work it again Sales force has been busy promoting old style backs to clean up inventory. All POS is being converted to \"B\" Kool.",
+      "label": "answer",
+      "bbox": [
+        94,
+        413,
+        644,
+        452
+      ]
+    },
+    {
+      "text": "DISTRIBUTORS ACCEPTANCE INTRO TERMS INTRO DEALS INVOLVEMENT:",
+      "label": "question",
+      "bbox": [
+        94,
+        500,
+        493,
+        515
+      ]
+    },
+    {
+      "text": "All accounts have the new packaging. It was not a problem obtaining new distribution. All accounts appear to have 100% distribution of new packings.",
+      "label": "answer",
+      "bbox": [
+        94,
+        522,
+        606,
+        559
+      ]
+    },
+    {
+      "text": "CHAINS ACCEPTANCE/ MERCHANDISING:",
+      "label": "question",
+      "bbox": [
+        92,
+        609,
+        317,
+        623
+      ]
+    },
+    {
+      "text": "This has not been a problem. New packaging is just following on the old \"packaging\".",
+      "label": "answer",
+      "bbox": [
+        95,
+        628,
+        516,
+        647
+      ]
+    },
+    {
+      "text": "INDEPENDENTS ACCEPTANCE/ MERCHANDISING:",
+      "label": "question",
+      "bbox": [
+        92,
+        716,
+        359,
+        731
+      ]
+    },
+    {
+      "text": "Very well received. The packs are peing consolidated and promoted in select retail locations at 40 off $4 00 off cartons.",
+      "label": "answer",
+      "bbox": [
+        94,
+        737,
+        587,
+        774
+      ]
+    },
+    {
+      "text": "ADVERTISING EFFECTIVENESS OF P. O. S.:",
+      "label": "question",
+      "bbox": [
+        94,
+        824,
+        321,
+        839
+      ]
+    },
+    {
+      "text": "The theme \"B\" Kool has replaced all previous POS. They have effectively replaced all old POS. New door signage, hour signs, poster mats, and clocks have the new design. \"B\" Kool also appears on billboards in llinois.",
+      "label": "answer",
+      "bbox": [
+        94,
+        844,
+        610,
+        904
+      ]
+    },
+    {
+      "text": "PAGE 1 OF 2",
+      "label": "other",
+      "bbox": [
+        330,
+        950,
+        397,
+        963
+      ]
+    }
+  ]
+}

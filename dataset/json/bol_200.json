@@ -1,0 +1,31 @@
+{
+  "template": "real_scan",
+  "category": "food_delivery",
+  "platform": "美团外卖",
+  "shop": "榆树炸鸡腿(嘉乐广场店)",
+  "order_no": "6021924037990000933",
+  "order_time": "2026-07-01 12:01:01",
+  "delivery_time": "12:21前送达",
+  "customer": "魏先生",
+  "items": [
+    {
+      "name": "小店热线 想吃啥点",
+      "qty": 1,
+      "price": 31.99,
+      "spec": "啥系列(孜然)",
+      "addons": [
+        "琵琶腿1个x3",
+        "炸鸡柳100克"
+      ]
+    },
+    {
+      "name": "开业福利(赠品)",
+      "qty": 1,
+      "price": 0,
+      "detail": "豆皮肉卷&爆汁鱼丸"
+    }
+  ],
+  "total_amount": 31.99,
+  "note": "顾客需要餐具;优先出餐15分钟闪电送单",
+  "payment": "在线支付"
+}

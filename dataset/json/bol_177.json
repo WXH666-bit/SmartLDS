@@ -1,0 +1,1600 @@
+{
+  "template": "funsd_public",
+  "source": "87528380",
+  "fields": {
+    "for": "Metal \"Pack\" Plaque",
+    "date": "October 16, 1987",
+    "recipient": "Lorillard Corporation",
+    "address": "666 Fifth Avenue",
+    "city": "New York",
+    "state": "New York 10103",
+    "attn": "Mr. Robert Kennedy",
+    "item": "Harley Davidson Metal Plaque",
+    "aluminum": "☑",
+    "size": "171/4 x 231/2 \"",
+    "gauge": ".025\"",
+    "colors": "Transparent gold, opaque black, white and orange",
+    "yes": "☑",
+    "embossed": "☑",
+    "square": "☑",
+    "other": "Price is based on reproduction of customer supplied \"Pack\" box.",
+    "tooling": "Form die, brass emboss die to achieve detail on eagle.",
+    "quantities": "500 Plaques",
+    "price": "$ 9.18 each",
+    "total": "",
+    "your_representative": "Mr. A. D. Steinberg",
+    "steel_☐": "",
+    "other_☐": "",
+    "base_color": "Aluminum",
+    "single_face": "☑",
+    "double_face_☐": "",
+    "no_☐": "",
+    "number_of": "4",
+    "round_☐": "",
+    "angle_☐": "",
+    "cut_to_shape_☐": "",
+    "hemmed_☐": "",
+    "stamp_frame": "☑",
+    "beaded_border_☐": "",
+    "back_frame_☐": "",
+    "right_angle_bend_☐": "",
+    "curled_☐": "",
+    "per_carton": "10",
+    "per_crate": "",
+    "per_bundle": "",
+    "one_time_tooling": "@ $ 3,015.00",
+    "steel_tips": "$ 1,045.00",
+    "bill_as_manufacture": "☑",
+    "☐_bill_as_ship_for.": "",
+    "☐_6_mos.": "",
+    "☐_12_mos": "",
+    "ship_immediately": "☑",
+    "☐_6_mos._whse.": "",
+    "☐_12_mos._whse": "",
+    "per_shipment": ""
+  },
+  "field_details": {
+    "for": {
+      "value": "Metal \"Pack\" Plaque",
+      "anchor": "FOR",
+      "bbox": [
+        418,
+        215,
+        442,
+        228
+      ]
+    },
+    "date": {
+      "value": "October 16, 1987",
+      "anchor": "DATE",
+      "bbox": [
+        409,
+        229,
+        440,
+        242
+      ]
+    },
+    "recipient": {
+      "value": "Lorillard Corporation",
+      "anchor": "TO",
+      "bbox": [
+        34,
+        214,
+        52,
+        227
+      ]
+    },
+    "address": {
+      "value": "666 Fifth Avenue",
+      "anchor": "ADDRESS",
+      "bbox": [
+        34,
+        232,
+        83,
+        242
+      ]
+    },
+    "city": {
+      "value": "New York",
+      "anchor": "CITY",
+      "bbox": [
+        34,
+        244,
+        63,
+        257
+      ]
+    },
+    "state": {
+      "value": "New York 10103",
+      "anchor": "STATE",
+      "bbox": [
+        34,
+        260,
+        72,
+        270
+      ]
+    },
+    "attn": {
+      "value": "Mr. Robert Kennedy",
+      "anchor": "ATTN",
+      "bbox": [
+        120,
+        270,
+        165,
+        287
+      ]
+    },
+    "item": {
+      "value": "Harley Davidson Metal Plaque",
+      "anchor": "ITEM",
+      "bbox": [
+        46,
+        339,
+        84,
+        357
+      ]
+    },
+    "aluminum": {
+      "value": "☑",
+      "anchor": "ALUMINUM",
+      "bbox": [
+        232,
+        358,
+        300,
+        372
+      ]
+    },
+    "size": {
+      "value": "171/4 x 231/2 \"",
+      "anchor": "SIZE",
+      "bbox": [
+        436,
+        341,
+        471,
+        358
+      ]
+    },
+    "gauge": {
+      "value": ".025\"",
+      "anchor": "GAUGE",
+      "bbox": [
+        514,
+        356,
+        561,
+        370
+      ]
+    },
+    "colors": {
+      "value": "Transparent gold, opaque black, white and orange",
+      "anchor": "COLORS",
+      "bbox": [
+        47,
+        385,
+        100,
+        399
+      ]
+    },
+    "yes": {
+      "value": "☑",
+      "anchor": "YES",
+      "bbox": [
+        101,
+        427,
+        125,
+        441
+      ]
+    },
+    "embossed": {
+      "value": "☑",
+      "anchor": "EMBOSSED",
+      "bbox": [
+        302,
+        469,
+        370,
+        483
+      ]
+    },
+    "square": {
+      "value": "☑",
+      "anchor": "SQUARE",
+      "bbox": [
+        207,
+        443,
+        263,
+        456
+      ]
+    },
+    "other": {
+      "value": "Price is based on reproduction of customer supplied \"Pack\" box.",
+      "anchor": "OTHER",
+      "bbox": [
+        46,
+        527,
+        95,
+        541
+      ]
+    },
+    "tooling": {
+      "value": "Form die, brass emboss die to achieve detail on eagle.",
+      "anchor": "TOOLING",
+      "bbox": [
+        106,
+        543,
+        174,
+        557
+      ]
+    },
+    "quantities": {
+      "value": "500 Plaques",
+      "anchor": "QUANTITIES",
+      "bbox": [
+        49,
+        582,
+        130,
+        603
+      ]
+    },
+    "price": {
+      "value": "$ 9.18 each",
+      "anchor": "PRICE",
+      "bbox": [
+        45,
+        613,
+        92,
+        628
+      ]
+    },
+    "total": {
+      "value": "",
+      "anchor": "TOTAL",
+      "bbox": [
+        479,
+        716,
+        575,
+        757
+      ]
+    },
+    "your_representative": {
+      "value": "Mr. A. D. Steinberg",
+      "anchor": "YOUR REPRESENTATIVE",
+      "bbox": [
+        513,
+        267,
+        640,
+        279
+      ]
+    },
+    "steel_☐": {
+      "value": "",
+      "anchor": "STEEL ☐",
+      "bbox": [
+        124,
+        356,
+        190,
+        373
+      ]
+    },
+    "other_☐": {
+      "value": "",
+      "anchor": "OTHER ☐",
+      "bbox": [
+        363,
+        355,
+        431,
+        373
+      ]
+    },
+    "base_color": {
+      "value": "Aluminum",
+      "anchor": "BASE COLOR",
+      "bbox": [
+        47,
+        399,
+        128,
+        416
+      ]
+    },
+    "single_face": {
+      "value": "☑",
+      "anchor": "SINGLE FACE",
+      "bbox": [
+        292,
+        399,
+        381,
+        416
+      ]
+    },
+    "double_face_☐": {
+      "value": "",
+      "anchor": "DOUBLE FACE ☐",
+      "bbox": [
+        444,
+        398,
+        561,
+        416
+      ]
+    },
+    "no_☐": {
+      "value": "",
+      "anchor": "NO ☐",
+      "bbox": [
+        172,
+        427,
+        211,
+        444
+      ]
+    },
+    "number_of": {
+      "value": "4",
+      "anchor": "NUMBER OF",
+      "bbox": [
+        244,
+        427,
+        323,
+        441
+      ]
+    },
+    "round_☐": {
+      "value": "",
+      "anchor": "ROUND ☐",
+      "bbox": [
+        117,
+        441,
+        186,
+        455
+      ]
+    },
+    "angle_☐": {
+      "value": "",
+      "anchor": "ANGLE ☐",
+      "bbox": [
+        309,
+        443,
+        373,
+        456
+      ]
+    },
+    "cut_to_shape_☐": {
+      "value": "",
+      "anchor": "CUT TO SHAPE ☐",
+      "bbox": [
+        392,
+        441,
+        511,
+        458
+      ]
+    },
+    "hemmed_☐": {
+      "value": "",
+      "anchor": "HEMMED ☐",
+      "bbox": [
+        99,
+        469,
+        177,
+        486
+      ]
+    },
+    "stamp_frame": {
+      "value": "☑",
+      "anchor": "STAMP FRAME",
+      "bbox": [
+        47,
+        485,
+        140,
+        500
+      ]
+    },
+    "beaded_border_☐": {
+      "value": "",
+      "anchor": "BEADED BORDER ☐",
+      "bbox": [
+        406,
+        468,
+        540,
+        486
+      ]
+    },
+    "back_frame_☐": {
+      "value": "",
+      "anchor": "BACK FRAME ☐",
+      "bbox": [
+        358,
+        485,
+        466,
+        500
+      ]
+    },
+    "right_angle_bend_☐": {
+      "value": "",
+      "anchor": "RIGHT ANGLE BEND ☐",
+      "bbox": [
+        183,
+        483,
+        337,
+        499
+      ]
+    },
+    "curled_☐": {
+      "value": "",
+      "anchor": "CURLED ☐",
+      "bbox": [
+        201,
+        469,
+        279,
+        484
+      ]
+    },
+    "per_carton": {
+      "value": "10",
+      "anchor": "PER CARTON",
+      "bbox": [
+        115,
+        515,
+        204,
+        529
+      ]
+    },
+    "per_crate": {
+      "value": "",
+      "anchor": "PER CRATE",
+      "bbox": [
+        274,
+        513,
+        350,
+        531
+      ]
+    },
+    "per_bundle": {
+      "value": "",
+      "anchor": "PER BUNDLE",
+      "bbox": [
+        415,
+        514,
+        504,
+        527
+      ]
+    },
+    "one_time_tooling": {
+      "value": "@ $ 3,015.00",
+      "anchor": "ONE TIME TOOLING",
+      "bbox": [
+        367,
+        581,
+        507,
+        601
+      ]
+    },
+    "steel_tips": {
+      "value": "$ 1,045.00",
+      "anchor": "STEEL TIPS",
+      "bbox": [
+        370,
+        603,
+        457,
+        621
+      ]
+    },
+    "bill_as_manufacture": {
+      "value": "☑",
+      "anchor": "BILL AS MANUFACTURE",
+      "bbox": [
+        200,
+        679,
+        351,
+        695
+      ]
+    },
+    "☐_bill_as_ship_for.": {
+      "value": "",
+      "anchor": "☐ BILL AS SHIP FOR.",
+      "bbox": [
+        376,
+        676,
+        509,
+        696
+      ]
+    },
+    "☐_6_mos.": {
+      "value": "",
+      "anchor": "☐ 6 MOS.",
+      "bbox": [
+        510,
+        676,
+        578,
+        694
+      ]
+    },
+    "☐_12_mos": {
+      "value": "",
+      "anchor": "☐ 12 MOS",
+      "bbox": [
+        588,
+        676,
+        656,
+        694
+      ]
+    },
+    "ship_immediately": {
+      "value": "☑",
+      "anchor": "SHIP IMMEDIATELY",
+      "bbox": [
+        182,
+        703,
+        304,
+        717
+      ]
+    },
+    "☐_6_mos._whse.": {
+      "value": "",
+      "anchor": "☐ 6 MOS. WHSE.",
+      "bbox": [
+        332,
+        698,
+        440,
+        716
+      ]
+    },
+    "☐_12_mos._whse": {
+      "value": "",
+      "anchor": "☐ 12 MOS. WHSE",
+      "bbox": [
+        459,
+        698,
+        570,
+        715
+      ]
+    },
+    "per_shipment": {
+      "value": "",
+      "anchor": "PER SHIPMENT",
+      "bbox": [
+        240,
+        728,
+        338,
+        743
+      ]
+    }
+  },
+  "ocr_blocks": [
+    {
+      "text": "10675",
+      "label": "other",
+      "bbox": [
+        612,
+        59,
+        678,
+        81
+      ]
+    },
+    {
+      "text": "PROPOSAL",
+      "label": "header",
+      "bbox": [
+        300,
+        186,
+        440,
+        204
+      ]
+    },
+    {
+      "text": "FOR",
+      "label": "question",
+      "bbox": [
+        418,
+        215,
+        442,
+        228
+      ]
+    },
+    {
+      "text": "DATE",
+      "label": "question",
+      "bbox": [
+        409,
+        229,
+        440,
+        242
+      ]
+    },
+    {
+      "text": "TO",
+      "label": "question",
+      "bbox": [
+        34,
+        214,
+        52,
+        227
+      ]
+    },
+    {
+      "text": "ADDRESS",
+      "label": "question",
+      "bbox": [
+        34,
+        232,
+        83,
+        242
+      ]
+    },
+    {
+      "text": "CITY",
+      "label": "question",
+      "bbox": [
+        34,
+        244,
+        63,
+        257
+      ]
+    },
+    {
+      "text": "STATE",
+      "label": "question",
+      "bbox": [
+        34,
+        260,
+        72,
+        270
+      ]
+    },
+    {
+      "text": "Attn:",
+      "label": "question",
+      "bbox": [
+        120,
+        270,
+        165,
+        287
+      ]
+    },
+    {
+      "text": "ITEM:",
+      "label": "question",
+      "bbox": [
+        46,
+        339,
+        84,
+        357
+      ]
+    },
+    {
+      "text": "MATERIAL:",
+      "label": "header",
+      "bbox": [
+        47,
+        358,
+        120,
+        372
+      ]
+    },
+    {
+      "text": "ALUMINUM",
+      "label": "question",
+      "bbox": [
+        232,
+        358,
+        300,
+        372
+      ]
+    },
+    {
+      "text": "SIZE:",
+      "label": "question",
+      "bbox": [
+        436,
+        341,
+        471,
+        358
+      ]
+    },
+    {
+      "text": "GAUGE",
+      "label": "question",
+      "bbox": [
+        514,
+        356,
+        561,
+        370
+      ]
+    },
+    {
+      "text": "COLORS:",
+      "label": "question",
+      "bbox": [
+        47,
+        385,
+        100,
+        399
+      ]
+    },
+    {
+      "text": "HOLES:",
+      "label": "header",
+      "bbox": [
+        47,
+        426,
+        93,
+        443
+      ]
+    },
+    {
+      "text": "YES",
+      "label": "question",
+      "bbox": [
+        101,
+        427,
+        125,
+        441
+      ]
+    },
+    {
+      "text": "EMBOSSED",
+      "label": "question",
+      "bbox": [
+        302,
+        469,
+        370,
+        483
+      ]
+    },
+    {
+      "text": "SQUARE",
+      "label": "question",
+      "bbox": [
+        207,
+        443,
+        263,
+        456
+      ]
+    },
+    {
+      "text": "CORNERS:",
+      "label": "header",
+      "bbox": [
+        47,
+        441,
+        113,
+        455
+      ]
+    },
+    {
+      "text": "EDGES:",
+      "label": "header",
+      "bbox": [
+        46,
+        469,
+        92,
+        483
+      ]
+    },
+    {
+      "text": "PACKING:",
+      "label": "header",
+      "bbox": [
+        46,
+        514,
+        109,
+        529
+      ]
+    },
+    {
+      "text": "OTHER:",
+      "label": "question",
+      "bbox": [
+        46,
+        527,
+        95,
+        541
+      ]
+    },
+    {
+      "text": "☑",
+      "label": "answer",
+      "bbox": [
+        303,
+        356,
+        323,
+        371
+      ]
+    },
+    {
+      "text": "Aluminum",
+      "label": "answer",
+      "bbox": [
+        163,
+        397,
+        238,
+        411
+      ]
+    },
+    {
+      "text": "☑",
+      "label": "answer",
+      "bbox": [
+        385,
+        399,
+        405,
+        414
+      ]
+    },
+    {
+      "text": "4",
+      "label": "answer",
+      "bbox": [
+        332,
+        427,
+        350,
+        440
+      ]
+    },
+    {
+      "text": "☑",
+      "label": "answer",
+      "bbox": [
+        131,
+        427,
+        151,
+        442
+      ]
+    },
+    {
+      "text": "☑",
+      "label": "answer",
+      "bbox": [
+        374,
+        469,
+        391,
+        483
+      ]
+    },
+    {
+      "text": "☑",
+      "label": "answer",
+      "bbox": [
+        142,
+        485,
+        162,
+        499
+      ]
+    },
+    {
+      "text": "Tooling:",
+      "label": "question",
+      "bbox": [
+        106,
+        543,
+        174,
+        557
+      ]
+    },
+    {
+      "text": "QUANTITIES:",
+      "label": "question",
+      "bbox": [
+        49,
+        582,
+        130,
+        603
+      ]
+    },
+    {
+      "text": "PRICE:",
+      "label": "question",
+      "bbox": [
+        45,
+        613,
+        92,
+        628
+      ]
+    },
+    {
+      "text": "BILLING:",
+      "label": "header",
+      "bbox": [
+        46,
+        680,
+        103,
+        693
+      ]
+    },
+    {
+      "text": "WAREHOUSING:",
+      "label": "header",
+      "bbox": [
+        47,
+        700,
+        146,
+        715
+      ]
+    },
+    {
+      "text": "☑",
+      "label": "answer",
+      "bbox": [
+        180,
+        679,
+        198,
+        694
+      ]
+    },
+    {
+      "text": "☑",
+      "label": "answer",
+      "bbox": [
+        163,
+        700,
+        183,
+        715
+      ]
+    },
+    {
+      "text": "87528380",
+      "label": "other",
+      "bbox": [
+        578,
+        846,
+        666,
+        863
+      ]
+    },
+    {
+      "text": "CONDITIONS:",
+      "label": "header",
+      "bbox": [
+        45,
+        757,
+        112,
+        770
+      ]
+    },
+    {
+      "text": "4050",
+      "label": "other",
+      "bbox": [
+        527,
+        630,
+        611,
+        657
+      ]
+    },
+    {
+      "text": "TOTAL",
+      "label": "question",
+      "bbox": [
+        479,
+        716,
+        575,
+        757
+      ]
+    },
+    {
+      "text": "8650",
+      "label": "other",
+      "bbox": [
+        592,
+        701,
+        683,
+        753
+      ]
+    },
+    {
+      "text": "S",
+      "label": "other",
+      "bbox": [
+        31,
+        41,
+        192,
+        163
+      ]
+    },
+    {
+      "text": "☑",
+      "label": "answer",
+      "bbox": [
+        263,
+        441,
+        285,
+        458
+      ]
+    },
+    {
+      "text": "10",
+      "label": "answer",
+      "bbox": [
+        223,
+        508,
+        245,
+        530
+      ]
+    },
+    {
+      "text": "STOUT INDUSTRIES, INC.",
+      "label": "header",
+      "bbox": [
+        204,
+        109,
+        598,
+        135
+      ]
+    },
+    {
+      "text": "6425 W. FLORISSANT AVE. ST. LOUIS MO 63136 . (314) 385- 2280",
+      "label": "other",
+      "bbox": [
+        203,
+        138,
+        674,
+        153
+      ]
+    },
+    {
+      "text": "Lorillard Corporation",
+      "label": "answer",
+      "bbox": [
+        105,
+        211,
+        286,
+        229
+      ]
+    },
+    {
+      "text": "666 Fifth Avenue",
+      "label": "answer",
+      "bbox": [
+        106,
+        226,
+        243,
+        240
+      ]
+    },
+    {
+      "text": "New York",
+      "label": "answer",
+      "bbox": [
+        106,
+        240,
+        174,
+        257
+      ]
+    },
+    {
+      "text": "New York 10103",
+      "label": "answer",
+      "bbox": [
+        106,
+        254,
+        233,
+        268
+      ]
+    },
+    {
+      "text": "Metal \"Pack\" Plaque",
+      "label": "answer",
+      "bbox": [
+        485,
+        207,
+        653,
+        225
+      ]
+    },
+    {
+      "text": "October 16, 1987",
+      "label": "answer",
+      "bbox": [
+        487,
+        222,
+        624,
+        240
+      ]
+    },
+    {
+      "text": "Mr. A. D. Steinberg",
+      "label": "answer",
+      "bbox": [
+        485,
+        253,
+        653,
+        270
+      ]
+    },
+    {
+      "text": "YOUR REPRESENTATIVE",
+      "label": "question",
+      "bbox": [
+        513,
+        267,
+        640,
+        279
+      ]
+    },
+    {
+      "text": "It is our pleasure to propose the following:",
+      "label": "other",
+      "bbox": [
+        49,
+        304,
+        415,
+        332
+      ]
+    },
+    {
+      "text": "Mr. Robert Kennedy",
+      "label": "answer",
+      "bbox": [
+        170,
+        270,
+        329,
+        285
+      ]
+    },
+    {
+      "text": "Harley Davidson Metal Plaque",
+      "label": "answer",
+      "bbox": [
+        103,
+        339,
+        348,
+        357
+      ]
+    },
+    {
+      "text": "171/4 x 231/2 \"",
+      "label": "answer",
+      "bbox": [
+        521,
+        335,
+        608,
+        357
+      ]
+    },
+    {
+      "text": ".025\"",
+      "label": "answer",
+      "bbox": [
+        617,
+        352,
+        660,
+        368
+      ]
+    },
+    {
+      "text": "STEEL ☐",
+      "label": "question",
+      "bbox": [
+        124,
+        356,
+        190,
+        373
+      ]
+    },
+    {
+      "text": "OTHER ☐",
+      "label": "question",
+      "bbox": [
+        363,
+        355,
+        431,
+        373
+      ]
+    },
+    {
+      "text": "Transparent gold, opaque black, white and orange",
+      "label": "answer",
+      "bbox": [
+        103,
+        378,
+        517,
+        399
+      ]
+    },
+    {
+      "text": "BASE COLOR",
+      "label": "question",
+      "bbox": [
+        47,
+        399,
+        128,
+        416
+      ]
+    },
+    {
+      "text": "SINGLE FACE",
+      "label": "question",
+      "bbox": [
+        292,
+        399,
+        381,
+        416
+      ]
+    },
+    {
+      "text": "DOUBLE FACE ☐",
+      "label": "question",
+      "bbox": [
+        444,
+        398,
+        561,
+        416
+      ]
+    },
+    {
+      "text": "NO ☐",
+      "label": "question",
+      "bbox": [
+        172,
+        427,
+        211,
+        444
+      ]
+    },
+    {
+      "text": "NUMBER OF",
+      "label": "question",
+      "bbox": [
+        244,
+        427,
+        323,
+        441
+      ]
+    },
+    {
+      "text": "ROUND ☐",
+      "label": "question",
+      "bbox": [
+        117,
+        441,
+        186,
+        455
+      ]
+    },
+    {
+      "text": "ANGLE ☐",
+      "label": "question",
+      "bbox": [
+        309,
+        443,
+        373,
+        456
+      ]
+    },
+    {
+      "text": "CUT TO SHAPE ☐",
+      "label": "question",
+      "bbox": [
+        392,
+        441,
+        511,
+        458
+      ]
+    },
+    {
+      "text": "HEMMED ☐",
+      "label": "question",
+      "bbox": [
+        99,
+        469,
+        177,
+        486
+      ]
+    },
+    {
+      "text": "STAMP FRAME",
+      "label": "question",
+      "bbox": [
+        47,
+        485,
+        140,
+        500
+      ]
+    },
+    {
+      "text": "BEADED BORDER ☐",
+      "label": "question",
+      "bbox": [
+        406,
+        468,
+        540,
+        486
+      ]
+    },
+    {
+      "text": "BACK FRAME ☐",
+      "label": "question",
+      "bbox": [
+        358,
+        485,
+        466,
+        500
+      ]
+    },
+    {
+      "text": "RIGHT ANGLE BEND ☐",
+      "label": "question",
+      "bbox": [
+        183,
+        483,
+        337,
+        499
+      ]
+    },
+    {
+      "text": "CURLED ☐",
+      "label": "question",
+      "bbox": [
+        201,
+        469,
+        279,
+        484
+      ]
+    },
+    {
+      "text": "PER CARTON",
+      "label": "question",
+      "bbox": [
+        115,
+        515,
+        204,
+        529
+      ]
+    },
+    {
+      "text": "PER CRATE",
+      "label": "question",
+      "bbox": [
+        274,
+        513,
+        350,
+        531
+      ]
+    },
+    {
+      "text": "PER BUNDLE",
+      "label": "question",
+      "bbox": [
+        415,
+        514,
+        504,
+        527
+      ]
+    },
+    {
+      "text": "Price is based on reproduction of customer supplied \"Pack\" box.",
+      "label": "answer",
+      "bbox": [
+        105,
+        525,
+        644,
+        544
+      ]
+    },
+    {
+      "text": "Form die, brass emboss die to achieve detail on eagle.",
+      "label": "answer",
+      "bbox": [
+        190,
+        538,
+        650,
+        556
+      ]
+    },
+    {
+      "text": "500 Plaques",
+      "label": "answer",
+      "bbox": [
+        172,
+        584,
+        272,
+        602
+      ]
+    },
+    {
+      "text": "$ 9.18 each",
+      "label": "answer",
+      "bbox": [
+        156,
+        613,
+        246,
+        630
+      ]
+    },
+    {
+      "text": "One time tooling",
+      "label": "question",
+      "bbox": [
+        367,
+        581,
+        507,
+        601
+      ]
+    },
+    {
+      "text": "Steel tips",
+      "label": "question",
+      "bbox": [
+        370,
+        603,
+        457,
+        621
+      ]
+    },
+    {
+      "text": "@ $ 3,015.00",
+      "label": "answer",
+      "bbox": [
+        511,
+        581,
+        609,
+        598
+      ]
+    },
+    {
+      "text": "$ 1,045.00",
+      "label": "answer",
+      "bbox": [
+        532,
+        603,
+        611,
+        620
+      ]
+    },
+    {
+      "text": "BILL AS MANUFACTURE",
+      "label": "question",
+      "bbox": [
+        200,
+        679,
+        351,
+        695
+      ]
+    },
+    {
+      "text": "☐ BILL AS SHIP FOR.",
+      "label": "question",
+      "bbox": [
+        376,
+        676,
+        509,
+        696
+      ]
+    },
+    {
+      "text": "☐ 6 MOS.",
+      "label": "question",
+      "bbox": [
+        510,
+        676,
+        578,
+        694
+      ]
+    },
+    {
+      "text": "☐ 12 MOS",
+      "label": "question",
+      "bbox": [
+        588,
+        676,
+        656,
+        694
+      ]
+    },
+    {
+      "text": "SHIP IMMEDIATELY",
+      "label": "question",
+      "bbox": [
+        182,
+        703,
+        304,
+        717
+      ]
+    },
+    {
+      "text": "☐ 6 MOS. WHSE.",
+      "label": "question",
+      "bbox": [
+        332,
+        698,
+        440,
+        716
+      ]
+    },
+    {
+      "text": "☐ 12 MOS. WHSE",
+      "label": "question",
+      "bbox": [
+        459,
+        698,
+        570,
+        715
+      ]
+    },
+    {
+      "text": "PER SHIPMENT",
+      "label": "question",
+      "bbox": [
+        240,
+        728,
+        338,
+        743
+      ]
+    },
+    {
+      "text": "DROP SHIPPING:",
+      "label": "header",
+      "bbox": [
+        46,
+        728,
+        150,
+        745
+      ]
+    },
+    {
+      "text": "TERMS - NET 10 DAYS A service charge of 11/2 per month will be applied to all unpaid balances over 30 days.",
+      "label": "other",
+      "bbox": [
+        56,
+        894,
+        284,
+        937
+      ]
+    },
+    {
+      "text": "STOUT INDUSTRIES INC,",
+      "label": "other",
+      "bbox": [
+        339,
+        898,
+        441,
+        929
+      ]
+    },
+    {
+      "text": "A 15 service charge will be added to reight costs for all prepaid shipments involving 5 or more pieces.",
+      "label": "other",
+      "bbox": [
+        47,
+        863,
+        485,
+        875
+      ]
+    },
+    {
+      "text": "PRICES QUOTED HEREIN ARE BASED ON CURRENT COSTS AND ARE FOR IMMEDIATE ACCEPTANCE *These prices will be updated periodically from date of order, to reflect changes in material and labor costs. Prices and terms quoted herein are not subject to verbal changes unless confirmed in writing by the home office of this company in S. T. LOUIS M. O. All contracts for delivers are contingent upon fires, strikes or other causes beyond our control. Purchaser agrees to accept overun or underrun to the extent of 10% of the quantity ordered.",
+      "label": "other",
+      "bbox": [
+        42,
+        768,
+        698,
+        828
+      ]
+    },
+    {
+      "text": "Any taxes or governmental changes which the seller may be required to pay or collect upon the production sale storage, or delivery under any existing or",
+      "label": "other",
+      "bbox": [
+        47,
+        827,
+        698,
+        840
+      ]
+    },
+    {
+      "text": "future law shall be for the account of the buyer who shall promptly pay the amount hereof to the seller upon",
+      "label": "other",
+      "bbox": [
+        46,
+        839,
+        504,
+        851
+      ]
+    },
+    {
+      "text": "F. O. B. S. T. LOUIS MISSOURI Shipments via truck shipped freight collect.",
+      "label": "other",
+      "bbox": [
+        46,
+        852,
+        368,
+        863
+      ]
+    }
+  ]
+}

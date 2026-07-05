@@ -1,0 +1,30 @@
+{
+  "template": "real_scan",
+  "category": "food_delivery",
+  "platform": "京东秒送",
+  "order_no": "JD3546426000799566",
+  "customer": "王新安",
+  "customer_phone": "15245008696",
+  "address": "辽宁大连市金州区大连理工大学(开发区校区)憩苑",
+  "items": [
+    {
+      "name": "双层-美式嫩牛堡",
+      "qty": 1
+    },
+    {
+      "name": "葡式蛋挞",
+      "qty": 1
+    },
+    {
+      "name": "黄金鸡块5块",
+      "qty": 1
+    },
+    {
+      "name": "中可",
+      "qty": 1
+    }
+  ],
+  "total_amount": 28.8,
+  "original_amount": 38.8,
+  "payment": "在线支付"
+}

@@ -1,0 +1,18 @@
+{
+  "template": "real_scan",
+  "category": "food_delivery",
+  "platform": "京东秒送",
+  "shop": "京东甄选",
+  "order_no": "3546205003531122",
+  "order_time": "2026-07-01 10:52:28",
+  "items": [
+    {
+      "name": "香辣鸡腿中国汉堡",
+      "qty": 2,
+      "price": 15.15
+    }
+  ],
+  "total_amount": 15.1,
+  "original_amount": 30.5,
+  "payment": "在线支付"
+}

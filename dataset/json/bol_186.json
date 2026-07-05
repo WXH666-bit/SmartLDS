@@ -1,0 +1,14 @@
+{
+  "template": "real_scan",
+  "category": "express",
+  "courier": "京东物流",
+  "tracking_no": "JD0159848202004",
+  "order_no": "297333832093",
+  "recipient": "赵杰",
+  "recipient_phone": "16316645381",
+  "recipient_addr": "辽宁大连市金州区大连理工大学软件学院生活区",
+  "delivery_time": "10月01日 09:00-15:00",
+  "print_time": "09月30日 21:40",
+  "station": "大连高城山营业部",
+  "payment": "在线支付"
+}

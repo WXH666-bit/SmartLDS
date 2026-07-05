@@ -1,0 +1,286 @@
+{
+  "template": "funsd_public",
+  "source": "83594639",
+  "fields": {
+    "date": "September 22, 1997",
+    "recipient": "Ron Milstein",
+    "company": "Lorillard",
+    "sender": "\"JJ\" Klein",
+    "pages_(including_cover_page)": "3",
+    "fax_number": "(910) 335 7707"
+  },
+  "field_details": {
+    "date": {
+      "value": "September 22, 1997",
+      "anchor": "DATE",
+      "bbox": [
+        103,
+        268,
+        131,
+        282
+      ]
+    },
+    "recipient": {
+      "value": "Ron Milstein",
+      "anchor": "TO",
+      "bbox": [
+        102,
+        297,
+        120,
+        311
+      ]
+    },
+    "company": {
+      "value": "Lorillard",
+      "anchor": "COMPANY",
+      "bbox": [
+        103,
+        328,
+        159,
+        345
+      ]
+    },
+    "sender": {
+      "value": "\"JJ\" Klein",
+      "anchor": "FROM",
+      "bbox": [
+        381,
+        297,
+        416,
+        314
+      ]
+    },
+    "pages_(including_cover_page)": {
+      "value": "3",
+      "anchor": "PAGES (INCLUDING COVER PAGE)",
+      "bbox": [
+        383,
+        359,
+        541,
+        375
+      ]
+    },
+    "fax_number": {
+      "value": "(910) 335 7707",
+      "anchor": "FAX NUMBER",
+      "bbox": [
+        102,
+        358,
+        170,
+        375
+      ]
+    }
+  },
+  "ocr_blocks": [
+    {
+      "text": "Date:",
+      "label": "question",
+      "bbox": [
+        103,
+        268,
+        131,
+        282
+      ]
+    },
+    {
+      "text": "To:",
+      "label": "question",
+      "bbox": [
+        102,
+        297,
+        120,
+        311
+      ]
+    },
+    {
+      "text": "Company:",
+      "label": "question",
+      "bbox": [
+        103,
+        328,
+        159,
+        345
+      ]
+    },
+    {
+      "text": "From:",
+      "label": "question",
+      "bbox": [
+        381,
+        297,
+        416,
+        314
+      ]
+    },
+    {
+      "text": "3",
+      "label": "answer",
+      "bbox": [
+        563,
+        360,
+        574,
+        373
+      ]
+    },
+    {
+      "text": "Lorillard",
+      "label": "answer",
+      "bbox": [
+        209,
+        328,
+        256,
+        343
+      ]
+    },
+    {
+      "text": "83594639",
+      "label": "other",
+      "bbox": [
+        641,
+        687,
+        662,
+        802
+      ]
+    },
+    {
+      "text": "☑001",
+      "label": "other",
+      "bbox": [
+        638,
+        68,
+        673,
+        90
+      ]
+    },
+    {
+      "text": "89/ 22/ 97 MON 15: 35 FAX 12124554900",
+      "label": "other",
+      "bbox": [
+        54,
+        78,
+        278,
+        91
+      ]
+    },
+    {
+      "text": "ROPER STARCH WORLDWIDE",
+      "label": "other",
+      "bbox": [
+        338,
+        74,
+        481,
+        88
+      ]
+    },
+    {
+      "text": "ROPER STARCH",
+      "label": "header",
+      "bbox": [
+        267,
+        109,
+        447,
+        168
+      ]
+    },
+    {
+      "text": "TURNING DATA INTO INTELLIGENCE WORLDWIDE",
+      "label": "other",
+      "bbox": [
+        196,
+        186,
+        524,
+        203
+      ]
+    },
+    {
+      "text": "Fax Fax Fax Fax Fax Fax Fax Fax Fax",
+      "label": "header",
+      "bbox": [
+        119,
+        225,
+        594,
+        250
+      ]
+    },
+    {
+      "text": "Ron Milstein",
+      "label": "answer",
+      "bbox": [
+        208,
+        296,
+        278,
+        313
+      ]
+    },
+    {
+      "text": "(910) 335 7707",
+      "label": "answer",
+      "bbox": [
+        209,
+        359,
+        287,
+        375
+      ]
+    },
+    {
+      "text": "Pages (Including cover page):",
+      "label": "question",
+      "bbox": [
+        383,
+        359,
+        541,
+        375
+      ]
+    },
+    {
+      "text": "\"JJ\" Klein",
+      "label": "answer",
+      "bbox": [
+        489,
+        297,
+        544,
+        314
+      ]
+    },
+    {
+      "text": "Fax Number:",
+      "label": "question",
+      "bbox": [
+        102,
+        358,
+        170,
+        375
+      ]
+    },
+    {
+      "text": "Roper Starch Worldwide nc 205 East 42nd Street New York NY 0017 212 599 0700 212 887 7008 Fax",
+      "label": "other",
+      "bbox": [
+        98,
+        860,
+        201,
+        914
+      ]
+    },
+    {
+      "text": "Roper Marketing and Public Option Research Search Advertising and Media Research Frederen Marketing Services INRA World Headquarters",
+      "label": "other",
+      "bbox": [
+        466,
+        872,
+        625,
+        913
+      ]
+    },
+    {
+      "text": "September 22, 1997",
+      "label": "answer",
+      "bbox": [
+        208,
+        268,
+        316,
+        283
+      ]
+    }
+  ]
+}

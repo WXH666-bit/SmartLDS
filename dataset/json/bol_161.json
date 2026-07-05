@@ -1,0 +1,732 @@
+{
+  "template": "funsd_public",
+  "source": "82200067_0069",
+  "fields": {
+    "recipient": "K. A. Sparrow",
+    "sender": "T. D. Blachly",
+    "subject": "",
+    "division": "Helena # REPS: 4",
+    "region": "(ONLY IF PARTIAL REGION CONTINUE WITH DIVISION (S) SCOPE)",
+    "aug_4": "",
+    "sep_15": "x",
+    "may_12": "",
+    "jun_23": "",
+    "name_of_account": "",
+    "volume": "",
+    "no._of_stores": ""
+  },
+  "field_details": {
+    "recipient": {
+      "value": "K. A. Sparrow",
+      "anchor": "TO",
+      "bbox": [
+        75,
+        140,
+        93,
+        153
+      ]
+    },
+    "sender": {
+      "value": "T. D. Blachly",
+      "anchor": "FROM",
+      "bbox": [
+        75,
+        168,
+        109,
+        181
+      ]
+    },
+    "subject": {
+      "value": "",
+      "anchor": "SUBJECT",
+      "bbox": [
+        75,
+        223,
+        127,
+        234
+      ]
+    },
+    "division": {
+      "value": "Helena # REPS: 4",
+      "anchor": "DIVISION",
+      "bbox": [
+        384,
+        432,
+        436,
+        445
+      ]
+    },
+    "region": {
+      "value": "(ONLY IF PARTIAL REGION CONTINUE WITH DIVISION (S) SCOPE)",
+      "anchor": "REGION",
+      "bbox": [
+        75,
+        293,
+        118,
+        306
+      ]
+    },
+    "aug_4": {
+      "value": "",
+      "anchor": "AUG 4",
+      "bbox": [
+        570,
+        170,
+        603,
+        181
+      ]
+    },
+    "sep_15": {
+      "value": "x",
+      "anchor": "SEP 15",
+      "bbox": [
+        566,
+        198,
+        603,
+        208
+      ]
+    },
+    "may_12": {
+      "value": "",
+      "anchor": "MAY 12",
+      "bbox": [
+        451,
+        169,
+        490,
+        182
+      ]
+    },
+    "jun_23": {
+      "value": "",
+      "anchor": "JUN 23",
+      "bbox": [
+        454,
+        197,
+        491,
+        208
+      ]
+    },
+    "name_of_account": {
+      "value": "",
+      "anchor": "NAME OF ACCOUNT",
+      "bbox": [
+        411,
+        570,
+        509,
+        582
+      ]
+    },
+    "volume": {
+      "value": "",
+      "anchor": "VOLUME",
+      "bbox": [
+        546,
+        557,
+        592,
+        581
+      ]
+    },
+    "no._of_stores": {
+      "value": "",
+      "anchor": "NO. OF STORES",
+      "bbox": [
+        622,
+        556,
+        664,
+        583
+      ]
+    }
+  },
+  "ocr_blocks": [
+    {
+      "text": "TO:",
+      "label": "question",
+      "bbox": [
+        75,
+        140,
+        93,
+        153
+      ]
+    },
+    {
+      "text": "FROM:",
+      "label": "question",
+      "bbox": [
+        75,
+        168,
+        109,
+        181
+      ]
+    },
+    {
+      "text": "x",
+      "label": "answer",
+      "bbox": [
+        633,
+        198,
+        641,
+        208
+      ]
+    },
+    {
+      "text": "SUBJECT:",
+      "label": "question",
+      "bbox": [
+        75,
+        223,
+        127,
+        234
+      ]
+    },
+    {
+      "text": "DIVISION:",
+      "label": "header",
+      "bbox": [
+        74,
+        348,
+        124,
+        361
+      ]
+    },
+    {
+      "text": "DIVISION:",
+      "label": "question",
+      "bbox": [
+        91,
+        374,
+        143,
+        388
+      ]
+    },
+    {
+      "text": "DIVISION:",
+      "label": "question",
+      "bbox": [
+        92,
+        404,
+        142,
+        415
+      ]
+    },
+    {
+      "text": "DIVISION:",
+      "label": "question",
+      "bbox": [
+        94,
+        433,
+        143,
+        444
+      ]
+    },
+    {
+      "text": "REGION:",
+      "label": "question",
+      "bbox": [
+        75,
+        293,
+        118,
+        306
+      ]
+    },
+    {
+      "text": "DIVISION:",
+      "label": "question",
+      "bbox": [
+        387,
+        374,
+        434,
+        388
+      ]
+    },
+    {
+      "text": "DIVISION:",
+      "label": "question",
+      "bbox": [
+        387,
+        404,
+        434,
+        417
+      ]
+    },
+    {
+      "text": "DIVISION:",
+      "label": "question",
+      "bbox": [
+        384,
+        432,
+        436,
+        445
+      ]
+    },
+    {
+      "text": "225",
+      "label": "answer",
+      "bbox": [
+        335,
+        587,
+        355,
+        598
+      ]
+    },
+    {
+      "text": "27",
+      "label": "answer",
+      "bbox": [
+        338,
+        601,
+        352,
+        614
+      ]
+    },
+    {
+      "text": "15",
+      "label": "answer",
+      "bbox": [
+        341,
+        617,
+        352,
+        628
+      ]
+    },
+    {
+      "text": "31",
+      "label": "answer",
+      "bbox": [
+        338,
+        649,
+        352,
+        662
+      ]
+    },
+    {
+      "text": "18",
+      "label": "answer",
+      "bbox": [
+        339,
+        666,
+        352,
+        676
+      ]
+    },
+    {
+      "text": "19",
+      "label": "answer",
+      "bbox": [
+        341,
+        680,
+        354,
+        693
+      ]
+    },
+    {
+      "text": "20",
+      "label": "answer",
+      "bbox": [
+        338,
+        697,
+        353,
+        708
+      ]
+    },
+    {
+      "text": "82200067",
+      "label": "other",
+      "bbox": [
+        675,
+        774,
+        696,
+        879
+      ]
+    },
+    {
+      "text": "09/ 17/ 97 10: 55 603 841 1898",
+      "label": "other",
+      "bbox": [
+        85,
+        77,
+        302,
+        90
+      ]
+    },
+    {
+      "text": "LORILLARD PTLD",
+      "label": "header",
+      "bbox": [
+        370,
+        78,
+        460,
+        89
+      ]
+    },
+    {
+      "text": "☑ 001",
+      "label": "other",
+      "bbox": [
+        644,
+        78,
+        676,
+        93
+      ]
+    },
+    {
+      "text": "K. A. Sparrow",
+      "label": "answer",
+      "bbox": [
+        225,
+        141,
+        292,
+        154
+      ]
+    },
+    {
+      "text": "T. D. Blachly",
+      "label": "answer",
+      "bbox": [
+        225,
+        169,
+        287,
+        181
+      ]
+    },
+    {
+      "text": "OLD GOLD MENTHOL LIGHTS & ULTRA LIGHTS 100'S PROGRESS REPORT",
+      "label": "other",
+      "bbox": [
+        225,
+        223,
+        588,
+        236
+      ]
+    },
+    {
+      "text": "AUG 4",
+      "label": "question",
+      "bbox": [
+        570,
+        170,
+        603,
+        181
+      ]
+    },
+    {
+      "text": "SEP 15",
+      "label": "question",
+      "bbox": [
+        566,
+        198,
+        603,
+        208
+      ]
+    },
+    {
+      "text": "MAY 12",
+      "label": "question",
+      "bbox": [
+        451,
+        169,
+        490,
+        182
+      ]
+    },
+    {
+      "text": "JUN 23",
+      "label": "question",
+      "bbox": [
+        454,
+        197,
+        491,
+        208
+      ]
+    },
+    {
+      "text": "(ONLY IF PARTIAL REGION CONTINUE WITH DIVISION (S) SCOPE)",
+      "label": "answer",
+      "bbox": [
+        75,
+        320,
+        387,
+        333
+      ]
+    },
+    {
+      "text": "Portland # REPS: 6",
+      "label": "answer",
+      "bbox": [
+        154,
+        376,
+        283,
+        388
+      ]
+    },
+    {
+      "text": "Boise # REPS: 2. 5",
+      "label": "answer",
+      "bbox": [
+        154,
+        402,
+        286,
+        417
+      ]
+    },
+    {
+      "text": "Eugene # REPS: 5",
+      "label": "answer",
+      "bbox": [
+        152,
+        430,
+        276,
+        445
+      ]
+    },
+    {
+      "text": "Seattle South # REPS: 7",
+      "label": "answer",
+      "bbox": [
+        443,
+        374,
+        592,
+        388
+      ]
+    },
+    {
+      "text": "Seattle North # REPS: 4",
+      "label": "answer",
+      "bbox": [
+        441,
+        402,
+        592,
+        417
+      ]
+    },
+    {
+      "text": "Helena # REPS: 4",
+      "label": "answer",
+      "bbox": [
+        443,
+        432,
+        592,
+        444
+      ]
+    },
+    {
+      "text": "DIRECT ACCOUNTS AND CHAINS HEADQUARTERED WITHIN THE REGION (15 + STORES) STOCKING NO OLD GOLD MENTHOL LIGHTS OR ULTRA LIGHTS 100'S",
+      "label": "other",
+      "bbox": [
+        77,
+        499,
+        576,
+        528
+      ]
+    },
+    {
+      "text": "NAME OF ACCOUNT",
+      "label": "question",
+      "bbox": [
+        98,
+        570,
+        199,
+        584
+      ]
+    },
+    {
+      "text": "VOLUME",
+      "label": "question",
+      "bbox": [
+        243,
+        557,
+        286,
+        581
+      ]
+    },
+    {
+      "text": "NO. OF STORES",
+      "label": "question",
+      "bbox": [
+        328,
+        557,
+        370,
+        582
+      ]
+    },
+    {
+      "text": "NAME OF ACCOUNT",
+      "label": "question",
+      "bbox": [
+        411,
+        570,
+        509,
+        582
+      ]
+    },
+    {
+      "text": "VOLUME",
+      "label": "question",
+      "bbox": [
+        546,
+        557,
+        592,
+        581
+      ]
+    },
+    {
+      "text": "NO. OF STORES",
+      "label": "question",
+      "bbox": [
+        622,
+        556,
+        664,
+        583
+      ]
+    },
+    {
+      "text": "Texaco Seattle",
+      "label": "answer",
+      "bbox": [
+        77,
+        587,
+        154,
+        598
+      ]
+    },
+    {
+      "text": "Texaco Portland",
+      "label": "answer",
+      "bbox": [
+        77,
+        602,
+        162,
+        615
+      ]
+    },
+    {
+      "text": "Maid -O Clover",
+      "label": "answer",
+      "bbox": [
+        77,
+        617,
+        147,
+        630
+      ]
+    },
+    {
+      "text": "Dari Mart",
+      "label": "answer",
+      "bbox": [
+        77,
+        648,
+        123,
+        662
+      ]
+    },
+    {
+      "text": "Zip Trip",
+      "label": "answer",
+      "bbox": [
+        75,
+        663,
+        115,
+        678
+      ]
+    },
+    {
+      "text": "Maverick",
+      "label": "answer",
+      "bbox": [
+        75,
+        683,
+        120,
+        694
+      ]
+    },
+    {
+      "text": "Astro Gas",
+      "label": "answer",
+      "bbox": [
+        78,
+        698,
+        126,
+        709
+      ]
+    },
+    {
+      "text": "105 / 5",
+      "label": "answer",
+      "bbox": [
+        246,
+        585,
+        285,
+        598
+      ]
+    },
+    {
+      "text": "61 / 3",
+      "label": "answer",
+      "bbox": [
+        249,
+        603,
+        282,
+        614
+      ]
+    },
+    {
+      "text": "20 / 2",
+      "label": "answer",
+      "bbox": [
+        250,
+        617,
+        279,
+        628
+      ]
+    },
+    {
+      "text": "125 / 5",
+      "label": "answer",
+      "bbox": [
+        244,
+        648,
+        286,
+        662
+      ]
+    },
+    {
+      "text": "106 / 4",
+      "label": "answer",
+      "bbox": [
+        244,
+        665,
+        288,
+        679
+      ]
+    },
+    {
+      "text": "77 / 1",
+      "label": "answer",
+      "bbox": [
+        246,
+        680,
+        284,
+        696
+      ]
+    },
+    {
+      "text": "600 / 7",
+      "label": "answer",
+      "bbox": [
+        243,
+        696,
+        287,
+        710
+      ]
+    },
+    {
+      "text": "Page 1 of 3 Pages",
+      "label": "other",
+      "bbox": [
+        554,
+        908,
+        659,
+        923
+      ]
+    }
+  ]
+}

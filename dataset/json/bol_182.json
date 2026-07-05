@@ -1,0 +1,44 @@
+{
+  "template": "real_scan",
+  "category": "food_delivery",
+  "platform": "美团外卖",
+  "shop": "张不怂生烫牛肉米线(青安路店)",
+  "order_no": "2001619190594260328",
+  "order_time": "2025-05-29 10:37:16",
+  "delivery_time": "2025-05-29 12:30",
+  "customer": "邱先生",
+  "items": [
+    {
+      "name": "灵魂调料葱花+香菜+柴火糊辣椒",
+      "qty": 1,
+      "price": 3.0
+    },
+    {
+      "name": "开胃小菜",
+      "qty": 1,
+      "price": 3.0
+    },
+    {
+      "name": "经典生烫牛肉肉酱米线",
+      "qty": 1,
+      "price": 45.0
+    },
+    {
+      "name": "加米线",
+      "qty": 1,
+      "price": 3.0
+    },
+    {
+      "name": "网红现炸黄金蛋",
+      "qty": 1,
+      "price": 5.0
+    }
+  ],
+  "total_amount": 21.19,
+  "original_amount": 65.25,
+  "delivery_fee": 3.25,
+  "packing_fee": 3.0,
+  "discount": 41.06,
+  "note": "哥哥昨天晚上辛苦你啦...",
+  "payment": "在线支付"
+}

@@ -1,0 +1,1225 @@
+{
+  "template": "funsd_public",
+  "source": "82253362_3364",
+  "fields": {
+    "recipient": "K. A. Sparrow",
+    "sender": "J. L. McGinnis",
+    "subject": "MAVERICK SPECIALS MENTHOL - PROGRESS REPORT",
+    "full": "",
+    "partial": "",
+    "may_19_☐": "",
+    "jun_30_☐": "",
+    "aug_11_☐": "",
+    "sep_22": "☑",
+    "division_name": "",
+    "#_reps": "",
+    "name_of_account": "Walgreen's",
+    "ind__lor_volume": "",
+    "no._of_stores": "",
+    "name_of_accounts": ""
+  },
+  "field_details": {
+    "recipient": {
+      "value": "K. A. Sparrow",
+      "anchor": "TO",
+      "bbox": [
+        60,
+        88,
+        78,
+        102
+      ]
+    },
+    "sender": {
+      "value": "J. L. McGinnis",
+      "anchor": "FROM",
+      "bbox": [
+        59,
+        113,
+        91,
+        126
+      ]
+    },
+    "subject": {
+      "value": "MAVERICK SPECIALS MENTHOL - PROGRESS REPORT",
+      "anchor": "SUBJECT",
+      "bbox": [
+        59,
+        162,
+        106,
+        175
+      ]
+    },
+    "full": {
+      "value": "",
+      "anchor": "FULL",
+      "bbox": [
+        246,
+        263,
+        271,
+        276
+      ]
+    },
+    "partial": {
+      "value": "",
+      "anchor": "PARTIAL",
+      "bbox": [
+        448,
+        261,
+        490,
+        274
+      ]
+    },
+    "may_19_☐": {
+      "value": "",
+      "anchor": "MAY 19 ☐",
+      "bbox": [
+        412,
+        113,
+        474,
+        126
+      ]
+    },
+    "jun_30_☐": {
+      "value": "",
+      "anchor": "JUN 30 ☐",
+      "bbox": [
+        416,
+        138,
+        474,
+        151
+      ]
+    },
+    "aug_11_☐": {
+      "value": "",
+      "anchor": "AUG 11 ☐",
+      "bbox": [
+        536,
+        113,
+        594,
+        126
+      ]
+    },
+    "sep_22": {
+      "value": "☑",
+      "anchor": "SEP 22",
+      "bbox": [
+        538,
+        138,
+        572,
+        149
+      ]
+    },
+    "division_name": {
+      "value": "",
+      "anchor": "DIVISION NAME",
+      "bbox": [
+        247,
+        335,
+        321,
+        349
+      ]
+    },
+    "#_reps": {
+      "value": "",
+      "anchor": "# REPS",
+      "bbox": [
+        450,
+        335,
+        485,
+        350
+      ]
+    },
+    "name_of_account": {
+      "value": "Walgreen's",
+      "anchor": "NAME OF ACCOUNT",
+      "bbox": [
+        70,
+        649,
+        164,
+        660
+      ]
+    },
+    "ind__lor_volume": {
+      "value": "",
+      "anchor": "IND/ LOR VOLUME",
+      "bbox": [
+        458,
+        637,
+        503,
+        663
+      ]
+    },
+    "no._of_stores": {
+      "value": "",
+      "anchor": "NO. OF STORES",
+      "bbox": [
+        521,
+        637,
+        565,
+        663
+      ]
+    },
+    "name_of_accounts": {
+      "value": "",
+      "anchor": "NAME OF ACCOUNTS",
+      "bbox": [
+        342,
+        648,
+        431,
+        662
+      ]
+    }
+  },
+  "ocr_blocks": [
+    {
+      "text": "TO:",
+      "label": "question",
+      "bbox": [
+        60,
+        88,
+        78,
+        102
+      ]
+    },
+    {
+      "text": "FROM:",
+      "label": "question",
+      "bbox": [
+        59,
+        113,
+        91,
+        126
+      ]
+    },
+    {
+      "text": "SUBJECT:",
+      "label": "question",
+      "bbox": [
+        59,
+        162,
+        106,
+        175
+      ]
+    },
+    {
+      "text": "☑",
+      "label": "answer",
+      "bbox": [
+        571,
+        138,
+        595,
+        152
+      ]
+    },
+    {
+      "text": "GEOGRAPHY",
+      "label": "header",
+      "bbox": [
+        162,
+        187,
+        223,
+        198
+      ]
+    },
+    {
+      "text": "REGION:",
+      "label": "header",
+      "bbox": [
+        60,
+        214,
+        99,
+        224
+      ]
+    },
+    {
+      "text": "FULL",
+      "label": "question",
+      "bbox": [
+        246,
+        212,
+        271,
+        225
+      ]
+    },
+    {
+      "text": "X",
+      "label": "answer",
+      "bbox": [
+        282,
+        212,
+        293,
+        222
+      ]
+    },
+    {
+      "text": "DIVISION:",
+      "label": "header",
+      "bbox": [
+        59,
+        261,
+        104,
+        274
+      ]
+    },
+    {
+      "text": "FULL",
+      "label": "question",
+      "bbox": [
+        246,
+        263,
+        271,
+        276
+      ]
+    },
+    {
+      "text": "PARTIAL",
+      "label": "question",
+      "bbox": [
+        450,
+        209,
+        489,
+        224
+      ]
+    },
+    {
+      "text": "PARTIAL",
+      "label": "question",
+      "bbox": [
+        448,
+        261,
+        490,
+        274
+      ]
+    },
+    {
+      "text": "DISTRIBUTION",
+      "label": "header",
+      "bbox": [
+        159,
+        360,
+        226,
+        374
+      ]
+    },
+    {
+      "text": "20",
+      "label": "answer",
+      "bbox": [
+        278,
+        437,
+        292,
+        448
+      ]
+    },
+    {
+      "text": "15",
+      "label": "answer",
+      "bbox": [
+        279,
+        455,
+        292,
+        465
+      ]
+    },
+    {
+      "text": "29",
+      "label": "answer",
+      "bbox": [
+        281,
+        472,
+        291,
+        483
+      ]
+    },
+    {
+      "text": "44",
+      "label": "answer",
+      "bbox": [
+        281,
+        489,
+        294,
+        500
+      ]
+    },
+    {
+      "text": "17",
+      "label": "answer",
+      "bbox": [
+        279,
+        507,
+        290,
+        518
+      ]
+    },
+    {
+      "text": "34",
+      "label": "answer",
+      "bbox": [
+        281,
+        525,
+        294,
+        535
+      ]
+    },
+    {
+      "text": "15",
+      "label": "answer",
+      "bbox": [
+        281,
+        542,
+        294,
+        553
+      ]
+    },
+    {
+      "text": "20",
+      "label": "answer",
+      "bbox": [
+        279,
+        557,
+        292,
+        572
+      ]
+    },
+    {
+      "text": "22",
+      "label": "answer",
+      "bbox": [
+        279,
+        577,
+        292,
+        588
+      ]
+    },
+    {
+      "text": "27",
+      "label": "answer",
+      "bbox": [
+        536,
+        436,
+        549,
+        451
+      ]
+    },
+    {
+      "text": "15",
+      "label": "answer",
+      "bbox": [
+        536,
+        455,
+        550,
+        466
+      ]
+    },
+    {
+      "text": "37",
+      "label": "answer",
+      "bbox": [
+        535,
+        472,
+        550,
+        483
+      ]
+    },
+    {
+      "text": "Chevron",
+      "label": "answer",
+      "bbox": [
+        60,
+        666,
+        95,
+        679
+      ]
+    },
+    {
+      "text": "Exxon",
+      "label": "answer",
+      "bbox": [
+        59,
+        718,
+        86,
+        732
+      ]
+    },
+    {
+      "text": "Walgreen's",
+      "label": "answer",
+      "bbox": [
+        59,
+        770,
+        106,
+        783
+      ]
+    },
+    {
+      "text": "?",
+      "label": "answer",
+      "bbox": [
+        205,
+        666,
+        215,
+        676
+      ]
+    },
+    {
+      "text": "?",
+      "label": "answer",
+      "bbox": [
+        207,
+        682,
+        214,
+        696
+      ]
+    },
+    {
+      "text": "?",
+      "label": "answer",
+      "bbox": [
+        208,
+        700,
+        214,
+        713
+      ]
+    },
+    {
+      "text": "?",
+      "label": "answer",
+      "bbox": [
+        208,
+        718,
+        215,
+        732
+      ]
+    },
+    {
+      "text": "?",
+      "label": "answer",
+      "bbox": [
+        208,
+        737,
+        215,
+        748
+      ]
+    },
+    {
+      "text": "?",
+      "label": "answer",
+      "bbox": [
+        208,
+        754,
+        214,
+        768
+      ]
+    },
+    {
+      "text": "?",
+      "label": "answer",
+      "bbox": [
+        207,
+        772,
+        214,
+        782
+      ]
+    },
+    {
+      "text": "115",
+      "label": "answer",
+      "bbox": [
+        278,
+        666,
+        296,
+        679
+      ]
+    },
+    {
+      "text": "38",
+      "label": "answer",
+      "bbox": [
+        279,
+        684,
+        293,
+        695
+      ]
+    },
+    {
+      "text": "217",
+      "label": "answer",
+      "bbox": [
+        278,
+        703,
+        296,
+        714
+      ]
+    },
+    {
+      "text": "38",
+      "label": "answer",
+      "bbox": [
+        279,
+        719,
+        293,
+        730
+      ]
+    },
+    {
+      "text": "27",
+      "label": "answer",
+      "bbox": [
+        281,
+        737,
+        292,
+        748
+      ]
+    },
+    {
+      "text": "70",
+      "label": "answer",
+      "bbox": [
+        279,
+        754,
+        292,
+        765
+      ]
+    },
+    {
+      "text": "177",
+      "label": "answer",
+      "bbox": [
+        278,
+        771,
+        298,
+        784
+      ]
+    },
+    {
+      "text": "82253362",
+      "label": "other",
+      "bbox": [
+        694,
+        796,
+        712,
+        901
+      ]
+    },
+    {
+      "text": "MAVPROGO",
+      "label": "other",
+      "bbox": [
+        77,
+        926,
+        136,
+        940
+      ]
+    },
+    {
+      "text": "K. A. Sparrow",
+      "label": "answer",
+      "bbox": [
+        176,
+        89,
+        236,
+        102
+      ]
+    },
+    {
+      "text": "SUBMISSION DATE",
+      "label": "header",
+      "bbox": [
+        486,
+        89,
+        574,
+        101
+      ]
+    },
+    {
+      "text": "MAY 19 ☐",
+      "label": "question",
+      "bbox": [
+        412,
+        113,
+        474,
+        126
+      ]
+    },
+    {
+      "text": "JUN 30 ☐",
+      "label": "question",
+      "bbox": [
+        416,
+        138,
+        474,
+        151
+      ]
+    },
+    {
+      "text": "AUG 11 ☐",
+      "label": "question",
+      "bbox": [
+        536,
+        113,
+        594,
+        126
+      ]
+    },
+    {
+      "text": "SEP 22",
+      "label": "question",
+      "bbox": [
+        538,
+        138,
+        572,
+        149
+      ]
+    },
+    {
+      "text": "J. L. McGinnis",
+      "label": "answer",
+      "bbox": [
+        176,
+        112,
+        236,
+        126
+      ]
+    },
+    {
+      "text": "MAVERICK SPECIALS MENTHOL - PROGRESS REPORT",
+      "label": "answer",
+      "bbox": [
+        177,
+        162,
+        433,
+        175
+      ]
+    },
+    {
+      "text": "(ONLY IF PARTIAL REGION CONTINUE WITH DIVISION (S) SCOPE)",
+      "label": "other",
+      "bbox": [
+        59,
+        236,
+        352,
+        250
+      ]
+    },
+    {
+      "text": "DIVISION NAME:",
+      "label": "question",
+      "bbox": [
+        71,
+        286,
+        147,
+        297
+      ]
+    },
+    {
+      "text": "DIVISION NAME:",
+      "label": "question",
+      "bbox": [
+        73,
+        311,
+        147,
+        324
+      ]
+    },
+    {
+      "text": "DIVISION NAME:",
+      "label": "question",
+      "bbox": [
+        73,
+        337,
+        145,
+        348
+      ]
+    },
+    {
+      "text": "DIVISION NAME:",
+      "label": "question",
+      "bbox": [
+        247,
+        288,
+        322,
+        299
+      ]
+    },
+    {
+      "text": "DIVISION NAME:",
+      "label": "question",
+      "bbox": [
+        247,
+        310,
+        321,
+        323
+      ]
+    },
+    {
+      "text": "DIVISION NAME:",
+      "label": "question",
+      "bbox": [
+        247,
+        335,
+        321,
+        349
+      ]
+    },
+    {
+      "text": "# REPS",
+      "label": "question",
+      "bbox": [
+        447,
+        286,
+        484,
+        298
+      ]
+    },
+    {
+      "text": "# REPS",
+      "label": "question",
+      "bbox": [
+        447,
+        310,
+        483,
+        323
+      ]
+    },
+    {
+      "text": "# REPS",
+      "label": "question",
+      "bbox": [
+        450,
+        335,
+        485,
+        350
+      ]
+    },
+    {
+      "text": "DIRECT ACCOUNTS AND CHAINS HEADQUARTERED WITHIN THE REGION (15+ STORES) STOCKING NO MAVERICK SPECIALS MENTHOL",
+      "label": "other",
+      "bbox": [
+        59,
+        380,
+        399,
+        406
+      ]
+    },
+    {
+      "text": "NAME OF ACCOUNT",
+      "label": "question",
+      "bbox": [
+        70,
+        418,
+        164,
+        432
+      ]
+    },
+    {
+      "text": "IND/ LOR VOLUME",
+      "label": "question",
+      "bbox": [
+        190,
+        406,
+        231,
+        432
+      ]
+    },
+    {
+      "text": "NO. OF STORES",
+      "label": "question",
+      "bbox": [
+        253,
+        406,
+        293,
+        429
+      ]
+    },
+    {
+      "text": "NAME OF ACCOUNT",
+      "label": "question",
+      "bbox": [
+        342,
+        419,
+        432,
+        431
+      ]
+    },
+    {
+      "text": "IND/ LOR VOLUME",
+      "label": "question",
+      "bbox": [
+        461,
+        406,
+        503,
+        430
+      ]
+    },
+    {
+      "text": "NO. OF STORES",
+      "label": "question",
+      "bbox": [
+        522,
+        408,
+        563,
+        433
+      ]
+    },
+    {
+      "text": "Sac N Pac",
+      "label": "answer",
+      "bbox": [
+        327,
+        437,
+        370,
+        449
+      ]
+    },
+    {
+      "text": "ACO Texaco",
+      "label": "answer",
+      "bbox": [
+        328,
+        453,
+        380,
+        467
+      ]
+    },
+    {
+      "text": "Lone Star",
+      "label": "answer",
+      "bbox": [
+        325,
+        472,
+        366,
+        483
+      ]
+    },
+    {
+      "text": "75/ 2",
+      "label": "answer",
+      "bbox": [
+        472,
+        436,
+        492,
+        450
+      ]
+    },
+    {
+      "text": "95/ 3",
+      "label": "answer",
+      "bbox": [
+        472,
+        454,
+        492,
+        468
+      ]
+    },
+    {
+      "text": "76/ 3",
+      "label": "answer",
+      "bbox": [
+        469,
+        472,
+        491,
+        485
+      ]
+    },
+    {
+      "text": "26/ 2",
+      "label": "answer",
+      "bbox": [
+        201,
+        437,
+        220,
+        448
+      ]
+    },
+    {
+      "text": "42/ 2",
+      "label": "answer",
+      "bbox": [
+        200,
+        454,
+        221,
+        467
+      ]
+    },
+    {
+      "text": "106 /4",
+      "label": "answer",
+      "bbox": [
+        198,
+        472,
+        224,
+        483
+      ]
+    },
+    {
+      "text": "62/ 2",
+      "label": "answer",
+      "bbox": [
+        201,
+        489,
+        221,
+        502
+      ]
+    },
+    {
+      "text": "78/ 4",
+      "label": "answer",
+      "bbox": [
+        201,
+        506,
+        221,
+        519
+      ]
+    },
+    {
+      "text": "319/ 16",
+      "label": "answer",
+      "bbox": [
+        196,
+        522,
+        224,
+        537
+      ]
+    },
+    {
+      "text": "65/ 3",
+      "label": "answer",
+      "bbox": [
+        201,
+        542,
+        221,
+        553
+      ]
+    },
+    {
+      "text": "69/ 3",
+      "label": "answer",
+      "bbox": [
+        201,
+        559,
+        221,
+        572
+      ]
+    },
+    {
+      "text": "80/ 4",
+      "label": "answer",
+      "bbox": [
+        201,
+        577,
+        221,
+        590
+      ]
+    },
+    {
+      "text": "Shopper Mart",
+      "label": "answer",
+      "bbox": [
+        59,
+        575,
+        113,
+        589
+      ]
+    },
+    {
+      "text": "Neal One Stop",
+      "label": "answer",
+      "bbox": [
+        59,
+        559,
+        126,
+        570
+      ]
+    },
+    {
+      "text": "Mini Mart",
+      "label": "answer",
+      "bbox": [
+        59,
+        539,
+        97,
+        555
+      ]
+    },
+    {
+      "text": "Albertson's -Houston",
+      "label": "answer",
+      "bbox": [
+        59,
+        521,
+        147,
+        537
+      ]
+    },
+    {
+      "text": "Valley Shamrock",
+      "label": "answer",
+      "bbox": [
+        59,
+        506,
+        128,
+        520
+      ]
+    },
+    {
+      "text": "Get Go",
+      "label": "answer",
+      "bbox": [
+        59,
+        489,
+        101,
+        500
+      ]
+    },
+    {
+      "text": "Speedy Stop",
+      "label": "answer",
+      "bbox": [
+        59,
+        472,
+        112,
+        486
+      ]
+    },
+    {
+      "text": "Western Beverage",
+      "label": "answer",
+      "bbox": [
+        59,
+        453,
+        134,
+        466
+      ]
+    },
+    {
+      "text": "Don & Bens",
+      "label": "answer",
+      "bbox": [
+        59,
+        436,
+        112,
+        449
+      ]
+    },
+    {
+      "text": "DIRECT ACCOUNTS AND CHAINS HEADQUARTERED OUTSIDE THE REGION (15+ STORES) STOCKING NO MAVERICK SPECIALS MENTHOL",
+      "label": "other",
+      "bbox": [
+        59,
+        610,
+        406,
+        637
+      ]
+    },
+    {
+      "text": "NAME OF ACCOUNT",
+      "label": "question",
+      "bbox": [
+        70,
+        649,
+        164,
+        660
+      ]
+    },
+    {
+      "text": "IND/ LOR VOLUME",
+      "label": "question",
+      "bbox": [
+        190,
+        637,
+        236,
+        661
+      ]
+    },
+    {
+      "text": "NO. OF STORES",
+      "label": "question",
+      "bbox": [
+        270,
+        638,
+        311,
+        660
+      ]
+    },
+    {
+      "text": "NAME OF ACCOUNTS",
+      "label": "question",
+      "bbox": [
+        342,
+        648,
+        431,
+        662
+      ]
+    },
+    {
+      "text": "IND/ LOR VOLUME",
+      "label": "question",
+      "bbox": [
+        458,
+        637,
+        503,
+        663
+      ]
+    },
+    {
+      "text": "NO. OF STORES",
+      "label": "question",
+      "bbox": [
+        521,
+        637,
+        565,
+        663
+      ]
+    },
+    {
+      "text": "Brookshire Bro's",
+      "label": "answer",
+      "bbox": [
+        59,
+        684,
+        130,
+        697
+      ]
+    },
+    {
+      "text": "Eckerd Drugs S. Texas",
+      "label": "answer",
+      "bbox": [
+        57,
+        701,
+        159,
+        715
+      ]
+    },
+    {
+      "text": "Philip's 66",
+      "label": "answer",
+      "bbox": [
+        59,
+        736,
+        105,
+        749
+      ]
+    },
+    {
+      "text": "Star Enterprise",
+      "label": "answer",
+      "bbox": [
+        59,
+        754,
+        120,
+        767
+      ]
+    },
+    {
+      "text": "Page 1 of 3 Pages",
+      "label": "other",
+      "bbox": [
+        577,
+        925,
+        673,
+        942
+      ]
+    }
+  ]
+}

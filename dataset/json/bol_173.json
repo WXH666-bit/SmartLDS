@@ -1,0 +1,399 @@
+{
+  "template": "funsd_public",
+  "source": "86263525",
+  "fields": {
+    "date": "7 /25 /90",
+    "department_name": "SCIENCE & TECHNOLOGY",
+    "cost_center_number": "141",
+    "index_binders_consolidated_by": "N /A",
+    "index_binder_re-_labeled_by": "Mallery",
+    "retention_&_recommendation_file_reorganized_and_re-_labeled_by": "/A",
+    "records_retention_schedule_placed_in_index_binder_and_in_file_by": "Wayne Boughan",
+    "boxes_created_for_hard_copy_permanent_retention_records_by": "/A",
+    "records_transfer_inventory_forms_updated_by": "Wayne Baughan"
+  },
+  "field_details": {
+    "date": {
+      "value": "7 /25 /90",
+      "anchor": "DATE",
+      "bbox": [
+        468,
+        816,
+        509,
+        833
+      ]
+    },
+    "department_name": {
+      "value": "SCIENCE & TECHNOLOGY",
+      "anchor": "DEPARTMENT NAME",
+      "bbox": [
+        89,
+        135,
+        234,
+        153
+      ]
+    },
+    "cost_center_number": {
+      "value": "141",
+      "anchor": "COST CENTER NUMBER",
+      "bbox": [
+        95,
+        182,
+        261,
+        199
+      ]
+    },
+    "index_binders_consolidated_by": {
+      "value": "N /A",
+      "anchor": "INDEX BINDERS CONSOLIDATED BY",
+      "bbox": [
+        94,
+        240,
+        367,
+        259
+      ]
+    },
+    "index_binder_re-_labeled_by": {
+      "value": "Mallery",
+      "anchor": "INDEX BINDER RE- LABELED BY",
+      "bbox": [
+        95,
+        346,
+        340,
+        365
+      ]
+    },
+    "retention_&_recommendation_file_reorganized_and_re-_labeled_by": {
+      "value": "/A",
+      "anchor": "RETENTION & RECOMMENDATION FILE REORGANIZED AND RE- LABELED BY",
+      "bbox": [
+        96,
+        451,
+        658,
+        472
+      ]
+    },
+    "records_retention_schedule_placed_in_index_binder_and_in_file_by": {
+      "value": "Wayne Boughan",
+      "anchor": "RECORDS RETENTION SCHEDULE PLACED IN INDEX BINDER AND IN FILE BY",
+      "bbox": [
+        96,
+        559,
+        687,
+        579
+      ]
+    },
+    "boxes_created_for_hard_copy_permanent_retention_records_by": {
+      "value": "/A",
+      "anchor": "BOXES CREATED FOR HARD COPY PERMANENT RETENTION RECORDS BY",
+      "bbox": [
+        95,
+        663,
+        631,
+        685
+      ]
+    },
+    "records_transfer_inventory_forms_updated_by": {
+      "value": "Wayne Baughan",
+      "anchor": "RECORDS TRANSFER INVENTORY FORMS UPDATED BY",
+      "bbox": [
+        98,
+        770,
+        494,
+        792
+      ]
+    }
+  },
+  "ocr_blocks": [
+    {
+      "text": "DATE",
+      "label": "question",
+      "bbox": [
+        466,
+        288,
+        507,
+        306
+      ]
+    },
+    {
+      "text": "DATE",
+      "label": "question",
+      "bbox": [
+        469,
+        392,
+        510,
+        410
+      ]
+    },
+    {
+      "text": "DATE",
+      "label": "question",
+      "bbox": [
+        469,
+        499,
+        507,
+        514
+      ]
+    },
+    {
+      "text": "DATE",
+      "label": "question",
+      "bbox": [
+        468,
+        602,
+        509,
+        623
+      ]
+    },
+    {
+      "text": "DATE",
+      "label": "question",
+      "bbox": [
+        466,
+        708,
+        507,
+        728
+      ]
+    },
+    {
+      "text": "DATE",
+      "label": "question",
+      "bbox": [
+        468,
+        816,
+        509,
+        833
+      ]
+    },
+    {
+      "text": "141",
+      "label": "answer",
+      "bbox": [
+        359,
+        179,
+        390,
+        197
+      ]
+    },
+    {
+      "text": "N",
+      "label": "other",
+      "bbox": [
+        229,
+        499,
+        242,
+        513
+      ]
+    },
+    {
+      "text": "/A",
+      "label": "answer",
+      "bbox": [
+        242,
+        499,
+        264,
+        514
+      ]
+    },
+    {
+      "text": "N",
+      "label": "answer",
+      "bbox": [
+        230,
+        709,
+        244,
+        726
+      ]
+    },
+    {
+      "text": "/A",
+      "label": "answer",
+      "bbox": [
+        244,
+        711,
+        261,
+        728
+      ]
+    },
+    {
+      "text": "2051119008",
+      "label": "other",
+      "bbox": [
+        719,
+        764,
+        743,
+        904
+      ]
+    },
+    {
+      "text": "RECORDS RETENTION SCHEDULE RECONCILIATION RECORDS MANAGEMENT DEPARTMENT - M /C",
+      "label": "header",
+      "bbox": [
+        201,
+        45,
+        580,
+        91
+      ]
+    },
+    {
+      "text": "DEPARTMENT NAME",
+      "label": "question",
+      "bbox": [
+        89,
+        135,
+        234,
+        153
+      ]
+    },
+    {
+      "text": "SCIENCE & TECHNOLOGY",
+      "label": "answer",
+      "bbox": [
+        321,
+        133,
+        507,
+        153
+      ]
+    },
+    {
+      "text": "COST CENTER NUMBER",
+      "label": "question",
+      "bbox": [
+        95,
+        182,
+        261,
+        199
+      ]
+    },
+    {
+      "text": "INDEX BINDERS CONSOLIDATED BY:",
+      "label": "question",
+      "bbox": [
+        94,
+        240,
+        367,
+        259
+      ]
+    },
+    {
+      "text": "N /A",
+      "label": "answer",
+      "bbox": [
+        230,
+        286,
+        265,
+        305
+      ]
+    },
+    {
+      "text": "INDEX BINDER RE- LABELED BY:",
+      "label": "question",
+      "bbox": [
+        95,
+        346,
+        340,
+        365
+      ]
+    },
+    {
+      "text": "Mallery",
+      "label": "answer",
+      "bbox": [
+        106,
+        388,
+        283,
+        426
+      ]
+    },
+    {
+      "text": "2 /15 /90",
+      "label": "answer",
+      "bbox": [
+        557,
+        390,
+        623,
+        408
+      ]
+    },
+    {
+      "text": "RETENTION & RECOMMENDATION FILE REORGANIZED AND RE- LABELED BY:",
+      "label": "question",
+      "bbox": [
+        96,
+        451,
+        658,
+        472
+      ]
+    },
+    {
+      "text": "RECORDS RETENTION SCHEDULE PLACED IN INDEX BINDER AND IN FILE BY:",
+      "label": "question",
+      "bbox": [
+        96,
+        559,
+        687,
+        579
+      ]
+    },
+    {
+      "text": "Wayne Boughan",
+      "label": "answer",
+      "bbox": [
+        156,
+        591,
+        307,
+        640
+      ]
+    },
+    {
+      "text": "4 /18 /90",
+      "label": "answer",
+      "bbox": [
+        556,
+        602,
+        624,
+        620
+      ]
+    },
+    {
+      "text": "BOXES CREATED FOR HARD COPY PERMANENT RETENTION RECORDS BY:",
+      "label": "question",
+      "bbox": [
+        95,
+        663,
+        631,
+        685
+      ]
+    },
+    {
+      "text": "RECORDS TRANSFER INVENTORY FORMS UPDATED BY:",
+      "label": "question",
+      "bbox": [
+        98,
+        770,
+        494,
+        792
+      ]
+    },
+    {
+      "text": "Wayne Baughan",
+      "label": "answer",
+      "bbox": [
+        155,
+        799,
+        314,
+        853
+      ]
+    },
+    {
+      "text": "7 /25 /90",
+      "label": "answer",
+      "bbox": [
+        556,
+        814,
+        624,
+        834
+      ]
+    }
+  ]
+}

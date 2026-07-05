@@ -1,0 +1,1061 @@
+{
+  "template": "funsd_public",
+  "source": "91814768_91814769",
+  "fields": {
+    "ballot": "",
+    "*note": "If this expenditure is made to influence a local ballot question, a copy of this form should be filed with the city or town clerk or election commission.",
+    "19": "92",
+    "address": "P. O. Box 5979. Boston, MA 02114",
+    "date": "March 30, 1993",
+    "purpose": "Oppose Tax increas",
+    "final": "☑",
+    "file_with": "Director, Office of Campaign & Political Finance One Ashburton Place, Boston, MA 02108",
+    "☐_60th_day_prior_to_election": "",
+    "☐_5th_day_of_the_month": "",
+    "☐_20th_day_of_the_month": "",
+    "please_print_or_type,_except_signatures.": "",
+    "1._name_of_treasurer": "M. Alfred Peterson; Assistant Treasurer Peter J. Marzullo",
+    "2._name_of_corporation": "Lorillard Tobacco Company",
+    "3._address_of_corporation": "One Park Avenue New York. NY 10016 -5895",
+    "4._question_no.": "1 relating to Tobacco Excise Tax Increase",
+    "(describe_question_briefly)": "",
+    "submitted_to_the_voters_on": "1992",
+    "(election_date)": "",
+    "on_the": "Massachusetts",
+    "(name_of_city__town_of_state)*": "",
+    "fil_in_dates": "",
+    "reporting_period_beginning": "October 16,",
+    "and_ending": "November 5. 1992",
+    "signed_under_the_penalties_of_perjury.": "",
+    "date_paid": "10/ 30/ 92",
+    "to_whom_paid_(alphabetical_listing_mandatory)": "Committee Against Unfair Taxes",
+    "amount_or_value**": "19, 503 00",
+    "total_expenditures_or_disbursements_on_this_report": "48, 585 00",
+    "total_expenditures_for_disbursements_previously_reported": "508. 789 00",
+    "total_expenditures_or_disbursements_to_date": "556 874. 00"
+  },
+  "field_details": {
+    "ballot": {
+      "value": "",
+      "anchor": "BALLOT",
+      "bbox": [
+        697,
+        408,
+        732,
+        422
+      ]
+    },
+    "*note": {
+      "value": "If this expenditure is made to influence a local ballot question, a copy of this form should be filed with the city or town clerk or election commission.",
+      "anchor": "*NOTE",
+      "bbox": [
+        60,
+        459,
+        102,
+        473
+      ]
+    },
+    "19": {
+      "value": "92",
+      "anchor": "19",
+      "bbox": [
+        451,
+        490,
+        466,
+        508
+      ]
+    },
+    "address": {
+      "value": "P. O. Box 5979. Boston, MA 02114",
+      "anchor": "ADDRESS",
+      "bbox": [
+        444,
+        679,
+        490,
+        696
+      ]
+    },
+    "date": {
+      "value": "March 30, 1993",
+      "anchor": "DATE",
+      "bbox": [
+        480,
+        616,
+        509,
+        631
+      ]
+    },
+    "purpose": {
+      "value": "Oppose Tax increas",
+      "anchor": "PURPOSE",
+      "bbox": [
+        594,
+        677,
+        641,
+        692
+      ]
+    },
+    "final": {
+      "value": "☑",
+      "anchor": "FINAL",
+      "bbox": [
+        594,
+        239,
+        619,
+        250
+      ]
+    },
+    "file_with": {
+      "value": "Director, Office of Campaign & Political Finance One Ashburton Place, Boston, MA 02108",
+      "anchor": "FILE WITH",
+      "bbox": [
+        52,
+        172,
+        107,
+        192
+      ]
+    },
+    "☐_60th_day_prior_to_election": {
+      "value": "",
+      "anchor": "☐ 60TH DAY PRIOR TO ELECTION",
+      "bbox": [
+        580,
+        197,
+        710,
+        214
+      ]
+    },
+    "☐_5th_day_of_the_month": {
+      "value": "",
+      "anchor": "☐ 5TH DAY OF THE MONTH",
+      "bbox": [
+        581,
+        212,
+        691,
+        226
+      ]
+    },
+    "☐_20th_day_of_the_month": {
+      "value": "",
+      "anchor": "☐ 20TH DAY OF THE MONTH",
+      "bbox": [
+        578,
+        223,
+        697,
+        239
+      ]
+    },
+    "please_print_or_type,_except_signatures.": {
+      "value": "",
+      "anchor": "PLEASE PRINT OR TYPE, EXCEPT SIGNATURES.",
+      "bbox": [
+        82,
+        235,
+        300,
+        253
+      ]
+    },
+    "1._name_of_treasurer": {
+      "value": "M. Alfred Peterson; Assistant Treasurer Peter J. Marzullo",
+      "anchor": "1. NAME OF TREASURER",
+      "bbox": [
+        56,
+        270,
+        177,
+        288
+      ]
+    },
+    "2._name_of_corporation": {
+      "value": "Lorillard Tobacco Company",
+      "anchor": "2. NAME OF CORPORATION",
+      "bbox": [
+        53,
+        295,
+        190,
+        310
+      ]
+    },
+    "3._address_of_corporation": {
+      "value": "One Park Avenue New York. NY 10016 -5895",
+      "anchor": "3. ADDRESS OF CORPORATION",
+      "bbox": [
+        56,
+        318,
+        204,
+        336
+      ]
+    },
+    "4._question_no.": {
+      "value": "1 relating to Tobacco Excise Tax Increase",
+      "anchor": "4. QUESTION NO.",
+      "bbox": [
+        56,
+        373,
+        143,
+        393
+      ]
+    },
+    "(describe_question_briefly)": {
+      "value": "",
+      "anchor": "(DESCRIBE QUESTION BRIEFLY)",
+      "bbox": [
+        439,
+        384,
+        588,
+        399
+      ]
+    },
+    "submitted_to_the_voters_on": {
+      "value": "1992",
+      "anchor": "SUBMITTED TO THE VOTERS ON",
+      "bbox": [
+        56,
+        416,
+        201,
+        436
+      ]
+    },
+    "(election_date)": {
+      "value": "",
+      "anchor": "(ELECTION DATE)",
+      "bbox": [
+        226,
+        429,
+        316,
+        446
+      ]
+    },
+    "on_the": {
+      "value": "Massachusetts",
+      "anchor": "ON THE",
+      "bbox": [
+        334,
+        412,
+        368,
+        429
+      ]
+    },
+    "(name_of_city__town_of_state)*": {
+      "value": "",
+      "anchor": "(NAME OF CITY/ TOWN OF STATE)*",
+      "bbox": [
+        459,
+        423,
+        633,
+        446
+      ]
+    },
+    "fil_in_dates": {
+      "value": "",
+      "anchor": "FIL IN DATES",
+      "bbox": [
+        84,
+        497,
+        161,
+        517
+      ]
+    },
+    "reporting_period_beginning": {
+      "value": "October 16,",
+      "anchor": "REPORTING PERIOD BEGINNING",
+      "bbox": [
+        180,
+        497,
+        332,
+        515
+      ]
+    },
+    "and_ending": {
+      "value": "November 5. 1992",
+      "anchor": "AND ENDING",
+      "bbox": [
+        497,
+        490,
+        562,
+        509
+      ]
+    },
+    "signed_under_the_penalties_of_perjury.": {
+      "value": "",
+      "anchor": "SIGNED UNDER THE PENALTIES OF PERJURY.",
+      "bbox": [
+        60,
+        577,
+        262,
+        600
+      ]
+    },
+    "date_paid": {
+      "value": "10/ 30/ 92",
+      "anchor": "DATE PAID",
+      "bbox": [
+        84,
+        673,
+        114,
+        698
+      ]
+    },
+    "to_whom_paid_(alphabetical_listing_mandatory)": {
+      "value": "Committee Against Unfair Taxes",
+      "anchor": "TO WHOM PAID (ALPHABETICAL LISTING MANDATORY)",
+      "bbox": [
+        161,
+        669,
+        345,
+        699
+      ]
+    },
+    "amount_or_value**": {
+      "value": "19, 503 00",
+      "anchor": "AMOUNT OR VALUE**",
+      "bbox": [
+        666,
+        662,
+        729,
+        689
+      ]
+    },
+    "total_expenditures_or_disbursements_on_this_report": {
+      "value": "48, 585 00",
+      "anchor": "TOTAL EXPENDITURES OR DISBURSEMENTS ON THIS REPORT",
+      "bbox": [
+        398,
+        905,
+        660,
+        926
+      ]
+    },
+    "total_expenditures_for_disbursements_previously_reported": {
+      "value": "508. 789 00",
+      "anchor": "TOTAL EXPENDITURES FOR DISBURSEMENTS PREVIOUSLY REPORTED",
+      "bbox": [
+        373,
+        929,
+        660,
+        947
+      ]
+    },
+    "total_expenditures_or_disbursements_to_date": {
+      "value": "556 874. 00",
+      "anchor": "TOTAL EXPENDITURES OR DISBURSEMENTS TO DATE",
+      "bbox": [
+        437,
+        951,
+        663,
+        970
+      ]
+    }
+  },
+  "ocr_blocks": [
+    {
+      "text": "November",
+      "label": "answer",
+      "bbox": [
+        204,
+        409,
+        277,
+        424
+      ]
+    },
+    {
+      "text": "3,",
+      "label": "answer",
+      "bbox": [
+        285,
+        408,
+        302,
+        426
+      ]
+    },
+    {
+      "text": "1992",
+      "label": "answer",
+      "bbox": [
+        313,
+        406,
+        348,
+        424
+      ]
+    },
+    {
+      "text": "Massachusetts",
+      "label": "answer",
+      "bbox": [
+        392,
+        406,
+        509,
+        421
+      ]
+    },
+    {
+      "text": "ballot",
+      "label": "question",
+      "bbox": [
+        697,
+        408,
+        732,
+        422
+      ]
+    },
+    {
+      "text": "*Note:",
+      "label": "question",
+      "bbox": [
+        60,
+        459,
+        102,
+        473
+      ]
+    },
+    {
+      "text": "19",
+      "label": "question",
+      "bbox": [
+        451,
+        490,
+        466,
+        508
+      ]
+    },
+    {
+      "text": "92",
+      "label": "answer",
+      "bbox": [
+        472,
+        492,
+        493,
+        505
+      ]
+    },
+    {
+      "text": "Address",
+      "label": "question",
+      "bbox": [
+        444,
+        679,
+        490,
+        696
+      ]
+    },
+    {
+      "text": "Date",
+      "label": "question",
+      "bbox": [
+        480,
+        616,
+        509,
+        631
+      ]
+    },
+    {
+      "text": "Purpose",
+      "label": "question",
+      "bbox": [
+        594,
+        677,
+        641,
+        692
+      ]
+    },
+    {
+      "text": "91814768",
+      "label": "other",
+      "bbox": [
+        742,
+        765,
+        764,
+        842
+      ]
+    },
+    {
+      "text": "☑",
+      "label": "answer",
+      "bbox": [
+        580,
+        240,
+        593,
+        248
+      ]
+    },
+    {
+      "text": "Final",
+      "label": "question",
+      "bbox": [
+        594,
+        239,
+        619,
+        250
+      ]
+    },
+    {
+      "text": "\"CORRECTED FORM\" The Commonwealth of Massachusetts OFFICE OF CAMPAIGN AND POLITICAL FINANCE",
+      "label": "header",
+      "bbox": [
+        201,
+        29,
+        551,
+        112
+      ]
+    },
+    {
+      "text": "Office Use Only",
+      "label": "other",
+      "bbox": [
+        612,
+        50,
+        682,
+        64
+      ]
+    },
+    {
+      "text": "Form CPF 22 (formerly CPF 10)",
+      "label": "other",
+      "bbox": [
+        444,
+        140,
+        547,
+        171
+      ]
+    },
+    {
+      "text": "REPORT OF CORPORATE TREASURER",
+      "label": "header",
+      "bbox": [
+        99,
+        130,
+        267,
+        162
+      ]
+    },
+    {
+      "text": "File with:",
+      "label": "question",
+      "bbox": [
+        52,
+        172,
+        107,
+        192
+      ]
+    },
+    {
+      "text": "Director, Office of Campaign & Political Finance One Ashburton Place, Boston, MA 02108",
+      "label": "answer",
+      "bbox": [
+        110,
+        175,
+        338,
+        222
+      ]
+    },
+    {
+      "text": "☐ 60th Day Prior to Election",
+      "label": "question",
+      "bbox": [
+        580,
+        197,
+        710,
+        214
+      ]
+    },
+    {
+      "text": "☐ 5th Day of the Month",
+      "label": "question",
+      "bbox": [
+        581,
+        212,
+        691,
+        226
+      ]
+    },
+    {
+      "text": "☐ 20th Day of the Month",
+      "label": "question",
+      "bbox": [
+        578,
+        223,
+        697,
+        239
+      ]
+    },
+    {
+      "text": "(CHECK ONE)",
+      "label": "header",
+      "bbox": [
+        612,
+        182,
+        683,
+        196
+      ]
+    },
+    {
+      "text": "Please Print or Type, except Signatures.",
+      "label": "question",
+      "bbox": [
+        82,
+        235,
+        300,
+        253
+      ]
+    },
+    {
+      "text": "1. Name of Treasurer",
+      "label": "question",
+      "bbox": [
+        56,
+        270,
+        177,
+        288
+      ]
+    },
+    {
+      "text": "2. Name of Corporation",
+      "label": "question",
+      "bbox": [
+        53,
+        295,
+        190,
+        310
+      ]
+    },
+    {
+      "text": "3. Address of Corporation",
+      "label": "question",
+      "bbox": [
+        56,
+        318,
+        204,
+        336
+      ]
+    },
+    {
+      "text": "M. Alfred Peterson; Assistant Treasurer Peter J. Marzullo",
+      "label": "answer",
+      "bbox": [
+        177,
+        258,
+        710,
+        278
+      ]
+    },
+    {
+      "text": "Lorillard Tobacco Company",
+      "label": "answer",
+      "bbox": [
+        222,
+        284,
+        449,
+        305
+      ]
+    },
+    {
+      "text": "One Park Avenue New York. NY 10016 -5895",
+      "label": "answer",
+      "bbox": [
+        221,
+        310,
+        440,
+        352
+      ]
+    },
+    {
+      "text": "4. Question No.",
+      "label": "question",
+      "bbox": [
+        56,
+        373,
+        143,
+        393
+      ]
+    },
+    {
+      "text": "1 relating to Tobacco Excise Tax Increase",
+      "label": "answer",
+      "bbox": [
+        173,
+        366,
+        536,
+        389
+      ]
+    },
+    {
+      "text": "(Describe question briefly)",
+      "label": "question",
+      "bbox": [
+        439,
+        384,
+        588,
+        399
+      ]
+    },
+    {
+      "text": "submitted to the voters on",
+      "label": "question",
+      "bbox": [
+        56,
+        416,
+        201,
+        436
+      ]
+    },
+    {
+      "text": "(Election Date)",
+      "label": "question",
+      "bbox": [
+        226,
+        429,
+        316,
+        446
+      ]
+    },
+    {
+      "text": "on the",
+      "label": "question",
+      "bbox": [
+        334,
+        412,
+        368,
+        429
+      ]
+    },
+    {
+      "text": "(Name of City/ Town of State)*",
+      "label": "question",
+      "bbox": [
+        459,
+        423,
+        633,
+        446
+      ]
+    },
+    {
+      "text": "If this expenditure is made to influence a local ballot question, a copy of this form should be filed with the city or town clerk or election commission.",
+      "label": "answer",
+      "bbox": [
+        106,
+        448,
+        736,
+        488
+      ]
+    },
+    {
+      "text": "Fil in Dates:",
+      "label": "question",
+      "bbox": [
+        84,
+        497,
+        161,
+        517
+      ]
+    },
+    {
+      "text": "Reporting Period Beginning",
+      "label": "question",
+      "bbox": [
+        180,
+        497,
+        332,
+        515
+      ]
+    },
+    {
+      "text": "October 16,",
+      "label": "answer",
+      "bbox": [
+        341,
+        490,
+        437,
+        508
+      ]
+    },
+    {
+      "text": "and Ending",
+      "label": "question",
+      "bbox": [
+        497,
+        490,
+        562,
+        509
+      ]
+    },
+    {
+      "text": "November 5. 1992",
+      "label": "answer",
+      "bbox": [
+        564,
+        485,
+        710,
+        504
+      ]
+    },
+    {
+      "text": "contribution I certify that this report is a true statement of the amount of value of gift, payment, expenditure or or whom promise to give, pay,, expend or contribute, together with the date, purpose, and full name and address of the person to Mass. Laws, Section, as amended. It was made. I make this General report in accordance with the requirements of Chapter,",
+      "label": "other",
+      "bbox": [
+        56,
+        518,
+        739,
+        573
+      ]
+    },
+    {
+      "text": "Signed under the penalties of perjury.",
+      "label": "question",
+      "bbox": [
+        60,
+        577,
+        262,
+        600
+      ]
+    },
+    {
+      "text": "Preasurer Senato",
+      "label": "other",
+      "bbox": [
+        53,
+        591,
+        178,
+        643
+      ]
+    },
+    {
+      "text": "March 30, 1993",
+      "label": "answer",
+      "bbox": [
+        384,
+        596,
+        509,
+        613
+      ]
+    },
+    {
+      "text": "Assistant Treasurer",
+      "label": "other",
+      "bbox": [
+        60,
+        631,
+        235,
+        651
+      ]
+    },
+    {
+      "text": "Date Paid",
+      "label": "question",
+      "bbox": [
+        84,
+        673,
+        114,
+        698
+      ]
+    },
+    {
+      "text": "To Whom Paid (Alphabetical Listing Mandatory)",
+      "label": "question",
+      "bbox": [
+        161,
+        669,
+        345,
+        699
+      ]
+    },
+    {
+      "text": "EXPENDITURES OR DISBURSEMENTS",
+      "label": "header",
+      "bbox": [
+        275,
+        635,
+        520,
+        657
+      ]
+    },
+    {
+      "text": "Amount or Value**",
+      "label": "question",
+      "bbox": [
+        666,
+        662,
+        729,
+        689
+      ]
+    },
+    {
+      "text": "10/ 26/ 92",
+      "label": "answer",
+      "bbox": [
+        77,
+        712,
+        127,
+        726
+      ]
+    },
+    {
+      "text": "10/ 30/ 92",
+      "label": "answer",
+      "bbox": [
+        75,
+        729,
+        129,
+        745
+      ]
+    },
+    {
+      "text": "Committee Against Unfair Taxes",
+      "label": "answer",
+      "bbox": [
+        154,
+        709,
+        335,
+        724
+      ]
+    },
+    {
+      "text": "Committee Against Unfair Taxes",
+      "label": "answer",
+      "bbox": [
+        154,
+        729,
+        336,
+        745
+      ]
+    },
+    {
+      "text": "P. O. B03 5979 Boston, MA 0212",
+      "label": "answer",
+      "bbox": [
+        370,
+        703,
+        563,
+        717
+      ]
+    },
+    {
+      "text": "P. O. Box 5979. Boston, MA 02114",
+      "label": "answer",
+      "bbox": [
+        370,
+        726,
+        563,
+        742
+      ]
+    },
+    {
+      "text": "Oppose Tax Increase",
+      "label": "answer",
+      "bbox": [
+        581,
+        694,
+        655,
+        716
+      ]
+    },
+    {
+      "text": "Oppose Tax increas",
+      "label": "answer",
+      "bbox": [
+        581,
+        721,
+        651,
+        740
+      ]
+    },
+    {
+      "text": "28, 482. 00",
+      "label": "answer",
+      "bbox": [
+        676,
+        701,
+        738,
+        717
+      ]
+    },
+    {
+      "text": "19, 503 00",
+      "label": "answer",
+      "bbox": [
+        676,
+        721,
+        740,
+        736
+      ]
+    },
+    {
+      "text": "**In- kind contributions should be included here. Attach additional pages if necessary.",
+      "label": "other",
+      "bbox": [
+        67,
+        933,
+        307,
+        968
+      ]
+    },
+    {
+      "text": "REPORTING REQUIREMENTS CONTINUED ON REVERSE SIDE",
+      "label": "other",
+      "bbox": [
+        161,
+        983,
+        568,
+        1000
+      ]
+    },
+    {
+      "text": "Total Expenditures or Disbursements on This Report",
+      "label": "question",
+      "bbox": [
+        398,
+        905,
+        660,
+        926
+      ]
+    },
+    {
+      "text": "Total Expenditures for Disbursements Previously Reported",
+      "label": "question",
+      "bbox": [
+        373,
+        929,
+        660,
+        947
+      ]
+    },
+    {
+      "text": "Total Expenditures or Disbursements to Date",
+      "label": "question",
+      "bbox": [
+        437,
+        951,
+        663,
+        970
+      ]
+    },
+    {
+      "text": "48, 585 00",
+      "label": "answer",
+      "bbox": [
+        675,
+        899,
+        741,
+        916
+      ]
+    },
+    {
+      "text": "508. 789 00",
+      "label": "answer",
+      "bbox": [
+        672,
+        923,
+        742,
+        940
+      ]
+    },
+    {
+      "text": "556 874. 00",
+      "label": "answer",
+      "bbox": [
+        672,
+        944,
+        740,
+        961
+      ]
+    }
+  ]
+}

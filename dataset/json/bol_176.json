@@ -1,0 +1,683 @@
+{
+  "template": "funsd_public",
+  "source": "87147607",
+  "fields": {
+    "vendor": "Piedmont Research Laboratory 2748 Patterson Ave., Greensboro,",
+    "terms": "27407 NET 15 F. O. B. N/A VIA N/A",
+    "code": "",
+    "description": "This is your authorization to prepare cigarette smoke condensate according to the protocol \"Standard Operating Procedure før the Preparation of Smoke Condensate for Mouse Skin Bioassay,\" for the period April 1, 1988 through December 31, 1988. Condensate will be prepared acording to a time schedule provided by Lorillard. The fixed price for condensate collection will be at a rate of $1, 750/10, 000 cigarettes smoked. Piedmont will pay the cost of consumable supplies. This work is to be conducted in accordance with the December 10, 1984 formal agreement between Piedmont Reseach Laboratories and Lorillard. All work is to be coordinated with our Mr. Neil Thaggard (919) 373-6628",
+    "quantity": "",
+    "nc": "",
+    "date": "April 19, 1988",
+    "prev.": "or Recommended Supplier",
+    "unit": "",
+    "price": "",
+    "☐_purchasing": "",
+    "☐_stationary": "",
+    "order_no": "",
+    "date_wanted": "As required",
+    "ship_to_(dept_branch)": "N. A. Thaggard",
+    "420_english_st.,_greensboro,_nc_27405": "",
+    "follow_up_date": "",
+    "budget_no.": "",
+    "requisition_no.": "",
+    "issued_by": "",
+    "approved_by": "",
+    "dept._no.": "8700",
+    "acct._no.": "4111"
+  },
+  "field_details": {
+    "vendor": {
+      "value": "Piedmont Research Laboratory 2748 Patterson Ave., Greensboro,",
+      "anchor": "VENDOR",
+      "bbox": [
+        41,
+        73,
+        84,
+        84
+      ]
+    },
+    "terms": {
+      "value": "27407 NET 15 F. O. B. N/A VIA N/A",
+      "anchor": "TERMS",
+      "bbox": [
+        70,
+        117,
+        102,
+        128
+      ]
+    },
+    "code": {
+      "value": "",
+      "anchor": "CODE",
+      "bbox": [
+        155,
+        197,
+        184,
+        211
+      ]
+    },
+    "description": {
+      "value": "This is your authorization to prepare cigarette smoke condensate according to the protocol \"Standard Operating Procedure før the Preparation of Smoke Condensate for Mouse Skin Bioassay,\" for the period April 1, 1988 through December 31, 1988. Condensate will be prepared acording to a time schedule provided by Lorillard. The fixed price for condensate collection will be at a rate of $1, 750/10, 000 cigarettes smoked. Piedmont will pay the cost of consumable supplies. This work is to be conducted in accordance with the December 10, 1984 formal agreement between Piedmont Reseach Laboratories and Lorillard. All work is to be coordinated with our Mr. Neil Thaggard (919) 373-6628",
+      "anchor": "DESCRIPTION",
+      "bbox": [
+        373,
+        200,
+        441,
+        214
+      ]
+    },
+    "quantity": {
+      "value": "",
+      "anchor": "QUANTITY",
+      "bbox": [
+        47,
+        197,
+        101,
+        212
+      ]
+    },
+    "nc": {
+      "value": "",
+      "anchor": "NC",
+      "bbox": [
+        561,
+        89,
+        582,
+        103
+      ]
+    },
+    "date": {
+      "value": "April 19, 1988",
+      "anchor": "DATE",
+      "bbox": [
+        575,
+        39,
+        603,
+        50
+      ]
+    },
+    "prev.": {
+      "value": "or Recommended Supplier",
+      "anchor": "PREV.",
+      "bbox": [
+        571,
+        108,
+        596,
+        118
+      ]
+    },
+    "unit": {
+      "value": "",
+      "anchor": "UNIT",
+      "bbox": [
+        641,
+        201,
+        668,
+        214
+      ]
+    },
+    "price": {
+      "value": "",
+      "anchor": "PRICE",
+      "bbox": [
+        670,
+        203,
+        701,
+        216
+      ]
+    },
+    "☐_purchasing": {
+      "value": "",
+      "anchor": "☐ PURCHASING",
+      "bbox": [
+        59,
+        42,
+        140,
+        53
+      ]
+    },
+    "☐_stationary": {
+      "value": "",
+      "anchor": "☐ STATIONARY",
+      "bbox": [
+        60,
+        56,
+        140,
+        68
+      ]
+    },
+    "order_no": {
+      "value": "",
+      "anchor": "ORDER NO",
+      "bbox": [
+        574,
+        78,
+        630,
+        88
+      ]
+    },
+    "date_wanted": {
+      "value": "As required",
+      "anchor": "DATE WANTED",
+      "bbox": [
+        503,
+        134,
+        577,
+        145
+      ]
+    },
+    "ship_to_(dept_branch)": {
+      "value": "N. A. Thaggard",
+      "anchor": "SHIP TO (DEPT BRANCH)",
+      "bbox": [
+        42,
+        131,
+        165,
+        143
+      ]
+    },
+    "420_english_st.,_greensboro,_nc_27405": {
+      "value": "",
+      "anchor": "420 ENGLISH ST., GREENSBORO, NC 27405",
+      "bbox": [
+        43,
+        168,
+        359,
+        186
+      ]
+    },
+    "follow_up_date": {
+      "value": "",
+      "anchor": "FOLLOW UP DATE",
+      "bbox": [
+        105,
+        679,
+        197,
+        693
+      ]
+    },
+    "budget_no.": {
+      "value": "",
+      "anchor": "BUDGET NO.",
+      "bbox": [
+        120,
+        730,
+        182,
+        745
+      ]
+    },
+    "requisition_no.": {
+      "value": "",
+      "anchor": "REQUISITION NO.",
+      "bbox": [
+        338,
+        682,
+        425,
+        693
+      ]
+    },
+    "issued_by": {
+      "value": "",
+      "anchor": "ISSUED BY",
+      "bbox": [
+        578,
+        683,
+        632,
+        696
+      ]
+    },
+    "approved_by": {
+      "value": "",
+      "anchor": "APPROVED BY",
+      "bbox": [
+        571,
+        735,
+        644,
+        749
+      ]
+    },
+    "dept._no.": {
+      "value": "8700",
+      "anchor": "DEPT. NO.",
+      "bbox": [
+        411,
+        732,
+        462,
+        747
+      ]
+    },
+    "acct._no.": {
+      "value": "4111",
+      "anchor": "ACCT. NO.",
+      "bbox": [
+        295,
+        733,
+        350,
+        746
+      ]
+    }
+  },
+  "ocr_blocks": [
+    {
+      "text": "VENDOR",
+      "label": "question",
+      "bbox": [
+        41,
+        73,
+        84,
+        84
+      ]
+    },
+    {
+      "text": "TERMS",
+      "label": "question",
+      "bbox": [
+        70,
+        117,
+        102,
+        128
+      ]
+    },
+    {
+      "text": "CODE",
+      "label": "question",
+      "bbox": [
+        155,
+        197,
+        184,
+        211
+      ]
+    },
+    {
+      "text": "DESCRIPTION",
+      "label": "question",
+      "bbox": [
+        373,
+        200,
+        441,
+        214
+      ]
+    },
+    {
+      "text": "QUANTITY",
+      "label": "question",
+      "bbox": [
+        47,
+        197,
+        101,
+        212
+      ]
+    },
+    {
+      "text": "DEPARTMENT",
+      "label": "other",
+      "bbox": [
+        296,
+        75,
+        364,
+        85
+      ]
+    },
+    {
+      "text": "USE",
+      "label": "other",
+      "bbox": [
+        366,
+        77,
+        387,
+        87
+      ]
+    },
+    {
+      "text": "ONLY",
+      "label": "other",
+      "bbox": [
+        385,
+        77,
+        416,
+        87
+      ]
+    },
+    {
+      "text": "NC",
+      "label": "question",
+      "bbox": [
+        561,
+        89,
+        582,
+        103
+      ]
+    },
+    {
+      "text": "DATE",
+      "label": "question",
+      "bbox": [
+        575,
+        39,
+        603,
+        50
+      ]
+    },
+    {
+      "text": "Prev.",
+      "label": "question",
+      "bbox": [
+        571,
+        108,
+        596,
+        118
+      ]
+    },
+    {
+      "text": "UNIT",
+      "label": "question",
+      "bbox": [
+        641,
+        201,
+        668,
+        214
+      ]
+    },
+    {
+      "text": "PRICE",
+      "label": "question",
+      "bbox": [
+        670,
+        203,
+        701,
+        216
+      ]
+    },
+    {
+      "text": "4111",
+      "label": "answer",
+      "bbox": [
+        296,
+        754,
+        334,
+        768
+      ]
+    },
+    {
+      "text": "8700",
+      "label": "answer",
+      "bbox": [
+        436,
+        757,
+        470,
+        768
+      ]
+    },
+    {
+      "text": "87147607",
+      "label": "other",
+      "bbox": [
+        627,
+        785,
+        645,
+        874
+      ]
+    },
+    {
+      "text": "FOR",
+      "label": "other",
+      "bbox": [
+        207,
+        75,
+        228,
+        83
+      ]
+    },
+    {
+      "text": "PURCHASING",
+      "label": "other",
+      "bbox": [
+        228,
+        75,
+        295,
+        85
+      ]
+    },
+    {
+      "text": "☐ PURCHASING",
+      "label": "question",
+      "bbox": [
+        59,
+        42,
+        140,
+        53
+      ]
+    },
+    {
+      "text": "☐ STATIONARY",
+      "label": "question",
+      "bbox": [
+        60,
+        56,
+        140,
+        68
+      ]
+    },
+    {
+      "text": "PURCHASE REQUISITION",
+      "label": "header",
+      "bbox": [
+        265,
+        45,
+        428,
+        57
+      ]
+    },
+    {
+      "text": "PLEASE INCLUDE ONLY ONE TYPE OF MATERIAL ON THIS REQUISITION",
+      "label": "other",
+      "bbox": [
+        182,
+        59,
+        531,
+        73
+      ]
+    },
+    {
+      "text": "P. O. 1534 LT-1979",
+      "label": "other",
+      "bbox": [
+        472,
+        36,
+        569,
+        55
+      ]
+    },
+    {
+      "text": "April 19, 1988",
+      "label": "answer",
+      "bbox": [
+        581,
+        56,
+        701,
+        71
+      ]
+    },
+    {
+      "text": "Piedmont Research Laboratory 2748 Patterson Ave., Greensboro,",
+      "label": "answer",
+      "bbox": [
+        46,
+        84,
+        563,
+        103
+      ]
+    },
+    {
+      "text": "ORDER NO",
+      "label": "question",
+      "bbox": [
+        574,
+        78,
+        630,
+        88
+      ]
+    },
+    {
+      "text": "or Recommended Supplier",
+      "label": "answer",
+      "bbox": [
+        598,
+        106,
+        711,
+        119
+      ]
+    },
+    {
+      "text": "Lorillard Research Center",
+      "label": "answer",
+      "bbox": [
+        43,
+        140,
+        257,
+        156
+      ]
+    },
+    {
+      "text": "N. A. Thaggard",
+      "label": "answer",
+      "bbox": [
+        338,
+        144,
+        462,
+        159
+      ]
+    },
+    {
+      "text": "As required",
+      "label": "answer",
+      "bbox": [
+        545,
+        147,
+        641,
+        161
+      ]
+    },
+    {
+      "text": "DATE WANTED",
+      "label": "question",
+      "bbox": [
+        503,
+        134,
+        577,
+        145
+      ]
+    },
+    {
+      "text": "SHIP TO (DEPT BRANCH)",
+      "label": "question",
+      "bbox": [
+        42,
+        131,
+        165,
+        143
+      ]
+    },
+    {
+      "text": "27407 NET 15 F. O. B. N/A VIA N/A",
+      "label": "answer",
+      "bbox": [
+        140,
+        105,
+        539,
+        133
+      ]
+    },
+    {
+      "text": "420 English St., Greensboro, NC 27405",
+      "label": "question",
+      "bbox": [
+        43,
+        168,
+        359,
+        186
+      ]
+    },
+    {
+      "text": "This is your authorization to prepare cigarette smoke condensate according to the protocol \"Standard Operating Procedure før the Preparation of Smoke Condensate for Mouse Skin Bioassay,\" for the period April 1, 1988 through December 31, 1988. Condensate will be prepared acording to a time schedule provided by Lorillard. The fixed price for condensate collection will be at a rate of $1, 750/10, 000 cigarettes smoked. Piedmont will pay the cost of consumable supplies. This work is to be conducted in accordance with the December 10, 1984 formal agreement between Piedmont Reseach Laboratories and Lorillard. All work is to be coordinated with our Mr. Neil Thaggard (919) 373-6628",
+      "label": "answer",
+      "bbox": [
+        123,
+        225,
+        705,
+        528
+      ]
+    },
+    {
+      "text": "FOLLOW UP DATE",
+      "label": "question",
+      "bbox": [
+        105,
+        679,
+        197,
+        693
+      ]
+    },
+    {
+      "text": "BUDGET NO.",
+      "label": "question",
+      "bbox": [
+        120,
+        730,
+        182,
+        745
+      ]
+    },
+    {
+      "text": "REQUISITION NO.",
+      "label": "question",
+      "bbox": [
+        338,
+        682,
+        425,
+        693
+      ]
+    },
+    {
+      "text": "ISSUED BY",
+      "label": "question",
+      "bbox": [
+        578,
+        683,
+        632,
+        696
+      ]
+    },
+    {
+      "text": "APPROVED BY",
+      "label": "question",
+      "bbox": [
+        571,
+        735,
+        644,
+        749
+      ]
+    },
+    {
+      "text": "DEPT. NO.",
+      "label": "question",
+      "bbox": [
+        411,
+        732,
+        462,
+        747
+      ]
+    },
+    {
+      "text": "ACCT. NO.",
+      "label": "question",
+      "bbox": [
+        295,
+        733,
+        350,
+        746
+      ]
+    }
+  ]
+}

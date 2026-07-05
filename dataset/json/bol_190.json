@@ -1,0 +1,15 @@
+{
+  "template": "real_scan",
+  "category": "express",
+  "courier": "中通快递",
+  "tracking_no": "78943137685262",
+  "sender": "徐磊",
+  "sender_phone": "18434910573",
+  "sender_addr": "安徽省阜阳市颍东开发区徽清科技园B4栋",
+  "recipient": "魏怡",
+  "recipient_phone": "18445786574转7198",
+  "recipient_addr": "辽宁省大连市金州区图强街321号大连理工大学开发区校区生活区",
+  "item": "药品/红包卡片",
+  "print_time": "2025/09/26 16:22:48",
+  "service_line": "95311"
+}

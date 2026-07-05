@@ -1,0 +1,461 @@
+{
+  "template": "funsd_public",
+  "source": "83443897",
+  "fields": {
+    "date": "January 11, 1999",
+    "company": "Lorillard Tobacco Company",
+    "phone": "202/ 828- 2259 and 202/ 828 2241",
+    "sender": "Andy Zausner and Rob Mangas",
+    "message": "JAN 1 2 1999",
+    "yes": "",
+    "no": "X",
+    "client_no.": "L8557 002",
+    "message_to": "Dewey Tedder",
+    "fax_number": "336/ 373- 6917",
+    "pages_(including_cover_sheet)": "2"
+  },
+  "field_details": {
+    "date": {
+      "value": "January 11, 1999",
+      "anchor": "DATE",
+      "bbox": [
+        91,
+        223,
+        127,
+        238
+      ]
+    },
+    "company": {
+      "value": "Lorillard Tobacco Company",
+      "anchor": "COMPANY",
+      "bbox": [
+        89,
+        313,
+        153,
+        330
+      ]
+    },
+    "phone": {
+      "value": "202/ 828- 2259 and 202/ 828 2241",
+      "anchor": "PHONE",
+      "bbox": [
+        91,
+        432,
+        136,
+        446
+      ]
+    },
+    "sender": {
+      "value": "Andy Zausner and Rob Mangas",
+      "anchor": "FROM",
+      "bbox": [
+        88,
+        402,
+        129,
+        417
+      ]
+    },
+    "message": {
+      "value": "JAN 1 2 1999",
+      "anchor": "MESSAGE",
+      "bbox": [
+        87,
+        483,
+        150,
+        497
+      ]
+    },
+    "yes": {
+      "value": "",
+      "anchor": "YES",
+      "bbox": [
+        486,
+        461,
+        513,
+        475
+      ]
+    },
+    "no": {
+      "value": "X",
+      "anchor": "NO",
+      "bbox": [
+        571,
+        462,
+        592,
+        475
+      ]
+    },
+    "client_no.": {
+      "value": "L8557 002",
+      "anchor": "CLIENT NO.",
+      "bbox": [
+        89,
+        250,
+        162,
+        265
+      ]
+    },
+    "message_to": {
+      "value": "Dewey Tedder",
+      "anchor": "MESSAGE TO",
+      "bbox": [
+        89,
+        285,
+        171,
+        303
+      ]
+    },
+    "fax_number": {
+      "value": "336/ 373- 6917",
+      "anchor": "FAX NUMBER",
+      "bbox": [
+        89,
+        342,
+        171,
+        357
+      ]
+    },
+    "pages_(including_cover_sheet)": {
+      "value": "2",
+      "anchor": "PAGES (INCLUDING COVER SHEET)",
+      "bbox": [
+        88,
+        459,
+        264,
+        475
+      ]
+    }
+  },
+  "ocr_blocks": [
+    {
+      "text": "DATE:",
+      "label": "question",
+      "bbox": [
+        91,
+        223,
+        127,
+        238
+      ]
+    },
+    {
+      "text": "COMPANY:",
+      "label": "question",
+      "bbox": [
+        89,
+        313,
+        153,
+        330
+      ]
+    },
+    {
+      "text": "PHONE:",
+      "label": "question",
+      "bbox": [
+        91,
+        366,
+        134,
+        384
+      ]
+    },
+    {
+      "text": "FROM:",
+      "label": "question",
+      "bbox": [
+        88,
+        402,
+        129,
+        417
+      ]
+    },
+    {
+      "text": "PHONE:",
+      "label": "question",
+      "bbox": [
+        91,
+        432,
+        136,
+        446
+      ]
+    },
+    {
+      "text": "MESSAGE:",
+      "label": "question",
+      "bbox": [
+        87,
+        483,
+        150,
+        497
+      ]
+    },
+    {
+      "text": "YES",
+      "label": "question",
+      "bbox": [
+        486,
+        461,
+        513,
+        475
+      ]
+    },
+    {
+      "text": "NO",
+      "label": "question",
+      "bbox": [
+        571,
+        462,
+        592,
+        475
+      ]
+    },
+    {
+      "text": "2",
+      "label": "answer",
+      "bbox": [
+        278,
+        459,
+        292,
+        472
+      ]
+    },
+    {
+      "text": "X",
+      "label": "answer",
+      "bbox": [
+        547,
+        461,
+        562,
+        475
+      ]
+    },
+    {
+      "text": "83443897",
+      "label": "other",
+      "bbox": [
+        670,
+        782,
+        694,
+        891
+      ]
+    },
+    {
+      "text": "JAN 11 '99 16: 29 FR 8220",
+      "label": "other",
+      "bbox": [
+        89,
+        63,
+        248,
+        78
+      ]
+    },
+    {
+      "text": "TO 3212128557HC02N P. 01",
+      "label": "other",
+      "bbox": [
+        434,
+        60,
+        588,
+        74
+      ]
+    },
+    {
+      "text": "DICKSTEIN SHAPIRO MORING OSHINSKY",
+      "label": "other",
+      "bbox": [
+        511,
+        126,
+        591,
+        208
+      ]
+    },
+    {
+      "text": "FAX TRANSMISSION",
+      "label": "header",
+      "bbox": [
+        94,
+        108,
+        315,
+        131
+      ]
+    },
+    {
+      "text": "January 11, 1999",
+      "label": "answer",
+      "bbox": [
+        177,
+        221,
+        282,
+        240
+      ]
+    },
+    {
+      "text": "L8557 002",
+      "label": "answer",
+      "bbox": [
+        179,
+        249,
+        247,
+        266
+      ]
+    },
+    {
+      "text": "Dewey Tedder",
+      "label": "answer",
+      "bbox": [
+        179,
+        284,
+        268,
+        304
+      ]
+    },
+    {
+      "text": "Lorillard Tobacco Company",
+      "label": "answer",
+      "bbox": [
+        179,
+        311,
+        343,
+        331
+      ]
+    },
+    {
+      "text": "336/ 373- 6917",
+      "label": "answer",
+      "bbox": [
+        179,
+        339,
+        270,
+        357
+      ]
+    },
+    {
+      "text": "336/ 373- 6750",
+      "label": "answer",
+      "bbox": [
+        177,
+        367,
+        270,
+        385
+      ]
+    },
+    {
+      "text": "Andy Zausner and Rob Mangas",
+      "label": "answer",
+      "bbox": [
+        175,
+        402,
+        361,
+        421
+      ]
+    },
+    {
+      "text": "202/ 828- 2259 and 202/ 828 2241",
+      "label": "answer",
+      "bbox": [
+        175,
+        430,
+        380,
+        448
+      ]
+    },
+    {
+      "text": "CLIENT NO.:",
+      "label": "question",
+      "bbox": [
+        89,
+        250,
+        162,
+        265
+      ]
+    },
+    {
+      "text": "MESSAGE TO:",
+      "label": "question",
+      "bbox": [
+        89,
+        285,
+        171,
+        303
+      ]
+    },
+    {
+      "text": "FAX NUMBER:",
+      "label": "question",
+      "bbox": [
+        89,
+        342,
+        171,
+        357
+      ]
+    },
+    {
+      "text": "PAGES (including Cover Sheet):",
+      "label": "question",
+      "bbox": [
+        88,
+        459,
+        264,
+        475
+      ]
+    },
+    {
+      "text": "HARD COPY TO FOLLOW",
+      "label": "header",
+      "bbox": [
+        307,
+        461,
+        451,
+        475
+      ]
+    },
+    {
+      "text": "JAN 1 2 1999",
+      "label": "answer",
+      "bbox": [
+        451,
+        567,
+        526,
+        585
+      ]
+    },
+    {
+      "text": "The following is for your review",
+      "label": "answer",
+      "bbox": [
+        156,
+        485,
+        331,
+        502
+      ]
+    },
+    {
+      "text": "If your receipt of this transmission is in error, please notify this firm immediately by collect call to our Facsimile Department at 202- 861- 9106, and send the original transmission to us by return mail at the address below.",
+      "label": "other",
+      "bbox": [
+        154,
+        700,
+        591,
+        747
+      ]
+    },
+    {
+      "text": "This transmission is intended for the sole use of the individual and entity to whom it is addressed, and may contain information that is privileged, confidential and exempt from disclosure under applicable law. You are hereby notified that any dissemination, distribution or duplication of this transmission by someone other than the intended addressee or its designated agent is strictly prohibited.",
+      "label": "other",
+      "bbox": [
+        154,
+        757,
+        601,
+        810
+      ]
+    },
+    {
+      "text": "2101 L Street NW Washington, DC 20037- 1526 Tel 202- 785 9700 Fax 202- 887 0689",
+      "label": "other",
+      "bbox": [
+        144,
+        923,
+        555,
+        938
+      ]
+    }
+  ]
+}

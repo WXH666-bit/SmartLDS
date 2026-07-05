@@ -1,0 +1,674 @@
+{
+  "template": "funsd_public",
+  "source": "83553333_3334",
+  "fields": {
+    "sender": "Charles Duggan",
+    "date": "1999",
+    "recipient": "Michael P. Thornton",
+    "reference": "17555 002",
+    "message": "",
+    "fax_transmittal": "450 Lexington Avenue New York, NY 10017 212- 450- 4000",
+    "number_of_pages_(this_page_included)": "6",
+    "sender_voice_number": "212- 450- 4785",
+    "if_problems_receiving_this_fax,_call": "212- 450- 4785",
+    "sender_fax_number": "212- 450- 3785",
+    "fax_number": "617- 720- 2445",
+    "company": "Thomton, Early & Naumes",
+    "recipient_phone_number": "617- 720- 1333",
+    "confidentiality_note": "of otherwis protected from disclosos. Disscnlation, distribution popying of the facile the information herein by anyone other than the poupil, waployee responsible for delivering the message the prohibited. You thisfacsimile in error please notify as immediately by telephone and return the facsimile by mail."
+  },
+  "field_details": {
+    "sender": {
+      "value": "Charles Duggan",
+      "anchor": "SENDER",
+      "bbox": [
+        253,
+        154,
+        294,
+        169
+      ]
+    },
+    "date": {
+      "value": "1999",
+      "anchor": "DATE",
+      "bbox": [
+        253,
+        194,
+        281,
+        207
+      ]
+    },
+    "recipient": {
+      "value": "Michael P. Thornton",
+      "anchor": "TO",
+      "bbox": [
+        46,
+        325,
+        61,
+        339
+      ]
+    },
+    "reference": {
+      "value": "17555 002",
+      "anchor": "REFERENCE",
+      "bbox": [
+        465,
+        268,
+        521,
+        281
+      ]
+    },
+    "message": {
+      "value": "",
+      "anchor": "MESSAGE",
+      "bbox": [
+        45,
+        640,
+        99,
+        657
+      ]
+    },
+    "fax_transmittal": {
+      "value": "450 Lexington Avenue New York, NY 10017 212- 450- 4000",
+      "anchor": "FAX TRANSMITTAL",
+      "bbox": [
+        43,
+        156,
+        134,
+        173
+      ]
+    },
+    "number_of_pages_(this_page_included)": {
+      "value": "6",
+      "anchor": "NUMBER OF PAGES (THIS PAGE INCLUDED)",
+      "bbox": [
+        465,
+        190,
+        665,
+        207
+      ]
+    },
+    "sender_voice_number": {
+      "value": "212- 450- 4785",
+      "anchor": "SENDER VOICE NUMBER",
+      "bbox": [
+        254,
+        229,
+        373,
+        246
+      ]
+    },
+    "if_problems_receiving_this_fax,_call": {
+      "value": "212- 450- 4785",
+      "anchor": "IF PROBLEMS RECEIVING THIS FAX, CALL",
+      "bbox": [
+        464,
+        228,
+        648,
+        244
+      ]
+    },
+    "sender_fax_number": {
+      "value": "212- 450- 3785",
+      "anchor": "SENDER FAX NUMBER",
+      "bbox": [
+        256,
+        270,
+        363,
+        284
+      ]
+    },
+    "fax_number": {
+      "value": "617- 720- 2445",
+      "anchor": "FAX NUMBER",
+      "bbox": [
+        201,
+        323,
+        271,
+        338
+      ]
+    },
+    "company": {
+      "value": "Thomton, Early & Naumes",
+      "anchor": "COMPANY",
+      "bbox": [
+        362,
+        324,
+        415,
+        338
+      ]
+    },
+    "recipient_phone_number": {
+      "value": "617- 720- 1333",
+      "anchor": "RECIPIENT PHONE NUMBER",
+      "bbox": [
+        520,
+        318,
+        654,
+        335
+      ]
+    },
+    "confidentiality_note": {
+      "value": "of otherwis protected from disclosos. Disscnlation, distribution popying of the facile the information herein by anyone other than the poupil, waployee responsible for delivering the message the prohibited. You thisfacsimile in error please notify as immediately by telephone and return the facsimile by mail.",
+      "anchor": "CONFIDENTIALITY NOTE",
+      "bbox": [
+        67,
+        897,
+        152,
+        907
+      ]
+    }
+  },
+  "ocr_blocks": [
+    {
+      "text": "Sender",
+      "label": "question",
+      "bbox": [
+        253,
+        154,
+        294,
+        169
+      ]
+    },
+    {
+      "text": "Date",
+      "label": "question",
+      "bbox": [
+        253,
+        194,
+        281,
+        207
+      ]
+    },
+    {
+      "text": "To",
+      "label": "question",
+      "bbox": [
+        46,
+        325,
+        61,
+        339
+      ]
+    },
+    {
+      "text": "Reference",
+      "label": "question",
+      "bbox": [
+        465,
+        268,
+        521,
+        281
+      ]
+    },
+    {
+      "text": "November",
+      "label": "answer",
+      "bbox": [
+        253,
+        214,
+        327,
+        227
+      ]
+    },
+    {
+      "text": "12,",
+      "label": "other",
+      "bbox": [
+        328,
+        214,
+        349,
+        227
+      ]
+    },
+    {
+      "text": "1999",
+      "label": "answer",
+      "bbox": [
+        353,
+        212,
+        387,
+        226
+      ]
+    },
+    {
+      "text": "6",
+      "label": "answer",
+      "bbox": [
+        489,
+        209,
+        502,
+        224
+      ]
+    },
+    {
+      "text": "Message:",
+      "label": "question",
+      "bbox": [
+        45,
+        640,
+        99,
+        657
+      ]
+    },
+    {
+      "text": "8355333",
+      "label": "other",
+      "bbox": [
+        638,
+        722,
+        662,
+        825
+      ]
+    },
+    {
+      "text": "11/ 12/ 99 19: 32 FAA 212 450 4800",
+      "label": "other",
+      "bbox": [
+        42,
+        63,
+        258,
+        76
+      ]
+    },
+    {
+      "text": "DPW 1048",
+      "label": "other",
+      "bbox": [
+        316,
+        66,
+        374,
+        76
+      ]
+    },
+    {
+      "text": "UUZ/ DUS",
+      "label": "other",
+      "bbox": [
+        619,
+        68,
+        680,
+        78
+      ]
+    },
+    {
+      "text": "DAVIS POLK & WARDWELL",
+      "label": "header",
+      "bbox": [
+        237,
+        109,
+        476,
+        125
+      ]
+    },
+    {
+      "text": "Fax Transmittal",
+      "label": "question",
+      "bbox": [
+        43,
+        156,
+        134,
+        173
+      ]
+    },
+    {
+      "text": "450 Lexington Avenue New York, NY 10017 212- 450- 4000",
+      "label": "answer",
+      "bbox": [
+        43,
+        176,
+        158,
+        214
+      ]
+    },
+    {
+      "text": "Charles Duggan",
+      "label": "answer",
+      "bbox": [
+        253,
+        173,
+        366,
+        192
+      ]
+    },
+    {
+      "text": "Number of Pages (this page included)",
+      "label": "question",
+      "bbox": [
+        465,
+        190,
+        665,
+        207
+      ]
+    },
+    {
+      "text": "Sender Voice Number",
+      "label": "question",
+      "bbox": [
+        254,
+        229,
+        373,
+        246
+      ]
+    },
+    {
+      "text": "If problems receiving this fax, call",
+      "label": "question",
+      "bbox": [
+        464,
+        228,
+        648,
+        244
+      ]
+    },
+    {
+      "text": "212- 450- 4785",
+      "label": "answer",
+      "bbox": [
+        464,
+        246,
+        557,
+        262
+      ]
+    },
+    {
+      "text": "212- 450- 4785",
+      "label": "answer",
+      "bbox": [
+        256,
+        250,
+        347,
+        265
+      ]
+    },
+    {
+      "text": "Sender Fax Number",
+      "label": "question",
+      "bbox": [
+        256,
+        270,
+        363,
+        284
+      ]
+    },
+    {
+      "text": "212- 450- 3785",
+      "label": "answer",
+      "bbox": [
+        257,
+        286,
+        346,
+        303
+      ]
+    },
+    {
+      "text": "17555 002",
+      "label": "answer",
+      "bbox": [
+        466,
+        285,
+        539,
+        302
+      ]
+    },
+    {
+      "text": "Fax Number",
+      "label": "question",
+      "bbox": [
+        201,
+        323,
+        271,
+        338
+      ]
+    },
+    {
+      "text": "Company",
+      "label": "question",
+      "bbox": [
+        362,
+        324,
+        415,
+        338
+      ]
+    },
+    {
+      "text": "Recipient Phone Number",
+      "label": "question",
+      "bbox": [
+        520,
+        318,
+        654,
+        335
+      ]
+    },
+    {
+      "text": "Thomas M. Sobol",
+      "label": "answer",
+      "bbox": [
+        45,
+        342,
+        164,
+        361
+      ]
+    },
+    {
+      "text": "617- 439- 3278",
+      "label": "answer",
+      "bbox": [
+        201,
+        341,
+        293,
+        358
+      ]
+    },
+    {
+      "text": "Brown Rudnick Freed & Gesmer",
+      "label": "answer",
+      "bbox": [
+        362,
+        341,
+        511,
+        372
+      ]
+    },
+    {
+      "text": "617- 330- 9000",
+      "label": "answer",
+      "bbox": [
+        520,
+        338,
+        612,
+        355
+      ]
+    },
+    {
+      "text": "843- 720 9000",
+      "label": "answer",
+      "bbox": [
+        520,
+        391,
+        610,
+        408
+      ]
+    },
+    {
+      "text": "Ness, Motley, Loadholt, Richardson & Poole",
+      "label": "answer",
+      "bbox": [
+        360,
+        394,
+        479,
+        458
+      ]
+    },
+    {
+      "text": "843- 720- 9290",
+      "label": "answer",
+      "bbox": [
+        204,
+        394,
+        295,
+        410
+      ]
+    },
+    {
+      "text": "Joseph F. Rice",
+      "label": "answer",
+      "bbox": [
+        45,
+        397,
+        147,
+        412
+      ]
+    },
+    {
+      "text": "Robert V. Costello Jeffrey D. Woolf",
+      "label": "answer",
+      "bbox": [
+        45,
+        479,
+        169,
+        511
+      ]
+    },
+    {
+      "text": "617- 722- 0286",
+      "label": "answer",
+      "bbox": [
+        203,
+        479,
+        295,
+        494
+      ]
+    },
+    {
+      "text": "415- 956- 1008",
+      "label": "answer",
+      "bbox": [
+        204,
+        531,
+        293,
+        548
+      ]
+    },
+    {
+      "text": "Richard M. Heimann",
+      "label": "answer",
+      "bbox": [
+        47,
+        531,
+        184,
+        548
+      ]
+    },
+    {
+      "text": "Michael P. Thornton",
+      "label": "answer",
+      "bbox": [
+        46,
+        582,
+        181,
+        600
+      ]
+    },
+    {
+      "text": "617- 720- 2445",
+      "label": "answer",
+      "bbox": [
+        204,
+        585,
+        295,
+        599
+      ]
+    },
+    {
+      "text": "Thomton, Early & Naumes",
+      "label": "answer",
+      "bbox": [
+        363,
+        582,
+        482,
+        615
+      ]
+    },
+    {
+      "text": "617- 720- 1333",
+      "label": "answer",
+      "bbox": [
+        520,
+        582,
+        611,
+        599
+      ]
+    },
+    {
+      "text": "415- 956- 1000",
+      "label": "answer",
+      "bbox": [
+        521,
+        531,
+        610,
+        548
+      ]
+    },
+    {
+      "text": "617- 227- 7500",
+      "label": "answer",
+      "bbox": [
+        521,
+        478,
+        612,
+        493
+      ]
+    },
+    {
+      "text": "Schneider, Reilly, Zabin & Costello",
+      "label": "answer",
+      "bbox": [
+        362,
+        476,
+        497,
+        510
+      ]
+    },
+    {
+      "text": "Lieff, Cabraser & Heimann",
+      "label": "answer",
+      "bbox": [
+        362,
+        531,
+        476,
+        561
+      ]
+    },
+    {
+      "text": "Confidentiality Note",
+      "label": "question",
+      "bbox": [
+        67,
+        897,
+        152,
+        907
+      ]
+    },
+    {
+      "text": "This only for the person or entity may besi pavilegedal",
+      "label": "answer",
+      "bbox": [
+        152,
+        894,
+        660,
+        907
+      ]
+    },
+    {
+      "text": "of otherwis protected from disclosos. Disscnlation, distribution popying of the facile the information herein by anyone other than the poupil, waployee responsible for delivering the message the prohibited. You thisfacsimile in error please notify as immediately by telephone and return the facsimile by mail.",
+      "label": "answer",
+      "bbox": [
+        67,
+        905,
+        666,
+        940
+      ]
+    }
+  ]
+}

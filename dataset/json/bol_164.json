@@ -1,0 +1,897 @@
+{
+  "template": "funsd_public",
+  "source": "82253245_3247",
+  "fields": {
+    "recipient": "K. A. Sparrow",
+    "sender": "R. E. Lane",
+    "subject": "",
+    "pre-": "",
+    "sell": "Style Full Price accepted the introduction of the low price",
+    "distribution": "",
+    "june_30": "X",
+    "aug_11": "",
+    "sep_22": "",
+    "nov_10": "",
+    "effectiveness_of:_transition_plan": "",
+    "bigif_2_for_1": "the system. This aided the field greatly during the transition",
+    "$_7.00_carton_coupon__buydown": "Those situations were limited.",
+    "name_of_account": "",
+    "ind__lor_volume": "",
+    "no._of_stores": "",
+    "no_of_stores": ""
+  },
+  "field_details": {
+    "recipient": {
+      "value": "K. A. Sparrow",
+      "anchor": "TO",
+      "bbox": [
+        36,
+        95,
+        57,
+        108
+      ]
+    },
+    "sender": {
+      "value": "R. E. Lane",
+      "anchor": "FROM",
+      "bbox": [
+        37,
+        123,
+        74,
+        138
+      ]
+    },
+    "subject": {
+      "value": "",
+      "anchor": "SUBJECT",
+      "bbox": [
+        39,
+        182,
+        90,
+        193
+      ]
+    },
+    "pre-": {
+      "value": "",
+      "anchor": "PRE-",
+      "bbox": [
+        39,
+        237,
+        65,
+        249
+      ]
+    },
+    "sell": {
+      "value": "Style Full Price accepted the introduction of the low price",
+      "anchor": "SELL",
+      "bbox": [
+        65,
+        236,
+        94,
+        247
+      ]
+    },
+    "distribution": {
+      "value": "",
+      "anchor": "DISTRIBUTION",
+      "bbox": [
+        145,
+        413,
+        224,
+        425
+      ]
+    },
+    "june_30": {
+      "value": "X",
+      "anchor": "JUNE 30",
+      "bbox": [
+        428,
+        123,
+        471,
+        135
+      ]
+    },
+    "aug_11": {
+      "value": "",
+      "anchor": "AUG 11",
+      "bbox": [
+        432,
+        151,
+        471,
+        164
+      ]
+    },
+    "sep_22": {
+      "value": "",
+      "anchor": "SEP 22",
+      "bbox": [
+        556,
+        124,
+        593,
+        138
+      ]
+    },
+    "nov_10": {
+      "value": "",
+      "anchor": "NOV 10",
+      "bbox": [
+        555,
+        152,
+        594,
+        167
+      ]
+    },
+    "effectiveness_of:_transition_plan": {
+      "value": "",
+      "anchor": "EFFECTIVENESS OF: TRANSITION PLAN",
+      "bbox": [
+        238,
+        205,
+        434,
+        222
+      ]
+    },
+    "bigif_2_for_1": {
+      "value": "the system. This aided the field greatly during the transition",
+      "anchor": "BIGIF 2 FOR 1",
+      "bbox": [
+        37,
+        293,
+        124,
+        308
+      ]
+    },
+    "$_7.00_carton_coupon__buydown": {
+      "value": "Those situations were limited.",
+      "anchor": "$ 7.00 CARTON COUPON/ BUYDOWN",
+      "bbox": [
+        39,
+        352,
+        231,
+        365
+      ]
+    },
+    "name_of_account": {
+      "value": "",
+      "anchor": "NAME OF ACCOUNT",
+      "bbox": [
+        350,
+        710,
+        454,
+        720
+      ]
+    },
+    "ind__lor_volume": {
+      "value": "",
+      "anchor": "IND/ LOR VOLUME",
+      "bbox": [
+        480,
+        695,
+        528,
+        721
+      ]
+    },
+    "no._of_stores": {
+      "value": "",
+      "anchor": "NO. OF STORES",
+      "bbox": [
+        548,
+        465,
+        593,
+        492
+      ]
+    },
+    "no_of_stores": {
+      "value": "",
+      "anchor": "NO OF STORES",
+      "bbox": [
+        546,
+        695,
+        593,
+        721
+      ]
+    }
+  },
+  "ocr_blocks": [
+    {
+      "text": "TO:",
+      "label": "question",
+      "bbox": [
+        36,
+        95,
+        57,
+        108
+      ]
+    },
+    {
+      "text": "FROM:",
+      "label": "question",
+      "bbox": [
+        37,
+        123,
+        74,
+        138
+      ]
+    },
+    {
+      "text": "SUBJECT:",
+      "label": "question",
+      "bbox": [
+        39,
+        182,
+        90,
+        193
+      ]
+    },
+    {
+      "text": "X",
+      "label": "answer",
+      "bbox": [
+        500,
+        123,
+        512,
+        136
+      ]
+    },
+    {
+      "text": "PRE-",
+      "label": "question",
+      "bbox": [
+        39,
+        237,
+        65,
+        249
+      ]
+    },
+    {
+      "text": "SELL",
+      "label": "question",
+      "bbox": [
+        65,
+        236,
+        94,
+        247
+      ]
+    },
+    {
+      "text": "DISTRIBUTION",
+      "label": "question",
+      "bbox": [
+        145,
+        413,
+        224,
+        425
+      ]
+    },
+    {
+      "text": "Sheetz",
+      "label": "answer",
+      "bbox": [
+        37,
+        563,
+        73,
+        576
+      ]
+    },
+    {
+      "text": "18",
+      "label": "answer",
+      "bbox": [
+        285,
+        544,
+        298,
+        556
+      ]
+    },
+    {
+      "text": "150",
+      "label": "answer",
+      "bbox": [
+        282,
+        561,
+        302,
+        573
+      ]
+    },
+    {
+      "text": "183",
+      "label": "answer",
+      "bbox": [
+        282,
+        579,
+        303,
+        590
+      ]
+    },
+    {
+      "text": "21",
+      "label": "answer",
+      "bbox": [
+        282,
+        726,
+        300,
+        737
+      ]
+    },
+    {
+      "text": "82",
+      "label": "answer",
+      "bbox": [
+        284,
+        742,
+        298,
+        753
+      ]
+    },
+    {
+      "text": "106",
+      "label": "answer",
+      "bbox": [
+        282,
+        757,
+        300,
+        769
+      ]
+    },
+    {
+      "text": "87",
+      "label": "answer",
+      "bbox": [
+        282,
+        774,
+        295,
+        785
+      ]
+    },
+    {
+      "text": "5",
+      "label": "answer",
+      "bbox": [
+        284,
+        791,
+        296,
+        802
+      ]
+    },
+    {
+      "text": "23",
+      "label": "answer",
+      "bbox": [
+        284,
+        806,
+        298,
+        818
+      ]
+    },
+    {
+      "text": "35",
+      "label": "answer",
+      "bbox": [
+        284,
+        823,
+        295,
+        835
+      ]
+    },
+    {
+      "text": "43",
+      "label": "answer",
+      "bbox": [
+        283,
+        838,
+        300,
+        851
+      ]
+    },
+    {
+      "text": "Kroger",
+      "label": "answer",
+      "bbox": [
+        37,
+        729,
+        74,
+        738
+      ]
+    },
+    {
+      "text": "cvs",
+      "label": "answer",
+      "bbox": [
+        39,
+        773,
+        60,
+        784
+      ]
+    },
+    {
+      "text": "82253245",
+      "label": "other",
+      "bbox": [
+        691,
+        784,
+        709,
+        885
+      ]
+    },
+    {
+      "text": "K. A. Sparrow",
+      "label": "answer",
+      "bbox": [
+        183,
+        91,
+        253,
+        107
+      ]
+    },
+    {
+      "text": "R. E. Lane",
+      "label": "answer",
+      "bbox": [
+        182,
+        120,
+        235,
+        136
+      ]
+    },
+    {
+      "text": "SUBMISSION DATE",
+      "label": "header",
+      "bbox": [
+        503,
+        94,
+        606,
+        109
+      ]
+    },
+    {
+      "text": "JUNE 30",
+      "label": "question",
+      "bbox": [
+        428,
+        123,
+        471,
+        135
+      ]
+    },
+    {
+      "text": "AUG 11",
+      "label": "question",
+      "bbox": [
+        432,
+        151,
+        471,
+        164
+      ]
+    },
+    {
+      "text": "SEP 22",
+      "label": "question",
+      "bbox": [
+        556,
+        124,
+        593,
+        138
+      ]
+    },
+    {
+      "text": "NOV 10",
+      "label": "question",
+      "bbox": [
+        555,
+        152,
+        594,
+        167
+      ]
+    },
+    {
+      "text": "STYLE LOW PRICE PROGRESS REPORT",
+      "label": "header",
+      "bbox": [
+        182,
+        180,
+        401,
+        195
+      ]
+    },
+    {
+      "text": "EFFECTIVENESS OF: Transition Plan",
+      "label": "question",
+      "bbox": [
+        238,
+        205,
+        434,
+        222
+      ]
+    },
+    {
+      "text": "(Report on June 30 only)",
+      "label": "other",
+      "bbox": [
+        37,
+        220,
+        159,
+        234
+      ]
+    },
+    {
+      "text": "Overall pre- sell efforts were successful Retail accounts that previously stocked",
+      "label": "answer",
+      "bbox": [
+        183,
+        236,
+        562,
+        250
+      ]
+    },
+    {
+      "text": "Style Full Price accepted the introduction of the low price",
+      "label": "answer",
+      "bbox": [
+        40,
+        251,
+        311,
+        265
+      ]
+    },
+    {
+      "text": "BIGIF 2 FOR 1:",
+      "label": "question",
+      "bbox": [
+        37,
+        293,
+        124,
+        308
+      ]
+    },
+    {
+      "text": "Proved to be an excellent tool for pulling the balance of Style Full Price packs through",
+      "label": "answer",
+      "bbox": [
+        183,
+        293,
+        590,
+        309
+      ]
+    },
+    {
+      "text": "the system. This aided the field greatly during the transition",
+      "label": "answer",
+      "bbox": [
+        37,
+        308,
+        326,
+        323
+      ]
+    },
+    {
+      "text": "$ 7.00 CARTON COUPON/ BUYDOWN:",
+      "label": "question",
+      "bbox": [
+        39,
+        352,
+        231,
+        365
+      ]
+    },
+    {
+      "text": "Effective in those retail calls that we could not exchange product out of.",
+      "label": "answer",
+      "bbox": [
+        250,
+        352,
+        588,
+        367
+      ]
+    },
+    {
+      "text": "Those situations were limited.",
+      "label": "answer",
+      "bbox": [
+        40,
+        367,
+        181,
+        382
+      ]
+    },
+    {
+      "text": "DIRECT ACCOUNTS AND CHAINS HEADQUARTERED WITHIN THE REGION (15+ STORES) STOCKING NO LOW PRICE STYLE",
+      "label": "other",
+      "bbox": [
+        36,
+        425,
+        422,
+        453
+      ]
+    },
+    {
+      "text": "NAME OF ACCOUNT",
+      "label": "question",
+      "bbox": [
+        56,
+        480,
+        162,
+        492
+      ]
+    },
+    {
+      "text": "IND/ LOR VOLUME",
+      "label": "question",
+      "bbox": [
+        191,
+        465,
+        239,
+        491
+      ]
+    },
+    {
+      "text": "NO. OF STORES",
+      "label": "question",
+      "bbox": [
+        259,
+        465,
+        307,
+        492
+      ]
+    },
+    {
+      "text": "NAME OF ACCOUNT",
+      "label": "question",
+      "bbox": [
+        348,
+        478,
+        457,
+        491
+      ]
+    },
+    {
+      "text": "IND/ LOR VOLUME",
+      "label": "question",
+      "bbox": [
+        480,
+        464,
+        528,
+        492
+      ]
+    },
+    {
+      "text": "NO. OF STORES",
+      "label": "question",
+      "bbox": [
+        548,
+        465,
+        593,
+        492
+      ]
+    },
+    {
+      "text": "M. Maskos & Sons",
+      "label": "answer",
+      "bbox": [
+        36,
+        498,
+        134,
+        508
+      ]
+    },
+    {
+      "text": "Pollock Candy and Cigar",
+      "label": "answer",
+      "bbox": [
+        40,
+        511,
+        168,
+        526
+      ]
+    },
+    {
+      "text": "McKeesport Candy Co.",
+      "label": "answer",
+      "bbox": [
+        40,
+        529,
+        159,
+        542
+      ]
+    },
+    {
+      "text": "Sicc Serva",
+      "label": "answer",
+      "bbox": [
+        35,
+        545,
+        95,
+        557
+      ]
+    },
+    {
+      "text": "Thrift/ Eckerd",
+      "label": "answer",
+      "bbox": [
+        41,
+        577,
+        110,
+        590
+      ]
+    },
+    {
+      "text": "104/ 22",
+      "label": "answer",
+      "bbox": [
+        198,
+        544,
+        234,
+        556
+      ]
+    },
+    {
+      "text": "521/ 42",
+      "label": "answer",
+      "bbox": [
+        196,
+        561,
+        233,
+        573
+      ]
+    },
+    {
+      "text": "137/ 20",
+      "label": "answer",
+      "bbox": [
+        199,
+        577,
+        233,
+        590
+      ]
+    },
+    {
+      "text": "DIRECT ACCOUNTS AND CHAINS HEADQUARTERED OUTSIDE THE REGION (15+ STORES) STOCKING NO LOW PRICE STYLE",
+      "label": "other",
+      "bbox": [
+        36,
+        654,
+        428,
+        683
+      ]
+    },
+    {
+      "text": "NAME OF ACCOUNT",
+      "label": "question",
+      "bbox": [
+        53,
+        709,
+        163,
+        722
+      ]
+    },
+    {
+      "text": "IND/ LOR VOLUME",
+      "label": "question",
+      "bbox": [
+        191,
+        695,
+        238,
+        720
+      ]
+    },
+    {
+      "text": "NO OF STORES",
+      "label": "question",
+      "bbox": [
+        257,
+        695,
+        302,
+        721
+      ]
+    },
+    {
+      "text": "NAME OF ACCOUNT",
+      "label": "question",
+      "bbox": [
+        350,
+        710,
+        454,
+        720
+      ]
+    },
+    {
+      "text": "IND/ LOR VOLUME",
+      "label": "question",
+      "bbox": [
+        480,
+        695,
+        528,
+        721
+      ]
+    },
+    {
+      "text": "NO OF STORES",
+      "label": "question",
+      "bbox": [
+        546,
+        695,
+        593,
+        721
+      ]
+    },
+    {
+      "text": "Rich Oil",
+      "label": "answer",
+      "bbox": [
+        37,
+        742,
+        80,
+        753
+      ]
+    },
+    {
+      "text": "Super America",
+      "label": "answer",
+      "bbox": [
+        37,
+        758,
+        114,
+        771
+      ]
+    },
+    {
+      "text": "W H Smith",
+      "label": "answer",
+      "bbox": [
+        36,
+        791,
+        93,
+        804
+      ]
+    },
+    {
+      "text": "7- 11 318 Zon",
+      "label": "answer",
+      "bbox": [
+        39,
+        806,
+        108,
+        819
+      ]
+    },
+    {
+      "text": "Dairy Marts",
+      "label": "answer",
+      "bbox": [
+        36,
+        824,
+        101,
+        835
+      ]
+    },
+    {
+      "text": "Widman Drugs",
+      "label": "answer",
+      "bbox": [
+        40,
+        838,
+        117,
+        852
+      ]
+    },
+    {
+      "text": "STYLE XLS",
+      "label": "other",
+      "bbox": [
+        76,
+        946,
+        126,
+        956
+      ]
+    },
+    {
+      "text": "Page 1 of 3 Pages",
+      "label": "other",
+      "bbox": [
+        561,
+        941,
+        669,
+        958
+      ]
+    }
+  ]
+}

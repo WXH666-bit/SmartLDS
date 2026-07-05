@@ -1,0 +1,1535 @@
+{
+  "template": "funsd_public",
+  "source": "87093315_87093318",
+  "fields": {
+    "date": "3/14/90",
+    "on": "2/15/90",
+    "blend": "Attached",
+    "casting": "None",
+    "recasing": "Attached",
+    "menihol": "None",
+    "maker": "MK 8",
+    "length": "99.0 mm",
+    "circumference": "24.45 mm",
+    "weight": "75.3 30g / 100",
+    "paper": "81- 01- 07",
+    "kind": "OG Lt.",
+    "plast.": "7 % Kent",
+    "closures": "Blue",
+    "labels": "White",
+    "cartons": "White",
+    "markings": "Sample No. on each Carton",
+    "shipping": "",
+    "original_request_made_by": "J. H. Bell",
+    "purpose_of_sample": "Cigarette Modification B- 451",
+    "sample_specifications_written_by": "C. W. Lassiter",
+    "final_flavor": "None",
+    "sample_no.": "1194- 90",
+    "type_of_cigarette": "100 mm Filter",
+    "batch_size": "47.5 lbs.",
+    "filter_length": "27 mm",
+    "tip._paper": "67 mm White",
+    "tip._paper_por.": "430",
+    "glue_roller": "G",
+    "air_dilution": "13.0 %",
+    "section_a": "655",
+    "section_b": "mm",
+    "rod_length": "108 mm",
+    "pressure_drop": "400 mm",
+    "plug_wrap": "84- 52- 28",
+    "plug_wrap_por.": "655",
+    "comb._wrap": "",
+    "comb._wrap_por.": "",
+    "tobacco_blend": "Lassiter/ Douglas",
+    "filter_production": "MFG.",
+    "making_&_packing": "James",
+    "sample_requistion_(form_02:_20:_06)": "James",
+    "tear_tape": "White",
+    "laboratory_other": "1 Tray",
+    "mainstream_smoke_analysis": ""
+  },
+  "field_details": {
+    "date": {
+      "value": "3/14/90",
+      "anchor": "DATE",
+      "bbox": [
+        476,
+        32,
+        513,
+        46
+      ]
+    },
+    "on": {
+      "value": "2/15/90",
+      "anchor": "ON",
+      "bbox": [
+        299,
+        99,
+        315,
+        110
+      ]
+    },
+    "blend": {
+      "value": "Attached",
+      "anchor": "BLEND",
+      "bbox": [
+        50,
+        167,
+        91,
+        179
+      ]
+    },
+    "casting": {
+      "value": "None",
+      "anchor": "CASTING",
+      "bbox": [
+        157,
+        165,
+        203,
+        184
+      ]
+    },
+    "recasing": {
+      "value": "Attached",
+      "anchor": "RECASING",
+      "bbox": [
+        271,
+        166,
+        331,
+        183
+      ]
+    },
+    "menihol": {
+      "value": "None",
+      "anchor": "MENIHOL",
+      "bbox": [
+        547,
+        167,
+        598,
+        181
+      ]
+    },
+    "maker": {
+      "value": "MK 8",
+      "anchor": "MAKER",
+      "bbox": [
+        72,
+        237,
+        109,
+        251
+      ]
+    },
+    "length": {
+      "value": "99.0 mm",
+      "anchor": "LENGTH",
+      "bbox": [
+        72,
+        261,
+        118,
+        275
+      ]
+    },
+    "circumference": {
+      "value": "24.45 mm",
+      "anchor": "CIRCUMFERENCE",
+      "bbox": [
+        340,
+        367,
+        435,
+        384
+      ]
+    },
+    "weight": {
+      "value": "75.3 30g / 100",
+      "anchor": "WEIGHT",
+      "bbox": [
+        340,
+        390,
+        384,
+        405
+      ]
+    },
+    "paper": {
+      "value": "81- 01- 07",
+      "anchor": "PAPER",
+      "bbox": [
+        72,
+        347,
+        111,
+        362
+      ]
+    },
+    "kind": {
+      "value": "OG Lt.",
+      "anchor": "KIND",
+      "bbox": [
+        342,
+        281,
+        373,
+        296
+      ]
+    },
+    "plast.": {
+      "value": "7 % Kent",
+      "anchor": "PLAST.",
+      "bbox": [
+        339,
+        413,
+        383,
+        424
+      ]
+    },
+    "closures": {
+      "value": "Blue",
+      "anchor": "CLOSURES",
+      "bbox": [
+        72,
+        567,
+        131,
+        579
+      ]
+    },
+    "labels": {
+      "value": "White",
+      "anchor": "LABELS",
+      "bbox": [
+        70,
+        545,
+        119,
+        557
+      ]
+    },
+    "cartons": {
+      "value": "White",
+      "anchor": "CARTONS",
+      "bbox": [
+        72,
+        610,
+        127,
+        622
+      ]
+    },
+    "markings": {
+      "value": "Sample No. on each Carton",
+      "anchor": "MARKINGS",
+      "bbox": [
+        71,
+        628,
+        130,
+        645
+      ]
+    },
+    "shipping": {
+      "value": "",
+      "anchor": "SHIPPING",
+      "bbox": [
+        340,
+        610,
+        401,
+        625
+      ]
+    },
+    "original_request_made_by": {
+      "value": "J. H. Bell",
+      "anchor": "ORIGINAL REQUEST MADE BY",
+      "bbox": [
+        52,
+        95,
+        223,
+        113
+      ]
+    },
+    "purpose_of_sample": {
+      "value": "Cigarette Modification B- 451",
+      "anchor": "PURPOSE OF SAMPLE",
+      "bbox": [
+        51,
+        117,
+        172,
+        134
+      ]
+    },
+    "sample_specifications_written_by": {
+      "value": "C. W. Lassiter",
+      "anchor": "SAMPLE SPECIFICATIONS WRITTEN BY",
+      "bbox": [
+        50,
+        137,
+        280,
+        154
+      ]
+    },
+    "final_flavor": {
+      "value": "None",
+      "anchor": "FINAL FLAVOR",
+      "bbox": [
+        390,
+        166,
+        479,
+        183
+      ]
+    },
+    "sample_no.": {
+      "value": "1194- 90",
+      "anchor": "SAMPLE NO.",
+      "bbox": [
+        320,
+        49,
+        393,
+        61
+      ]
+    },
+    "type_of_cigarette": {
+      "value": "100 mm Filter",
+      "anchor": "TYPE OF CIGARETTE",
+      "bbox": [
+        277,
+        59,
+        399,
+        76
+      ]
+    },
+    "batch_size": {
+      "value": "47.5 lbs.",
+      "anchor": "BATCH SIZE",
+      "bbox": [
+        313,
+        74,
+        384,
+        89
+      ]
+    },
+    "filter_length": {
+      "value": "27 mm",
+      "anchor": "FILTER LENGTH",
+      "bbox": [
+        71,
+        279,
+        166,
+        296
+      ]
+    },
+    "tip._paper": {
+      "value": "67 mm White",
+      "anchor": "TIP. PAPER",
+      "bbox": [
+        70,
+        367,
+        145,
+        384
+      ]
+    },
+    "tip._paper_por.": {
+      "value": "430",
+      "anchor": "TIP. PAPER POR.",
+      "bbox": [
+        70,
+        410,
+        179,
+        425
+      ]
+    },
+    "glue_roller": {
+      "value": "G",
+      "anchor": "GLUE ROLLER",
+      "bbox": [
+        71,
+        430,
+        152,
+        445
+      ]
+    },
+    "air_dilution": {
+      "value": "13.0 %",
+      "anchor": "AIR DILUTION",
+      "bbox": [
+        70,
+        453,
+        160,
+        468
+      ]
+    },
+    "section_a": {
+      "value": "655",
+      "anchor": "SECTION A",
+      "bbox": [
+        475,
+        238,
+        542,
+        254
+      ]
+    },
+    "section_b": {
+      "value": "mm",
+      "anchor": "SECTION B",
+      "bbox": [
+        575,
+        238,
+        642,
+        254
+      ]
+    },
+    "rod_length": {
+      "value": "108 mm",
+      "anchor": "ROD LENGTH",
+      "bbox": [
+        342,
+        323,
+        414,
+        341
+      ]
+    },
+    "pressure_drop": {
+      "value": "400 mm",
+      "anchor": "PRESSURE DROP",
+      "bbox": [
+        339,
+        347,
+        435,
+        364
+      ]
+    },
+    "plug_wrap": {
+      "value": "84- 52- 28",
+      "anchor": "PLUG WRAP",
+      "bbox": [
+        340,
+        433,
+        409,
+        449
+      ]
+    },
+    "plug_wrap_por.": {
+      "value": "655",
+      "anchor": "PLUG WRAP POR.",
+      "bbox": [
+        340,
+        454,
+        439,
+        469
+      ]
+    },
+    "comb._wrap": {
+      "value": "",
+      "anchor": "COMB. WRAP",
+      "bbox": [
+        340,
+        474,
+        414,
+        488
+      ]
+    },
+    "comb._wrap_por.": {
+      "value": "",
+      "anchor": "COMB. WRAP POR.",
+      "bbox": [
+        340,
+        494,
+        447,
+        512
+      ]
+    },
+    "tobacco_blend": {
+      "value": "Lassiter/ Douglas",
+      "anchor": "TOBACCO BLEND",
+      "bbox": [
+        339,
+        545,
+        436,
+        559
+      ]
+    },
+    "filter_production": {
+      "value": "MFG.",
+      "anchor": "FILTER PRODUCTION",
+      "bbox": [
+        339,
+        565,
+        465,
+        581
+      ]
+    },
+    "making_&_packing": {
+      "value": "James",
+      "anchor": "MAKING & PACKING",
+      "bbox": [
+        339,
+        586,
+        456,
+        603
+      ]
+    },
+    "sample_requistion_(form_02:_20:_06)": {
+      "value": "James",
+      "anchor": "SAMPLE REQUISTION (FORM 02: 20: 06)",
+      "bbox": [
+        339,
+        632,
+        464,
+        662
+      ]
+    },
+    "tear_tape": {
+      "value": "White",
+      "anchor": "TEAR TAPE",
+      "bbox": [
+        72,
+        589,
+        136,
+        603
+      ]
+    },
+    "laboratory_other": {
+      "value": "1 Tray",
+      "anchor": "LABORATORY OTHER",
+      "bbox": [
+        70,
+        693,
+        144,
+        730
+      ]
+    },
+    "mainstream_smoke_analysis": {
+      "value": "",
+      "anchor": "MAINSTREAM SMOKE ANALYSIS",
+      "bbox": [
+        338,
+        696,
+        520,
+        712
+      ]
+    }
+  },
+  "ocr_blocks": [
+    {
+      "text": "Date:",
+      "label": "question",
+      "bbox": [
+        476,
+        32,
+        513,
+        46
+      ]
+    },
+    {
+      "text": "on",
+      "label": "question",
+      "bbox": [
+        299,
+        99,
+        315,
+        110
+      ]
+    },
+    {
+      "text": "BLEND",
+      "label": "question",
+      "bbox": [
+        50,
+        167,
+        91,
+        179
+      ]
+    },
+    {
+      "text": "CASTING",
+      "label": "question",
+      "bbox": [
+        157,
+        165,
+        203,
+        184
+      ]
+    },
+    {
+      "text": "RECASING",
+      "label": "question",
+      "bbox": [
+        271,
+        166,
+        331,
+        183
+      ]
+    },
+    {
+      "text": "MENIHOL",
+      "label": "question",
+      "bbox": [
+        547,
+        167,
+        598,
+        181
+      ]
+    },
+    {
+      "text": "Filters",
+      "label": "header",
+      "bbox": [
+        319,
+        211,
+        374,
+        223
+      ]
+    },
+    {
+      "text": "Cigarettes",
+      "label": "header",
+      "bbox": [
+        50,
+        208,
+        126,
+        223
+      ]
+    },
+    {
+      "text": "Maker",
+      "label": "question",
+      "bbox": [
+        72,
+        237,
+        109,
+        251
+      ]
+    },
+    {
+      "text": "Length",
+      "label": "question",
+      "bbox": [
+        72,
+        261,
+        118,
+        275
+      ]
+    },
+    {
+      "text": "Circumference",
+      "label": "question",
+      "bbox": [
+        72,
+        303,
+        166,
+        317
+      ]
+    },
+    {
+      "text": "Weight",
+      "label": "question",
+      "bbox": [
+        71,
+        325,
+        116,
+        337
+      ]
+    },
+    {
+      "text": "Paper",
+      "label": "question",
+      "bbox": [
+        72,
+        347,
+        111,
+        362
+      ]
+    },
+    {
+      "text": "Kind",
+      "label": "question",
+      "bbox": [
+        342,
+        281,
+        373,
+        296
+      ]
+    },
+    {
+      "text": "Circumference",
+      "label": "question",
+      "bbox": [
+        340,
+        367,
+        435,
+        384
+      ]
+    },
+    {
+      "text": "Weight",
+      "label": "question",
+      "bbox": [
+        340,
+        390,
+        384,
+        405
+      ]
+    },
+    {
+      "text": "Plast.",
+      "label": "question",
+      "bbox": [
+        339,
+        413,
+        383,
+        424
+      ]
+    },
+    {
+      "text": "3/14/90",
+      "label": "answer",
+      "bbox": [
+        520,
+        30,
+        570,
+        49
+      ]
+    },
+    {
+      "text": "Attached",
+      "label": "answer",
+      "bbox": [
+        49,
+        181,
+        111,
+        195
+      ]
+    },
+    {
+      "text": "None",
+      "label": "answer",
+      "bbox": [
+        157,
+        182,
+        189,
+        193
+      ]
+    },
+    {
+      "text": "Attached",
+      "label": "answer",
+      "bbox": [
+        271,
+        182,
+        331,
+        196
+      ]
+    },
+    {
+      "text": "None",
+      "label": "answer",
+      "bbox": [
+        390,
+        183,
+        421,
+        195
+      ]
+    },
+    {
+      "text": "None",
+      "label": "answer",
+      "bbox": [
+        546,
+        183,
+        580,
+        197
+      ]
+    },
+    {
+      "text": "mm",
+      "label": "answer",
+      "bbox": [
+        575,
+        262,
+        594,
+        273
+      ]
+    },
+    {
+      "text": "430",
+      "label": "answer",
+      "bbox": [
+        213,
+        413,
+        238,
+        425
+      ]
+    },
+    {
+      "text": "G",
+      "label": "answer",
+      "bbox": [
+        213,
+        434,
+        224,
+        444
+      ]
+    },
+    {
+      "text": "White",
+      "label": "answer",
+      "bbox": [
+        213,
+        545,
+        250,
+        560
+      ]
+    },
+    {
+      "text": "Blue",
+      "label": "answer",
+      "bbox": [
+        212,
+        569,
+        242,
+        583
+      ]
+    },
+    {
+      "text": "White",
+      "label": "answer",
+      "bbox": [
+        213,
+        589,
+        252,
+        603
+      ]
+    },
+    {
+      "text": "White",
+      "label": "answer",
+      "bbox": [
+        213,
+        612,
+        253,
+        621
+      ]
+    },
+    {
+      "text": "James",
+      "label": "answer",
+      "bbox": [
+        475,
+        590,
+        512,
+        602
+      ]
+    },
+    {
+      "text": "James",
+      "label": "answer",
+      "bbox": [
+        476,
+        632,
+        512,
+        644
+      ]
+    },
+    {
+      "text": "MFG.",
+      "label": "answer",
+      "bbox": [
+        475,
+        566,
+        504,
+        581
+      ]
+    },
+    {
+      "text": "Wrapping",
+      "label": "header",
+      "bbox": [
+        49,
+        524,
+        110,
+        541
+      ]
+    },
+    {
+      "text": "Responsibility",
+      "label": "header",
+      "bbox": [
+        319,
+        524,
+        420,
+        541
+      ]
+    },
+    {
+      "text": "Closures",
+      "label": "question",
+      "bbox": [
+        72,
+        567,
+        131,
+        579
+      ]
+    },
+    {
+      "text": "Labels",
+      "label": "question",
+      "bbox": [
+        70,
+        545,
+        119,
+        557
+      ]
+    },
+    {
+      "text": "Cartons",
+      "label": "question",
+      "bbox": [
+        72,
+        610,
+        127,
+        622
+      ]
+    },
+    {
+      "text": "Markings",
+      "label": "question",
+      "bbox": [
+        71,
+        628,
+        130,
+        645
+      ]
+    },
+    {
+      "text": "Shipping",
+      "label": "question",
+      "bbox": [
+        340,
+        610,
+        401,
+        625
+      ]
+    },
+    {
+      "text": "Requirements",
+      "label": "header",
+      "bbox": [
+        51,
+        681,
+        138,
+        695
+      ]
+    },
+    {
+      "text": "Laboratory",
+      "label": "header",
+      "bbox": [
+        318,
+        682,
+        392,
+        697
+      ]
+    },
+    {
+      "text": "Analysis:",
+      "label": "header",
+      "bbox": [
+        397,
+        682,
+        463,
+        696
+      ]
+    },
+    {
+      "text": "87093315",
+      "label": "other",
+      "bbox": [
+        678,
+        762,
+        697,
+        853
+      ]
+    },
+    {
+      "text": "90- B- 1",
+      "label": "other",
+      "bbox": [
+        620,
+        31,
+        662,
+        47
+      ]
+    },
+    {
+      "text": "1194- 90",
+      "label": "answer",
+      "bbox": [
+        398,
+        46,
+        450,
+        62
+      ]
+    },
+    {
+      "text": "100 mm Filter",
+      "label": "answer",
+      "bbox": [
+        405,
+        61,
+        500,
+        75
+      ]
+    },
+    {
+      "text": "47.5 lbs.",
+      "label": "answer",
+      "bbox": [
+        392,
+        75,
+        455,
+        88
+      ]
+    },
+    {
+      "text": "Original Request Made By",
+      "label": "question",
+      "bbox": [
+        52,
+        95,
+        223,
+        113
+      ]
+    },
+    {
+      "text": "J. H. Bell",
+      "label": "answer",
+      "bbox": [
+        227,
+        95,
+        293,
+        112
+      ]
+    },
+    {
+      "text": "2/15/90",
+      "label": "answer",
+      "bbox": [
+        319,
+        95,
+        371,
+        110
+      ]
+    },
+    {
+      "text": "Purpose of Sample",
+      "label": "question",
+      "bbox": [
+        51,
+        117,
+        172,
+        134
+      ]
+    },
+    {
+      "text": "Cigarette Modification B- 451",
+      "label": "answer",
+      "bbox": [
+        176,
+        116,
+        379,
+        133
+      ]
+    },
+    {
+      "text": "Sample Specifications Written By",
+      "label": "question",
+      "bbox": [
+        50,
+        137,
+        280,
+        154
+      ]
+    },
+    {
+      "text": "C. W. Lassiter",
+      "label": "answer",
+      "bbox": [
+        283,
+        138,
+        379,
+        152
+      ]
+    },
+    {
+      "text": "FINAL FLAVOR",
+      "label": "question",
+      "bbox": [
+        390,
+        166,
+        479,
+        183
+      ]
+    },
+    {
+      "text": "MK 8",
+      "label": "answer",
+      "bbox": [
+        213,
+        238,
+        245,
+        253
+      ]
+    },
+    {
+      "text": "99.0 mm",
+      "label": "answer",
+      "bbox": [
+        216,
+        259,
+        268,
+        274
+      ]
+    },
+    {
+      "text": "27 mm",
+      "label": "answer",
+      "bbox": [
+        214,
+        281,
+        252,
+        295
+      ]
+    },
+    {
+      "text": "24.8 mm",
+      "label": "answer",
+      "bbox": [
+        214,
+        303,
+        266,
+        317
+      ]
+    },
+    {
+      "text": "78.0 g / 100",
+      "label": "answer",
+      "bbox": [
+        214,
+        324,
+        279,
+        343
+      ]
+    },
+    {
+      "text": "81- 01- 07",
+      "label": "answer",
+      "bbox": [
+        213,
+        344,
+        271,
+        359
+      ]
+    },
+    {
+      "text": "25- 04- 07",
+      "label": "answer",
+      "bbox": [
+        214,
+        365,
+        273,
+        382
+      ]
+    },
+    {
+      "text": "67 mm White",
+      "label": "answer",
+      "bbox": [
+        214,
+        388,
+        293,
+        404
+      ]
+    },
+    {
+      "text": "Sample No.",
+      "label": "question",
+      "bbox": [
+        320,
+        49,
+        393,
+        61
+      ]
+    },
+    {
+      "text": "Type of Cigarette",
+      "label": "question",
+      "bbox": [
+        277,
+        59,
+        399,
+        76
+      ]
+    },
+    {
+      "text": "Batch Size",
+      "label": "question",
+      "bbox": [
+        313,
+        74,
+        384,
+        89
+      ]
+    },
+    {
+      "text": "Filter Length",
+      "label": "question",
+      "bbox": [
+        71,
+        279,
+        166,
+        296
+      ]
+    },
+    {
+      "text": "Tip. Paper",
+      "label": "question",
+      "bbox": [
+        70,
+        367,
+        145,
+        384
+      ]
+    },
+    {
+      "text": "Tip. Paper Por.",
+      "label": "question",
+      "bbox": [
+        70,
+        410,
+        179,
+        425
+      ]
+    },
+    {
+      "text": "Glue Roller",
+      "label": "question",
+      "bbox": [
+        71,
+        430,
+        152,
+        445
+      ]
+    },
+    {
+      "text": "Air Dilution",
+      "label": "question",
+      "bbox": [
+        70,
+        453,
+        160,
+        468
+      ]
+    },
+    {
+      "text": "13.0 %",
+      "label": "answer",
+      "bbox": [
+        213,
+        454,
+        260,
+        466
+      ]
+    },
+    {
+      "text": "Section A",
+      "label": "question",
+      "bbox": [
+        475,
+        238,
+        542,
+        254
+      ]
+    },
+    {
+      "text": "Section B",
+      "label": "question",
+      "bbox": [
+        575,
+        238,
+        642,
+        254
+      ]
+    },
+    {
+      "text": "27 mm",
+      "label": "answer",
+      "bbox": [
+        475,
+        261,
+        515,
+        277
+      ]
+    },
+    {
+      "text": "3.3/ 35,000",
+      "label": "answer",
+      "bbox": [
+        475,
+        283,
+        550,
+        298
+      ]
+    },
+    {
+      "text": "OG Lt.",
+      "label": "answer",
+      "bbox": [
+        475,
+        304,
+        520,
+        318
+      ]
+    },
+    {
+      "text": "108 mm",
+      "label": "answer",
+      "bbox": [
+        475,
+        324,
+        522,
+        339
+      ]
+    },
+    {
+      "text": "400 mm",
+      "label": "answer",
+      "bbox": [
+        476,
+        348,
+        522,
+        361
+      ]
+    },
+    {
+      "text": "24.45 mm",
+      "label": "answer",
+      "bbox": [
+        475,
+        367,
+        536,
+        383
+      ]
+    },
+    {
+      "text": "75.3 30g / 100",
+      "label": "answer",
+      "bbox": [
+        476,
+        387,
+        544,
+        407
+      ]
+    },
+    {
+      "text": "7 % Kent",
+      "label": "answer",
+      "bbox": [
+        475,
+        410,
+        531,
+        425
+      ]
+    },
+    {
+      "text": "84- 52- 28",
+      "label": "answer",
+      "bbox": [
+        475,
+        430,
+        534,
+        447
+      ]
+    },
+    {
+      "text": "655",
+      "label": "answer",
+      "bbox": [
+        475,
+        454,
+        513,
+        468
+      ]
+    },
+    {
+      "text": "Rod Length",
+      "label": "question",
+      "bbox": [
+        342,
+        323,
+        414,
+        341
+      ]
+    },
+    {
+      "text": "Pressure Drop",
+      "label": "question",
+      "bbox": [
+        339,
+        347,
+        435,
+        364
+      ]
+    },
+    {
+      "text": "Plug Wrap",
+      "label": "question",
+      "bbox": [
+        340,
+        433,
+        409,
+        449
+      ]
+    },
+    {
+      "text": "Plug Wrap Por.",
+      "label": "question",
+      "bbox": [
+        340,
+        454,
+        439,
+        469
+      ]
+    },
+    {
+      "text": "Comb. Wrap",
+      "label": "question",
+      "bbox": [
+        340,
+        474,
+        414,
+        488
+      ]
+    },
+    {
+      "text": "Comb. Wrap Por.",
+      "label": "question",
+      "bbox": [
+        340,
+        494,
+        447,
+        512
+      ]
+    },
+    {
+      "text": "Tobacco Blend",
+      "label": "question",
+      "bbox": [
+        339,
+        545,
+        436,
+        559
+      ]
+    },
+    {
+      "text": "Filter Production",
+      "label": "question",
+      "bbox": [
+        339,
+        565,
+        465,
+        581
+      ]
+    },
+    {
+      "text": "Making & Packing",
+      "label": "question",
+      "bbox": [
+        339,
+        586,
+        456,
+        603
+      ]
+    },
+    {
+      "text": "Sample Requistion (Form 02: 20: 06)",
+      "label": "question",
+      "bbox": [
+        339,
+        632,
+        464,
+        662
+      ]
+    },
+    {
+      "text": "Lassiter/ Douglas",
+      "label": "answer",
+      "bbox": [
+        474,
+        545,
+        591,
+        561
+      ]
+    },
+    {
+      "text": "Tear Tape",
+      "label": "question",
+      "bbox": [
+        72,
+        589,
+        136,
+        603
+      ]
+    },
+    {
+      "text": "Sample No. on each Carton",
+      "label": "answer",
+      "bbox": [
+        212,
+        632,
+        312,
+        666
+      ]
+    },
+    {
+      "text": "Laboratory Other",
+      "label": "question",
+      "bbox": [
+        70,
+        693,
+        144,
+        730
+      ]
+    },
+    {
+      "text": "1 Tray",
+      "label": "answer",
+      "bbox": [
+        213,
+        695,
+        258,
+        711
+      ]
+    },
+    {
+      "text": "Mainstream Smoke Analysis",
+      "label": "question",
+      "bbox": [
+        338,
+        696,
+        520,
+        712
+      ]
+    },
+    {
+      "text": "Special Requirements",
+      "label": "other",
+      "bbox": [
+        310,
+        759,
+        455,
+        774
+      ]
+    },
+    {
+      "text": "Director, Product Development",
+      "label": "other",
+      "bbox": [
+        486,
+        894,
+        695,
+        910
+      ]
+    }
+  ]
+}

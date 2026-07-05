@@ -1,0 +1,773 @@
+{
+  "template": "funsd_public",
+  "source": "89856243",
+  "fields": {
+    "product": "Triumph",
+    "date": "October 17, 1979",
+    "yes": "",
+    "no": "",
+    "approved": "",
+    "by": "",
+    "incidence": "-",
+    "topline": "2 wks from start of fid.",
+    "final": "4 wks from start of fld",
+    "marketing": "",
+    "research": "",
+    "director": "",
+    "project_title": "Triumph Disaster Check Study",
+    "key_criteria_for_analysis": "-Mentions of \"harshness\"",
+    "research_limitations": "If below 50% of Triumph smokers mention \"harshness\" we could consider it at a problem",
+    "research_firm": "The Data Group. Inc",
+    "lenght_int": "10 minutes",
+    "#_open": "4",
+    "#_reports": "1",
+    "group_product_manager": "",
+    "product_manager": "",
+    "prepared_by": "",
+    "cost_estimate_+_-_10%_contingency_final_report_inc.": "$ 2.250"
+  },
+  "field_details": {
+    "product": {
+      "value": "Triumph",
+      "anchor": "PRODUCT",
+      "bbox": [
+        104,
+        116,
+        157,
+        130
+      ]
+    },
+    "date": {
+      "value": "October 17, 1979",
+      "anchor": "DATE",
+      "bbox": [
+        559,
+        24,
+        589,
+        38
+      ]
+    },
+    "yes": {
+      "value": "",
+      "anchor": "YES",
+      "bbox": [
+        259,
+        671,
+        282,
+        683
+      ]
+    },
+    "no": {
+      "value": "",
+      "anchor": "NO",
+      "bbox": [
+        314,
+        670,
+        333,
+        682
+      ]
+    },
+    "approved": {
+      "value": "",
+      "anchor": "APPROVED",
+      "bbox": [
+        106,
+        725,
+        165,
+        738
+      ]
+    },
+    "by": {
+      "value": "",
+      "anchor": "BY",
+      "bbox": [
+        170,
+        727,
+        190,
+        740
+      ]
+    },
+    "incidence": {
+      "value": "-",
+      "anchor": "INCIDENCE",
+      "bbox": [
+        470,
+        665,
+        532,
+        678
+      ]
+    },
+    "topline": {
+      "value": "2 wks from start of fid.",
+      "anchor": "TOPLINE",
+      "bbox": [
+        471,
+        780,
+        521,
+        795
+      ]
+    },
+    "final": {
+      "value": "4 wks from start of fld",
+      "anchor": "FINAL",
+      "bbox": [
+        469,
+        825,
+        505,
+        838
+      ]
+    },
+    "marketing": {
+      "value": "",
+      "anchor": "MARKETING",
+      "bbox": [
+        106,
+        768,
+        170,
+        785
+      ]
+    },
+    "research": {
+      "value": "",
+      "anchor": "RESEARCH",
+      "bbox": [
+        175,
+        771,
+        231,
+        784
+      ]
+    },
+    "director": {
+      "value": "",
+      "anchor": "DIRECTOR",
+      "bbox": [
+        239,
+        767,
+        293,
+        782
+      ]
+    },
+    "project_title": {
+      "value": "Triumph Disaster Check Study",
+      "anchor": "PROJECT TITLE",
+      "bbox": [
+        323,
+        99,
+        380,
+        124
+      ]
+    },
+    "key_criteria_for_analysis": {
+      "value": "-Mentions of \"harshness\"",
+      "anchor": "KEY CRITERIA FOR ANALYSIS",
+      "bbox": [
+        101,
+        441,
+        282,
+        454
+      ]
+    },
+    "research_limitations": {
+      "value": "If below 50% of Triumph smokers mention \"harshness\" we could consider it at a problem",
+      "anchor": "RESEARCH LIMITATIONS",
+      "bbox": [
+        102,
+        513,
+        243,
+        531
+      ]
+    },
+    "research_firm": {
+      "value": "The Data Group. Inc",
+      "anchor": "RESEARCH FIRM",
+      "bbox": [
+        470,
+        637,
+        559,
+        652
+      ]
+    },
+    "lenght_int": {
+      "value": "10 minutes",
+      "anchor": "LENGHT INT",
+      "bbox": [
+        471,
+        696,
+        542,
+        708
+      ]
+    },
+    "#_open": {
+      "value": "4",
+      "anchor": "# OPEN",
+      "bbox": [
+        469,
+        724,
+        551,
+        737
+      ]
+    },
+    "#_reports": {
+      "value": "1",
+      "anchor": "# REPORTS",
+      "bbox": [
+        469,
+        752,
+        533,
+        766
+      ]
+    },
+    "group_product_manager": {
+      "value": "",
+      "anchor": "GROUP PRODUCT MANAGER",
+      "bbox": [
+        106,
+        855,
+        254,
+        870
+      ]
+    },
+    "product_manager": {
+      "value": "",
+      "anchor": "PRODUCT MANAGER",
+      "bbox": [
+        107,
+        812,
+        212,
+        826
+      ]
+    },
+    "prepared_by": {
+      "value": "",
+      "anchor": "PREPARED BY",
+      "bbox": [
+        106,
+        696,
+        191,
+        713
+      ]
+    },
+    "cost_estimate_+_-_10%_contingency_final_report_inc.": {
+      "value": "$ 2.250",
+      "anchor": "COST ESTIMATE + - 10% CONTINGENCY FINAL REPORT INC.",
+      "bbox": [
+        101,
+        641,
+        238,
+        683
+      ]
+    }
+  },
+  "ocr_blocks": [
+    {
+      "text": "file",
+      "label": "other",
+      "bbox": [
+        100,
+        42,
+        148,
+        99
+      ]
+    },
+    {
+      "text": "PRODUCT",
+      "label": "question",
+      "bbox": [
+        104,
+        116,
+        157,
+        130
+      ]
+    },
+    {
+      "text": "Date",
+      "label": "question",
+      "bbox": [
+        559,
+        24,
+        589,
+        38
+      ]
+    },
+    {
+      "text": "Triumph",
+      "label": "answer",
+      "bbox": [
+        199,
+        116,
+        249,
+        127
+      ]
+    },
+    {
+      "text": "yes",
+      "label": "question",
+      "bbox": [
+        260,
+        654,
+        280,
+        667
+      ]
+    },
+    {
+      "text": "yes",
+      "label": "question",
+      "bbox": [
+        259,
+        671,
+        282,
+        683
+      ]
+    },
+    {
+      "text": "no",
+      "label": "question",
+      "bbox": [
+        314,
+        657,
+        333,
+        667
+      ]
+    },
+    {
+      "text": "no",
+      "label": "question",
+      "bbox": [
+        314,
+        670,
+        333,
+        682
+      ]
+    },
+    {
+      "text": "Approved",
+      "label": "question",
+      "bbox": [
+        106,
+        725,
+        165,
+        738
+      ]
+    },
+    {
+      "text": "by:",
+      "label": "question",
+      "bbox": [
+        170,
+        727,
+        190,
+        740
+      ]
+    },
+    {
+      "text": "Incidence",
+      "label": "question",
+      "bbox": [
+        470,
+        665,
+        532,
+        678
+      ]
+    },
+    {
+      "text": "-",
+      "label": "answer",
+      "bbox": [
+        645,
+        670,
+        657,
+        679
+      ]
+    },
+    {
+      "text": "4",
+      "label": "answer",
+      "bbox": [
+        613,
+        726,
+        623,
+        736
+      ]
+    },
+    {
+      "text": "1",
+      "label": "answer",
+      "bbox": [
+        617,
+        752,
+        630,
+        763
+      ]
+    },
+    {
+      "text": "Topline",
+      "label": "question",
+      "bbox": [
+        471,
+        780,
+        521,
+        795
+      ]
+    },
+    {
+      "text": "Final",
+      "label": "question",
+      "bbox": [
+        469,
+        825,
+        505,
+        838
+      ]
+    },
+    {
+      "text": "89856243",
+      "label": "other",
+      "bbox": [
+        606,
+        869,
+        691,
+        886
+      ]
+    },
+    {
+      "text": "Marketing",
+      "label": "question",
+      "bbox": [
+        106,
+        768,
+        170,
+        785
+      ]
+    },
+    {
+      "text": "Research",
+      "label": "question",
+      "bbox": [
+        175,
+        771,
+        231,
+        784
+      ]
+    },
+    {
+      "text": "Director",
+      "label": "question",
+      "bbox": [
+        239,
+        767,
+        293,
+        782
+      ]
+    },
+    {
+      "text": "October 17, 1979",
+      "label": "answer",
+      "bbox": [
+        607,
+        21,
+        719,
+        40
+      ]
+    },
+    {
+      "text": "MARKETING RESEARCH RPROJECT APPROVAL",
+      "label": "header",
+      "bbox": [
+        314,
+        36,
+        558,
+        55
+      ]
+    },
+    {
+      "text": "(To be filled out by Marketing Research Department)",
+      "label": "other",
+      "bbox": [
+        261,
+        52,
+        616,
+        71
+      ]
+    },
+    {
+      "text": "PROJECT TITLE",
+      "label": "question",
+      "bbox": [
+        323,
+        99,
+        380,
+        124
+      ]
+    },
+    {
+      "text": "Triumph Disaster Check Study",
+      "label": "answer",
+      "bbox": [
+        399,
+        111,
+        594,
+        126
+      ]
+    },
+    {
+      "text": "5546/ 1979",
+      "label": "other",
+      "bbox": [
+        671,
+        109,
+        734,
+        127
+      ]
+    },
+    {
+      "text": "Research Design (N, Cells, Elegibility, Design, Key Danner Breaks, Methodololy, Cities)",
+      "label": "other",
+      "bbox": [
+        104,
+        152,
+        711,
+        172
+      ]
+    },
+    {
+      "text": "Contact respondents from Buffalo and Kansas City who had previously participated in a steak knife offer This will consist of one cell of approximately 175 respondents who are Triumph most often smokers /triers This study is intended to provide us with any negatives associated with Triumph Banner points will include Triumph most often smokers (we anticipate approximately 25 most of ten people Switchers away from Triumph (N approximately 45). It should be noted that an action standard of at least 50% be obtained in acting upon any product negatives associated with these groups see research limitations below for additional action standard.",
+      "label": "other",
+      "bbox": [
+        106,
+        207,
+        720,
+        320
+      ]
+    },
+    {
+      "text": "(See attached memo",
+      "label": "other",
+      "bbox": [
+        363,
+        345,
+        496,
+        361
+      ]
+    },
+    {
+      "text": "Key Criteria for Analysis",
+      "label": "question",
+      "bbox": [
+        101,
+        441,
+        282,
+        454
+      ]
+    },
+    {
+      "text": "-Triumph switchers asked why no longer smoking Triumph",
+      "label": "answer",
+      "bbox": [
+        150,
+        458,
+        539,
+        476
+      ]
+    },
+    {
+      "text": "-Present smokers of Triumph asked reasons for switching to Triumph",
+      "label": "answer",
+      "bbox": [
+        153,
+        476,
+        618,
+        491
+      ]
+    },
+    {
+      "text": "-Mentions of \"harshness\"",
+      "label": "answer",
+      "bbox": [
+        154,
+        486,
+        336,
+        501
+      ]
+    },
+    {
+      "text": "Research Limitations",
+      "label": "question",
+      "bbox": [
+        102,
+        513,
+        243,
+        531
+      ]
+    },
+    {
+      "text": "Due to sample size and experience we feel 25 respondents will presently be Triumph smokers. An action standard of 75% should be utilized for judgments on product negatives only among this group",
+      "label": "answer",
+      "bbox": [
+        104,
+        531,
+        725,
+        573
+      ]
+    },
+    {
+      "text": "If 75% of Triumph smokers mention harshness we could consider it a 50- 75% problem If of Triumph smokers mention \"harshness\" we could it a look consider possible problem at other areas).",
+      "label": "answer",
+      "bbox": [
+        100,
+        572,
+        704,
+        613
+      ]
+    },
+    {
+      "text": "If below 50% of Triumph smokers mention \"harshness\" we could consider it at a problem",
+      "label": "answer",
+      "bbox": [
+        139,
+        610,
+        744,
+        628
+      ]
+    },
+    {
+      "text": "Research Firm",
+      "label": "question",
+      "bbox": [
+        470,
+        637,
+        559,
+        652
+      ]
+    },
+    {
+      "text": "Lenght Int",
+      "label": "question",
+      "bbox": [
+        471,
+        696,
+        542,
+        708
+      ]
+    },
+    {
+      "text": "# Open",
+      "label": "question",
+      "bbox": [
+        469,
+        724,
+        551,
+        737
+      ]
+    },
+    {
+      "text": "# Reports",
+      "label": "question",
+      "bbox": [
+        469,
+        752,
+        533,
+        766
+      ]
+    },
+    {
+      "text": "The Data Group. Inc",
+      "label": "answer",
+      "bbox": [
+        588,
+        637,
+        719,
+        654
+      ]
+    },
+    {
+      "text": "10 minutes",
+      "label": "answer",
+      "bbox": [
+        608,
+        695,
+        680,
+        708
+      ]
+    },
+    {
+      "text": "2 wks from start of fid.",
+      "label": "answer",
+      "bbox": [
+        588,
+        778,
+        754,
+        794
+      ]
+    },
+    {
+      "text": "4 wks from start of fld",
+      "label": "answer",
+      "bbox": [
+        588,
+        824,
+        756,
+        839
+      ]
+    },
+    {
+      "text": "Group Product Manager",
+      "label": "question",
+      "bbox": [
+        106,
+        855,
+        254,
+        870
+      ]
+    },
+    {
+      "text": "Product Manager",
+      "label": "question",
+      "bbox": [
+        107,
+        812,
+        212,
+        826
+      ]
+    },
+    {
+      "text": "Prepared by:",
+      "label": "question",
+      "bbox": [
+        106,
+        696,
+        191,
+        713
+      ]
+    },
+    {
+      "text": "Cost Estimate + - 10% Contingency Final Report Inc.",
+      "label": "question",
+      "bbox": [
+        101,
+        641,
+        238,
+        683
+      ]
+    },
+    {
+      "text": "Scott R. Benson",
+      "label": "other",
+      "bbox": [
+        237,
+        686,
+        385,
+        711
+      ]
+    },
+    {
+      "text": "$ 2.250",
+      "label": "answer",
+      "bbox": [
+        243,
+        640,
+        290,
+        653
+      ]
+    }
+  ]
+}

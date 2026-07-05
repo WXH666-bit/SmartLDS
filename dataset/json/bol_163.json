@@ -1,0 +1,627 @@
+{
+  "template": "funsd_public",
+  "source": "82253058_3059",
+  "fields": {
+    "recipient": "MRS. K. A. SPARROW",
+    "sender": "R. G. Ryan",
+    "date": "12/ 10/ 96",
+    "aug": "",
+    "sept": "",
+    "oct": "",
+    "nov": "X",
+    "manufacturer": "R. J. Reynolds",
+    "brand": "Camel Menthol",
+    "type_of_packings": "Full Flavor Box and Light Box",
+    "test_market_geography": "All of Region 7.",
+    "price_point": "FULL $ 11.89 P/ V $ (Indicate Distributor's Cost Per Carton)",
+    "sales_force_involvement": "carton fixtures in the Camel section. Also placing metal signs and temporary counter displays.",
+    "distributors_-_acceptance__intro_terms__intro_deals": "Product is being introduced to all Direct: Accounts in the Region. Acceptance is spotty at this time.",
+    "distributor_involvement": "Assembly of promotional products and shipment to retail Indianapolis Direct Accounts are reported to be receiving B1G1F product.",
+    "chains_-_acceptance__merchandising_allowance": "Chain acceptance has been very good.",
+    "independents_-_acceptance__merchandising_allowance": "Acceptance is better at high volume locations than at lower volume retail calls."
+  },
+  "field_details": {
+    "recipient": {
+      "value": "MRS. K. A. SPARROW",
+      "anchor": "TO",
+      "bbox": [
+        94,
+        203,
+        115,
+        217
+      ]
+    },
+    "sender": {
+      "value": "R. G. Ryan",
+      "anchor": "FROM",
+      "bbox": [
+        94,
+        222,
+        133,
+        236
+      ]
+    },
+    "date": {
+      "value": "12/ 10/ 96",
+      "anchor": "DATE",
+      "bbox": [
+        94,
+        242,
+        130,
+        256
+      ]
+    },
+    "aug": {
+      "value": "",
+      "anchor": "AUG",
+      "bbox": [
+        288,
+        279,
+        319,
+        293
+      ]
+    },
+    "sept": {
+      "value": "",
+      "anchor": "SEPT",
+      "bbox": [
+        384,
+        279,
+        416,
+        294
+      ]
+    },
+    "oct": {
+      "value": "",
+      "anchor": "OCT",
+      "bbox": [
+        482,
+        279,
+        510,
+        293
+      ]
+    },
+    "nov": {
+      "value": "X",
+      "anchor": "NOV",
+      "bbox": [
+        581,
+        281,
+        610,
+        295
+      ]
+    },
+    "manufacturer": {
+      "value": "R. J. Reynolds",
+      "anchor": "MANUFACTURER",
+      "bbox": [
+        328,
+        204,
+        433,
+        219
+      ]
+    },
+    "brand": {
+      "value": "Camel Menthol",
+      "anchor": "BRAND",
+      "bbox": [
+        330,
+        223,
+        377,
+        236
+      ]
+    },
+    "type_of_packings": {
+      "value": "Full Flavor Box and Light Box",
+      "anchor": "TYPE OF PACKINGS",
+      "bbox": [
+        330,
+        240,
+        450,
+        256
+      ]
+    },
+    "test_market_geography": {
+      "value": "All of Region 7.",
+      "anchor": "TEST MARKET GEOGRAPHY",
+      "bbox": [
+        92,
+        335,
+        264,
+        350
+      ]
+    },
+    "price_point": {
+      "value": "FULL $ 11.89 P/ V $ (Indicate Distributor's Cost Per Carton)",
+      "anchor": "PRICE POINT",
+      "bbox": [
+        92,
+        374,
+        178,
+        389
+      ]
+    },
+    "sales_force_involvement": {
+      "value": "carton fixtures in the Camel section. Also placing metal signs and temporary counter displays.",
+      "anchor": "SALES FORCE INVOLVEMENT",
+      "bbox": [
+        92,
+        411,
+        272,
+        427
+      ]
+    },
+    "distributors_-_acceptance__intro_terms__intro_deals": {
+      "value": "Product is being introduced to all Direct: Accounts in the Region. Acceptance is spotty at this time.",
+      "anchor": "DISTRIBUTORS - ACCEPTANCE/ INTRO TERMS/ INTRO DEALS",
+      "bbox": [
+        94,
+        487,
+        456,
+        504
+      ]
+    },
+    "distributor_involvement": {
+      "value": "Assembly of promotional products and shipment to retail Indianapolis Direct Accounts are reported to be receiving B1G1F product.",
+      "anchor": "DISTRIBUTOR INVOLVEMENT",
+      "bbox": [
+        92,
+        582,
+        269,
+        596
+      ]
+    },
+    "chains_-_acceptance__merchandising_allowance": {
+      "value": "Chain acceptance has been very good.",
+      "anchor": "CHAINS - ACCEPTANCE/ MERCHANDISING ALLOWANCE",
+      "bbox": [
+        94,
+        679,
+        426,
+        693
+      ]
+    },
+    "independents_-_acceptance__merchandising_allowance": {
+      "value": "Acceptance is better at high volume locations than at lower volume retail calls.",
+      "anchor": "INDEPENDENTS - ACCEPTANCE/ MERCHANDISING ALLOWANCE",
+      "bbox": [
+        92,
+        774,
+        473,
+        789
+      ]
+    }
+  },
+  "ocr_blocks": [
+    {
+      "text": "82253058",
+      "label": "other",
+      "bbox": [
+        570,
+        901,
+        672,
+        928
+      ]
+    },
+    {
+      "text": "LORILLARD",
+      "label": "other",
+      "bbox": [
+        384,
+        63,
+        445,
+        76
+      ]
+    },
+    {
+      "text": "TO:",
+      "label": "question",
+      "bbox": [
+        94,
+        203,
+        115,
+        217
+      ]
+    },
+    {
+      "text": "FROM:",
+      "label": "question",
+      "bbox": [
+        94,
+        222,
+        133,
+        236
+      ]
+    },
+    {
+      "text": "DATE:",
+      "label": "question",
+      "bbox": [
+        94,
+        242,
+        130,
+        256
+      ]
+    },
+    {
+      "text": "AUG",
+      "label": "question",
+      "bbox": [
+        288,
+        279,
+        319,
+        293
+      ]
+    },
+    {
+      "text": "SEPT",
+      "label": "question",
+      "bbox": [
+        384,
+        279,
+        416,
+        294
+      ]
+    },
+    {
+      "text": "OCT",
+      "label": "question",
+      "bbox": [
+        482,
+        279,
+        510,
+        293
+      ]
+    },
+    {
+      "text": "NOV",
+      "label": "question",
+      "bbox": [
+        581,
+        281,
+        610,
+        295
+      ]
+    },
+    {
+      "text": "MANUFACTURER",
+      "label": "question",
+      "bbox": [
+        328,
+        204,
+        433,
+        219
+      ]
+    },
+    {
+      "text": "BRAND:",
+      "label": "question",
+      "bbox": [
+        330,
+        223,
+        377,
+        236
+      ]
+    },
+    {
+      "text": "X",
+      "label": "answer",
+      "bbox": [
+        637,
+        279,
+        652,
+        294
+      ]
+    },
+    {
+      "text": "12/ 10/ 36 09: 51",
+      "label": "other",
+      "bbox": [
+        84,
+        56,
+        191,
+        70
+      ]
+    },
+    {
+      "text": "317 8450977",
+      "label": "other",
+      "bbox": [
+        218,
+        60,
+        303,
+        73
+      ]
+    },
+    {
+      "text": "001/ 002",
+      "label": "other",
+      "bbox": [
+        647,
+        68,
+        706,
+        82
+      ]
+    },
+    {
+      "text": "COMPETITIVE PRODUCT INTRODUCTION",
+      "label": "header",
+      "bbox": [
+        221,
+        137,
+        542,
+        152
+      ]
+    },
+    {
+      "text": "PROGRESS REPORT",
+      "label": "other",
+      "bbox": [
+        300,
+        155,
+        461,
+        170
+      ]
+    },
+    {
+      "text": "MRS. K. A. SPARROW",
+      "label": "answer",
+      "bbox": [
+        141,
+        203,
+        271,
+        218
+      ]
+    },
+    {
+      "text": "R. J. Reynolds",
+      "label": "answer",
+      "bbox": [
+        439,
+        204,
+        522,
+        219
+      ]
+    },
+    {
+      "text": "Camel Menthol",
+      "label": "answer",
+      "bbox": [
+        383,
+        222,
+        469,
+        237
+      ]
+    },
+    {
+      "text": "Full Flavor Box and Light Box",
+      "label": "answer",
+      "bbox": [
+        457,
+        240,
+        627,
+        257
+      ]
+    },
+    {
+      "text": "TYPE OF PACKINGS:",
+      "label": "question",
+      "bbox": [
+        330,
+        240,
+        450,
+        256
+      ]
+    },
+    {
+      "text": "R. G. Ryan",
+      "label": "answer",
+      "bbox": [
+        141,
+        222,
+        196,
+        237
+      ]
+    },
+    {
+      "text": "12/ 10/ 96",
+      "label": "answer",
+      "bbox": [
+        142,
+        240,
+        190,
+        255
+      ]
+    },
+    {
+      "text": "REPORTING PERIODS:",
+      "label": "header",
+      "bbox": [
+        92,
+        278,
+        228,
+        295
+      ]
+    },
+    {
+      "text": "(Forward by the 10th of the following month.)",
+      "label": "other",
+      "bbox": [
+        240,
+        297,
+        498,
+        314
+      ]
+    },
+    {
+      "text": "TEST MARKET GEOGRAPHY",
+      "label": "question",
+      "bbox": [
+        92,
+        335,
+        264,
+        350
+      ]
+    },
+    {
+      "text": "All of Region 7.",
+      "label": "answer",
+      "bbox": [
+        282,
+        337,
+        359,
+        352
+      ]
+    },
+    {
+      "text": "PRICE POINT:",
+      "label": "question",
+      "bbox": [
+        92,
+        374,
+        178,
+        389
+      ]
+    },
+    {
+      "text": "FULL $ 11.89 P/ V $ (Indicate Distributor's Cost Per Carton)",
+      "label": "answer",
+      "bbox": [
+        194,
+        374,
+        591,
+        391
+      ]
+    },
+    {
+      "text": "Merchandising the top tray of permanent counter displays and labeling",
+      "label": "answer",
+      "bbox": [
+        281,
+        412,
+        645,
+        429
+      ]
+    },
+    {
+      "text": "carton fixtures in the Camel section. Also placing metal signs and temporary counter displays.",
+      "label": "answer",
+      "bbox": [
+        91,
+        430,
+        577,
+        447
+      ]
+    },
+    {
+      "text": "SALES FORCE INVOLVEMENT:",
+      "label": "question",
+      "bbox": [
+        92,
+        411,
+        272,
+        427
+      ]
+    },
+    {
+      "text": "DISTRIBUTORS - ACCEPTANCE/ INTRO TERMS/ INTRO DEALS:",
+      "label": "question",
+      "bbox": [
+        94,
+        487,
+        456,
+        504
+      ]
+    },
+    {
+      "text": "Product is being introduced to all Direct: Accounts in the Region. Acceptance is spotty at this time.",
+      "label": "answer",
+      "bbox": [
+        91,
+        506,
+        600,
+        523
+      ]
+    },
+    {
+      "text": "DISTRIBUTOR INVOLVEMENT:",
+      "label": "question",
+      "bbox": [
+        92,
+        582,
+        269,
+        596
+      ]
+    },
+    {
+      "text": "Assembly of promotional products and shipment to retail Indianapolis Direct Accounts are reported to be receiving B1G1F product.",
+      "label": "answer",
+      "bbox": [
+        92,
+        602,
+        638,
+        637
+      ]
+    },
+    {
+      "text": "CHAINS - ACCEPTANCE/ MERCHANDISING ALLOWANCE",
+      "label": "question",
+      "bbox": [
+        94,
+        679,
+        426,
+        693
+      ]
+    },
+    {
+      "text": "Chain acceptance has been very good.",
+      "label": "answer",
+      "bbox": [
+        94,
+        698,
+        296,
+        713
+      ]
+    },
+    {
+      "text": "INDEPENDENTS - ACCEPTANCE/ MERCHANDISING ALLOWANCE",
+      "label": "question",
+      "bbox": [
+        92,
+        774,
+        473,
+        789
+      ]
+    },
+    {
+      "text": "Acceptance is better at high volume locations than at lower volume retail calls.",
+      "label": "answer",
+      "bbox": [
+        92,
+        792,
+        494,
+        808
+      ]
+    },
+    {
+      "text": "CAMEL WK1/ FMT",
+      "label": "other",
+      "bbox": [
+        64,
+        925,
+        158,
+        940
+      ]
+    },
+    {
+      "text": "PAGE 1 OF 2",
+      "label": "other",
+      "bbox": [
+        348,
+        923,
+        421,
+        940
+      ]
+    }
+  ]
+}

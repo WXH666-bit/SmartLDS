@@ -1,0 +1,775 @@
+{
+  "template": "funsd_public",
+  "source": "85629964",
+  "fields": {
+    "year": "",
+    "overwrap": "",
+    "nicotine": "",
+    "tar": "",
+    "brand_name": "",
+    "no._per_pack": "",
+    "var._desc": "",
+    "(see_explanation)": "",
+    "variety_unit_sales": "",
+    "variety_dollar_sales": "",
+    "cig._length": "",
+    "filter_length": "",
+    "filter_type": "",
+    "flavoring": "",
+    "pack_type": "",
+    "last_sold_date": "",
+    "ist_manufact._date": "",
+    "yearly_summary": "",
+    "ist_sales_date": "",
+    "carbon_mono": "",
+    "cat-_a-_expenses": "",
+    "cat-_d-_expenses": "",
+    "cat-_g-_expenses": "",
+    "cat-_j-_expenses": "",
+    "cat-_m-_expenses": "",
+    "total_advertising_expenditures": "",
+    "cat-_b-_expenses": "",
+    "cat-_e-_expenses": "",
+    "cat-_h-_expenses": "",
+    "cat-_k-_expenses": "",
+    "cat-_n-_expenses": "",
+    "cat-_c-_expenses": "",
+    "cat-_f-_expenses": "",
+    "cat-_i-_expenses": "",
+    "cat-_l-_expenses": ""
+  },
+  "field_details": {
+    "year": {
+      "value": "",
+      "anchor": "YEAR",
+      "bbox": [
+        110,
+        142,
+        156,
+        162
+      ]
+    },
+    "overwrap": {
+      "value": "",
+      "anchor": "OVERWRAP",
+      "bbox": [
+        416,
+        297,
+        501,
+        315
+      ]
+    },
+    "nicotine": {
+      "value": "",
+      "anchor": "NICOTINE",
+      "bbox": [
+        282,
+        385,
+        364,
+        406
+      ]
+    },
+    "tar": {
+      "value": "",
+      "anchor": "TAR",
+      "bbox": [
+        109,
+        385,
+        148,
+        402
+      ]
+    },
+    "brand_name": {
+      "value": "",
+      "anchor": "BRAND NAME",
+      "bbox": [
+        112,
+        175,
+        210,
+        193
+      ]
+    },
+    "no._per_pack": {
+      "value": "",
+      "anchor": "NO. PER PACK",
+      "bbox": [
+        510,
+        147,
+        631,
+        168
+      ]
+    },
+    "var._desc": {
+      "value": "",
+      "anchor": "VAR. DESC",
+      "bbox": [
+        112,
+        207,
+        203,
+        222
+      ]
+    },
+    "(see_explanation)": {
+      "value": "",
+      "anchor": "(SEE EXPLANATION)",
+      "bbox": [
+        552,
+        208,
+        701,
+        229
+      ]
+    },
+    "variety_unit_sales": {
+      "value": "",
+      "anchor": "VARIETY UNIT SALES",
+      "bbox": [
+        110,
+        235,
+        283,
+        255
+      ]
+    },
+    "variety_dollar_sales": {
+      "value": "",
+      "anchor": "VARIETY DOLLAR SALES",
+      "bbox": [
+        420,
+        237,
+        613,
+        259
+      ]
+    },
+    "cig._length": {
+      "value": "",
+      "anchor": "CIG. LENGTH",
+      "bbox": [
+        109,
+        265,
+        219,
+        283
+      ]
+    },
+    "filter_length": {
+      "value": "",
+      "anchor": "FILTER LENGTH",
+      "bbox": [
+        373,
+        267,
+        502,
+        288
+      ]
+    },
+    "filter_type": {
+      "value": "",
+      "anchor": "FILTER TYPE",
+      "bbox": [
+        110,
+        296,
+        221,
+        313
+      ]
+    },
+    "flavoring": {
+      "value": "",
+      "anchor": "FLAVORING",
+      "bbox": [
+        285,
+        296,
+        376,
+        316
+      ]
+    },
+    "pack_type": {
+      "value": "",
+      "anchor": "PACK TYPE",
+      "bbox": [
+        556,
+        299,
+        648,
+        320
+      ]
+    },
+    "last_sold_date": {
+      "value": "",
+      "anchor": "LAST SOLD DATE",
+      "bbox": [
+        531,
+        328,
+        667,
+        350
+      ]
+    },
+    "ist_manufact._date": {
+      "value": "",
+      "anchor": "IST MANUFACT. DATE",
+      "bbox": [
+        113,
+        325,
+        283,
+        344
+      ]
+    },
+    "yearly_summary": {
+      "value": "",
+      "anchor": "YEARLY SUMMARY",
+      "bbox": [
+        112,
+        355,
+        246,
+        375
+      ]
+    },
+    "ist_sales_date": {
+      "value": "",
+      "anchor": "IST SALES DATE",
+      "bbox": [
+        331,
+        325,
+        466,
+        346
+      ]
+    },
+    "carbon_mono": {
+      "value": "",
+      "anchor": "CARBON MONO",
+      "bbox": [
+        556,
+        391,
+        665,
+        409
+      ]
+    },
+    "cat-_a-_expenses": {
+      "value": "",
+      "anchor": "CAT- A- EXPENSES",
+      "bbox": [
+        108,
+        520,
+        246,
+        539
+      ]
+    },
+    "cat-_d-_expenses": {
+      "value": "",
+      "anchor": "CAT- D- EXPENSES",
+      "bbox": [
+        109,
+        552,
+        246,
+        571
+      ]
+    },
+    "cat-_g-_expenses": {
+      "value": "",
+      "anchor": "CAT- G- EXPENSES",
+      "bbox": [
+        110,
+        582,
+        247,
+        601
+      ]
+    },
+    "cat-_j-_expenses": {
+      "value": "",
+      "anchor": "CAT- J- EXPENSES",
+      "bbox": [
+        109,
+        613,
+        246,
+        630
+      ]
+    },
+    "cat-_m-_expenses": {
+      "value": "",
+      "anchor": "CAT- M- EXPENSES",
+      "bbox": [
+        110,
+        644,
+        247,
+        662
+      ]
+    },
+    "total_advertising_expenditures": {
+      "value": "",
+      "anchor": "TOTAL ADVERTISING EXPENDITURES",
+      "bbox": [
+        109,
+        675,
+        392,
+        695
+      ]
+    },
+    "cat-_b-_expenses": {
+      "value": "",
+      "anchor": "CAT- B- EXPENSES",
+      "bbox": [
+        310,
+        522,
+        447,
+        542
+      ]
+    },
+    "cat-_e-_expenses": {
+      "value": "",
+      "anchor": "CAT- E- EXPENSES",
+      "bbox": [
+        309,
+        553,
+        447,
+        571
+      ]
+    },
+    "cat-_h-_expenses": {
+      "value": "",
+      "anchor": "CAT- H- EXPENSES",
+      "bbox": [
+        310,
+        584,
+        447,
+        604
+      ]
+    },
+    "cat-_k-_expenses": {
+      "value": "",
+      "anchor": "CAT- K- EXPENSES",
+      "bbox": [
+        310,
+        613,
+        446,
+        633
+      ]
+    },
+    "cat-_n-_expenses": {
+      "value": "",
+      "anchor": "CAT- N- EXPENSES",
+      "bbox": [
+        307,
+        645,
+        451,
+        663
+      ]
+    },
+    "cat-_c-_expenses": {
+      "value": "",
+      "anchor": "CAT- C- EXPENSES",
+      "bbox": [
+        520,
+        524,
+        657,
+        545
+      ]
+    },
+    "cat-_f-_expenses": {
+      "value": "",
+      "anchor": "CAT- F- EXPENSES",
+      "bbox": [
+        518,
+        553,
+        659,
+        576
+      ]
+    },
+    "cat-_i-_expenses": {
+      "value": "",
+      "anchor": "CAT- I- EXPENSES",
+      "bbox": [
+        520,
+        584,
+        657,
+        608
+      ]
+    },
+    "cat-_l-_expenses": {
+      "value": "",
+      "anchor": "CAT- L- EXPENSES",
+      "bbox": [
+        520,
+        616,
+        656,
+        634
+      ]
+    }
+  },
+  "ocr_blocks": [
+    {
+      "text": "YEAR:",
+      "label": "question",
+      "bbox": [
+        110,
+        142,
+        156,
+        162
+      ]
+    },
+    {
+      "text": "OVERWRAP:",
+      "label": "question",
+      "bbox": [
+        416,
+        297,
+        501,
+        315
+      ]
+    },
+    {
+      "text": "NICOTINE:",
+      "label": "question",
+      "bbox": [
+        282,
+        385,
+        364,
+        406
+      ]
+    },
+    {
+      "text": "TAR:",
+      "label": "question",
+      "bbox": [
+        109,
+        385,
+        148,
+        402
+      ]
+    },
+    {
+      "text": "85629964",
+      "label": "other",
+      "bbox": [
+        689,
+        832,
+        709,
+        930
+      ]
+    },
+    {
+      "text": "CIGARETTE REPORT FORM",
+      "label": "header",
+      "bbox": [
+        311,
+        101,
+        507,
+        121
+      ]
+    },
+    {
+      "text": "BRAND NAME:",
+      "label": "question",
+      "bbox": [
+        112,
+        175,
+        210,
+        193
+      ]
+    },
+    {
+      "text": "NO. PER PACK",
+      "label": "question",
+      "bbox": [
+        510,
+        147,
+        631,
+        168
+      ]
+    },
+    {
+      "text": "VAR. DESC:",
+      "label": "question",
+      "bbox": [
+        112,
+        207,
+        203,
+        222
+      ]
+    },
+    {
+      "text": "(SEE EXPLANATION)",
+      "label": "question",
+      "bbox": [
+        552,
+        208,
+        701,
+        229
+      ]
+    },
+    {
+      "text": "VARIETY UNIT SALES:",
+      "label": "question",
+      "bbox": [
+        110,
+        235,
+        283,
+        255
+      ]
+    },
+    {
+      "text": "VARIETY DOLLAR SALES:",
+      "label": "question",
+      "bbox": [
+        420,
+        237,
+        613,
+        259
+      ]
+    },
+    {
+      "text": "CIG. LENGTH:",
+      "label": "question",
+      "bbox": [
+        109,
+        265,
+        219,
+        283
+      ]
+    },
+    {
+      "text": "FILTER LENGTH:",
+      "label": "question",
+      "bbox": [
+        373,
+        267,
+        502,
+        288
+      ]
+    },
+    {
+      "text": "FILTER TYPE:",
+      "label": "question",
+      "bbox": [
+        110,
+        296,
+        221,
+        313
+      ]
+    },
+    {
+      "text": "FLAVORING:",
+      "label": "question",
+      "bbox": [
+        285,
+        296,
+        376,
+        316
+      ]
+    },
+    {
+      "text": "PACK TYPE:",
+      "label": "question",
+      "bbox": [
+        556,
+        299,
+        648,
+        320
+      ]
+    },
+    {
+      "text": "LAST SOLD DATE:",
+      "label": "question",
+      "bbox": [
+        531,
+        328,
+        667,
+        350
+      ]
+    },
+    {
+      "text": "IST MANUFACT. DATE:",
+      "label": "question",
+      "bbox": [
+        113,
+        325,
+        283,
+        344
+      ]
+    },
+    {
+      "text": "YEARLY SUMMARY:",
+      "label": "question",
+      "bbox": [
+        112,
+        355,
+        246,
+        375
+      ]
+    },
+    {
+      "text": "IST SALES DATE:",
+      "label": "question",
+      "bbox": [
+        331,
+        325,
+        466,
+        346
+      ]
+    },
+    {
+      "text": "CARBON MONO:",
+      "label": "question",
+      "bbox": [
+        556,
+        391,
+        665,
+        409
+      ]
+    },
+    {
+      "text": "ADVERTISING EXPENDITURES (SEE EXPLANATION)",
+      "label": "header",
+      "bbox": [
+        214,
+        492,
+        598,
+        515
+      ]
+    },
+    {
+      "text": "CAT- A- EXPENSES:",
+      "label": "question",
+      "bbox": [
+        108,
+        520,
+        246,
+        539
+      ]
+    },
+    {
+      "text": "CAT- D- EXPENSES:",
+      "label": "question",
+      "bbox": [
+        109,
+        552,
+        246,
+        571
+      ]
+    },
+    {
+      "text": "CAT- G- EXPENSES:",
+      "label": "question",
+      "bbox": [
+        110,
+        582,
+        247,
+        601
+      ]
+    },
+    {
+      "text": "CAT- J- EXPENSES:",
+      "label": "question",
+      "bbox": [
+        109,
+        613,
+        246,
+        630
+      ]
+    },
+    {
+      "text": "CAT- M- EXPENSES:",
+      "label": "question",
+      "bbox": [
+        110,
+        644,
+        247,
+        662
+      ]
+    },
+    {
+      "text": "TOTAL ADVERTISING EXPENDITURES:",
+      "label": "question",
+      "bbox": [
+        109,
+        675,
+        392,
+        695
+      ]
+    },
+    {
+      "text": "CAT- B- EXPENSES:",
+      "label": "question",
+      "bbox": [
+        310,
+        522,
+        447,
+        542
+      ]
+    },
+    {
+      "text": "CAT- E- EXPENSES:",
+      "label": "question",
+      "bbox": [
+        309,
+        553,
+        447,
+        571
+      ]
+    },
+    {
+      "text": "CAT- H- EXPENSES:",
+      "label": "question",
+      "bbox": [
+        310,
+        584,
+        447,
+        604
+      ]
+    },
+    {
+      "text": "CAT- K- EXPENSES:",
+      "label": "question",
+      "bbox": [
+        310,
+        613,
+        446,
+        633
+      ]
+    },
+    {
+      "text": "CAT- N- EXPENSES:",
+      "label": "question",
+      "bbox": [
+        307,
+        645,
+        451,
+        663
+      ]
+    },
+    {
+      "text": "CAT- C- EXPENSES:",
+      "label": "question",
+      "bbox": [
+        520,
+        524,
+        657,
+        545
+      ]
+    },
+    {
+      "text": "CAT- F- EXPENSES:",
+      "label": "question",
+      "bbox": [
+        518,
+        553,
+        659,
+        576
+      ]
+    },
+    {
+      "text": "CAT- I- EXPENSES:",
+      "label": "question",
+      "bbox": [
+        520,
+        584,
+        657,
+        608
+      ]
+    },
+    {
+      "text": "CAT- L- EXPENSES:",
+      "label": "question",
+      "bbox": [
+        520,
+        616,
+        656,
+        634
+      ]
+    }
+  ]
+}

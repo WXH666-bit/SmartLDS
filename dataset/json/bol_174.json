@@ -1,0 +1,403 @@
+{
+  "template": "funsd_public",
+  "source": "87086073",
+  "fields": {
+    "date": "August 14, 1990",
+    "structure": "CH3CH2O OH",
+    "comments": "This ethoxy substitued aromatic falls into class III.",
+    "j.": "",
+    "d.": "",
+    "engle": "",
+    "r.": "",
+    "f.": "",
+    "dufresne": "",
+    "compound_name": "Vanitrope",
+    "estimated_toxicity_class": "III",
+    "lorillaro_compound_code_number": "B134",
+    "research_chemist": ""
+  },
+  "field_details": {
+    "date": {
+      "value": "August 14, 1990",
+      "anchor": "DATE",
+      "bbox": [
+        492,
+        138,
+        513,
+        151
+      ]
+    },
+    "structure": {
+      "value": "CH3CH2O OH",
+      "anchor": "STRUCTURE",
+      "bbox": [
+        88,
+        222,
+        134,
+        236
+      ]
+    },
+    "comments": {
+      "value": "This ethoxy substitued aromatic falls into class III.",
+      "anchor": "COMMENTS",
+      "bbox": [
+        88,
+        385,
+        134,
+        399
+      ]
+    },
+    "j.": {
+      "value": "",
+      "anchor": "J.",
+      "bbox": [
+        469,
+        603,
+        484,
+        616
+      ]
+    },
+    "d.": {
+      "value": "",
+      "anchor": "D.",
+      "bbox": [
+        490,
+        602,
+        503,
+        617
+      ]
+    },
+    "engle": {
+      "value": "",
+      "anchor": "ENGLE",
+      "bbox": [
+        513,
+        601,
+        548,
+        616
+      ]
+    },
+    "r.": {
+      "value": "",
+      "anchor": "R.",
+      "bbox": [
+        469,
+        687,
+        484,
+        701
+      ]
+    },
+    "f.": {
+      "value": "",
+      "anchor": "F.",
+      "bbox": [
+        490,
+        686,
+        505,
+        700
+      ]
+    },
+    "dufresne": {
+      "value": "",
+      "anchor": "DUFRESNE",
+      "bbox": [
+        513,
+        687,
+        572,
+        700
+      ]
+    },
+    "compound_name": {
+      "value": "Vanitrope",
+      "anchor": "COMPOUND NAME",
+      "bbox": [
+        89,
+        169,
+        155,
+        180
+      ]
+    },
+    "estimated_toxicity_class": {
+      "value": "III",
+      "anchor": "ESTIMATED TOXICITY CLASS",
+      "bbox": [
+        89,
+        359,
+        195,
+        373
+      ]
+    },
+    "lorillaro_compound_code_number": {
+      "value": "B134",
+      "anchor": "LORILLARO COMPOUND CODE NUMBER",
+      "bbox": [
+        387,
+        356,
+        535,
+        371
+      ]
+    },
+    "research_chemist": {
+      "value": "",
+      "anchor": "RESEARCH CHEMIST",
+      "bbox": [
+        471,
+        616,
+        587,
+        631
+      ]
+    }
+  },
+  "ocr_blocks": [
+    {
+      "text": "DATE",
+      "label": "question",
+      "bbox": [
+        492,
+        138,
+        513,
+        151
+      ]
+    },
+    {
+      "text": "STRUCTURE",
+      "label": "question",
+      "bbox": [
+        88,
+        222,
+        134,
+        236
+      ]
+    },
+    {
+      "text": "COMMENTS",
+      "label": "question",
+      "bbox": [
+        88,
+        385,
+        134,
+        399
+      ]
+    },
+    {
+      "text": "J.",
+      "label": "question",
+      "bbox": [
+        469,
+        603,
+        484,
+        616
+      ]
+    },
+    {
+      "text": "D.",
+      "label": "question",
+      "bbox": [
+        490,
+        602,
+        503,
+        617
+      ]
+    },
+    {
+      "text": "Engle",
+      "label": "question",
+      "bbox": [
+        513,
+        601,
+        548,
+        616
+      ]
+    },
+    {
+      "text": "R.",
+      "label": "question",
+      "bbox": [
+        469,
+        687,
+        484,
+        701
+      ]
+    },
+    {
+      "text": "F.",
+      "label": "question",
+      "bbox": [
+        490,
+        686,
+        505,
+        700
+      ]
+    },
+    {
+      "text": "Dufresne",
+      "label": "question",
+      "bbox": [
+        513,
+        687,
+        572,
+        700
+      ]
+    },
+    {
+      "text": "Vanitrope",
+      "label": "answer",
+      "bbox": [
+        115,
+        186,
+        182,
+        204
+      ]
+    },
+    {
+      "text": "III",
+      "label": "answer",
+      "bbox": [
+        208,
+        369,
+        236,
+        386
+      ]
+    },
+    {
+      "text": "B134",
+      "label": "answer",
+      "bbox": [
+        451,
+        366,
+        482,
+        381
+      ]
+    },
+    {
+      "text": "87086073",
+      "label": "other",
+      "bbox": [
+        654,
+        785,
+        669,
+        873
+      ]
+    },
+    {
+      "text": "DECISION TREE ESTIMATION OF TOXIC RISK",
+      "label": "header",
+      "bbox": [
+        212,
+        113,
+        556,
+        136
+      ]
+    },
+    {
+      "text": "J. D. Ergle and R. F. Dufresne",
+      "label": "answer",
+      "bbox": [
+        115,
+        142,
+        329,
+        161
+      ]
+    },
+    {
+      "text": "August 14, 1990",
+      "label": "answer",
+      "bbox": [
+        522,
+        135,
+        630,
+        159
+      ]
+    },
+    {
+      "text": "COMPOUND NAME",
+      "label": "question",
+      "bbox": [
+        89,
+        169,
+        155,
+        180
+      ]
+    },
+    {
+      "text": "CH3CH2O OH",
+      "label": "answer",
+      "bbox": [
+        279,
+        221,
+        532,
+        343
+      ]
+    },
+    {
+      "text": "ESTIMATED TOXICITY CLASS",
+      "label": "question",
+      "bbox": [
+        89,
+        359,
+        195,
+        373
+      ]
+    },
+    {
+      "text": "LORILLARO COMPOUND CODE NUMBER",
+      "label": "question",
+      "bbox": [
+        387,
+        356,
+        535,
+        371
+      ]
+    },
+    {
+      "text": "This ethoxy substitued aromatic falls into class III.",
+      "label": "answer",
+      "bbox": [
+        119,
+        409,
+        496,
+        428
+      ]
+    },
+    {
+      "text": "Research Chemist",
+      "label": "question",
+      "bbox": [
+        469,
+        700,
+        585,
+        718
+      ]
+    },
+    {
+      "text": "Research Chemist",
+      "label": "question",
+      "bbox": [
+        471,
+        616,
+        587,
+        631
+      ]
+    },
+    {
+      "text": "LORILLARD RESEARCH CENTER",
+      "label": "other",
+      "bbox": [
+        92,
+        926,
+        210,
+        937
+      ]
+    },
+    {
+      "text": "FORM",
+      "label": "other",
+      "bbox": [
+        635,
+        919,
+        694,
+        932
+      ]
+    }
+  ]
+}

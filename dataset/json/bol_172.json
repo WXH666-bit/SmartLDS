@@ -1,0 +1,350 @@
+{
+  "template": "funsd_public",
+  "source": "86236474_6476",
+  "fields": {
+    "recipient": "Mrs. K. A. Sparrow",
+    "sender": "R. G. Ryan",
+    "june7": "☑",
+    "aug.2": "",
+    "oct.7": "",
+    "direct_account__wholesalers": "Distribution allowance was very effective in accomplishing our objectives. All accounts have purchased introductory products.",
+    "direct_account_chains": "Eagle Foods is the only Void.",
+    "non-_direct_account_chains": "Reception from these accounts is most positive with a solid incentitive to purchase.",
+    "effectiveness_of_the_retail_(1_00_off_carton)_distribution_allowance": "Has been most helpful in acquiring desireable distribution when needed by Sales Reps.",
+    "40c_off_pack-_general_market": "The 40c off promotions continue to be well received at the retail stores and by consumers, as well."
+  },
+  "field_details": {
+    "recipient": {
+      "value": "Mrs. K. A. Sparrow",
+      "anchor": "TO",
+      "bbox": [
+        47,
+        102,
+        74,
+        120
+      ]
+    },
+    "sender": {
+      "value": "R. G. Ryan",
+      "anchor": "FROM",
+      "bbox": [
+        47,
+        141,
+        96,
+        159
+      ]
+    },
+    "june7": {
+      "value": "☑",
+      "anchor": "JUNE7",
+      "bbox": [
+        511,
+        140,
+        560,
+        155
+      ]
+    },
+    "aug.2": {
+      "value": "",
+      "anchor": "AUG.2",
+      "bbox": [
+        510,
+        156,
+        562,
+        174
+      ]
+    },
+    "oct.7": {
+      "value": "",
+      "anchor": "OCT.7",
+      "bbox": [
+        511,
+        175,
+        561,
+        192
+      ]
+    },
+    "direct_account__wholesalers": {
+      "value": "Distribution allowance was very effective in accomplishing our objectives. All accounts have purchased introductory products.",
+      "anchor": "DIRECT ACCOUNT/ WHOLESALERS",
+      "bbox": [
+        45,
+        307,
+        287,
+        327
+      ]
+    },
+    "direct_account_chains": {
+      "value": "Eagle Foods is the only Void.",
+      "anchor": "DIRECT ACCOUNT CHAINS",
+      "bbox": [
+        47,
+        437,
+        236,
+        454
+      ]
+    },
+    "non-_direct_account_chains": {
+      "value": "Reception from these accounts is most positive with a solid incentitive to purchase.",
+      "anchor": "NON- DIRECT ACCOUNT CHAINS",
+      "bbox": [
+        47,
+        552,
+        280,
+        570
+      ]
+    },
+    "effectiveness_of_the_retail_(1_00_off_carton)_distribution_allowance": {
+      "value": "Has been most helpful in acquiring desireable distribution when needed by Sales Reps.",
+      "anchor": "EFFECTIVENESS OF THE RETAIL (1 00 OFF CARTON) DISTRIBUTION ALLOWANCE",
+      "bbox": [
+        46,
+        662,
+        243,
+        721
+      ]
+    },
+    "40c_off_pack-_general_market": {
+      "value": "The 40c off promotions continue to be well received at the retail stores and by consumers, as well.",
+      "anchor": "40C OFF PACK- GENERAL MARKET",
+      "bbox": [
+        46,
+        834,
+        181,
+        871
+      ]
+    }
+  },
+  "ocr_blocks": [
+    {
+      "text": "TO:",
+      "label": "question",
+      "bbox": [
+        47,
+        102,
+        74,
+        120
+      ]
+    },
+    {
+      "text": "FROM:",
+      "label": "question",
+      "bbox": [
+        47,
+        141,
+        96,
+        159
+      ]
+    },
+    {
+      "text": "8623474",
+      "label": "other",
+      "bbox": [
+        683,
+        800,
+        707,
+        912
+      ]
+    },
+    {
+      "text": "☑",
+      "label": "answer",
+      "bbox": [
+        616,
+        138,
+        638,
+        155
+      ]
+    },
+    {
+      "text": "Mrs. K. A. Sparrow",
+      "label": "answer",
+      "bbox": [
+        124,
+        102,
+        244,
+        122
+      ]
+    },
+    {
+      "text": "R. G. Ryan",
+      "label": "answer",
+      "bbox": [
+        126,
+        138,
+        196,
+        158
+      ]
+    },
+    {
+      "text": "JUNE7",
+      "label": "question",
+      "bbox": [
+        511,
+        140,
+        560,
+        155
+      ]
+    },
+    {
+      "text": "AUG.2",
+      "label": "question",
+      "bbox": [
+        510,
+        156,
+        562,
+        174
+      ]
+    },
+    {
+      "text": "OCT.7",
+      "label": "question",
+      "bbox": [
+        511,
+        175,
+        561,
+        192
+      ]
+    },
+    {
+      "text": "SUBMISSION DATE:",
+      "label": "header",
+      "bbox": [
+        518,
+        101,
+        655,
+        121
+      ]
+    },
+    {
+      "text": "NEWPORT LIGHTS HEAVY UP PROGRESS REPORT",
+      "label": "header",
+      "bbox": [
+        169,
+        211,
+        545,
+        234
+      ]
+    },
+    {
+      "text": "EFFECTIVENESS OF DISTRIBUTION ALLOWANCE:",
+      "label": "header",
+      "bbox": [
+        46,
+        267,
+        416,
+        289
+      ]
+    },
+    {
+      "text": "DIRECT ACCOUNT/ WHOLESALERS:",
+      "label": "question",
+      "bbox": [
+        45,
+        307,
+        287,
+        327
+      ]
+    },
+    {
+      "text": "Distribution allowance was very effective in accomplishing our objectives. All accounts have purchased introductory products.",
+      "label": "answer",
+      "bbox": [
+        49,
+        327,
+        599,
+        364
+      ]
+    },
+    {
+      "text": "DIRECT ACCOUNT CHAINS:",
+      "label": "question",
+      "bbox": [
+        47,
+        437,
+        236,
+        454
+      ]
+    },
+    {
+      "text": "Eagle Foods is the only Void.",
+      "label": "answer",
+      "bbox": [
+        47,
+        457,
+        235,
+        477
+      ]
+    },
+    {
+      "text": "NON- DIRECT ACCOUNT CHAINS:",
+      "label": "question",
+      "bbox": [
+        47,
+        552,
+        280,
+        570
+      ]
+    },
+    {
+      "text": "Reception from these accounts is most positive with a solid incentitive to purchase.",
+      "label": "answer",
+      "bbox": [
+        47,
+        571,
+        575,
+        590
+      ]
+    },
+    {
+      "text": "EFFECTIVENESS OF THE RETAIL (1 00 OFF CARTON) DISTRIBUTION ALLOWANCE:",
+      "label": "question",
+      "bbox": [
+        46,
+        662,
+        243,
+        721
+      ]
+    },
+    {
+      "text": "Has been most helpful in acquiring desireable distribution when needed by Sales Reps.",
+      "label": "answer",
+      "bbox": [
+        279,
+        701,
+        647,
+        739
+      ]
+    },
+    {
+      "text": "PROMOTIONAL ACTIVITY",
+      "label": "header",
+      "bbox": [
+        47,
+        795,
+        234,
+        816
+      ]
+    },
+    {
+      "text": "40c OFF PACK- GENERAL MARKET:",
+      "label": "question",
+      "bbox": [
+        46,
+        834,
+        181,
+        871
+      ]
+    },
+    {
+      "text": "The 40c off promotions continue to be well received at the retail stores and by consumers, as well.",
+      "label": "answer",
+      "bbox": [
+        203,
+        852,
+        605,
+        888
+      ]
+    }
+  ]
+}

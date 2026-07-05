@@ -1,0 +1,645 @@
+{
+  "template": "funsd_public",
+  "source": "93106788",
+  "fields": {
+    "recipient": "ESSENCE 1500 BROADWAY NEW YORK, NY 10036",
+    "attn": "",
+    "date": "JUNE 1995",
+    "advertiser": "LORILLARD",
+    "product": "NEWPORT",
+    "ad#": "NPT- 533- 7",
+    "caption": "FOUNTAIN COUPLE",
+    "space": "P5CE",
+    "po": "#77219",
+    "position_urgently_requested": "",
+    "copy_instructions": "",
+    "surgeon_generals_warning": "",
+    "important_instructions": "",
+    "space_billing_instructions": "",
+    "the_space_is_being_brdered_by": ""
+  },
+  "field_details": {
+    "recipient": {
+      "value": "ESSENCE 1500 BROADWAY NEW YORK, NY 10036",
+      "anchor": "TO",
+      "bbox": [
+        99,
+        196,
+        114,
+        206
+      ]
+    },
+    "attn": {
+      "value": "",
+      "anchor": "ATTN",
+      "bbox": [
+        447,
+        827,
+        475,
+        837
+      ]
+    },
+    "date": {
+      "value": "JUNE 1995",
+      "anchor": "DATE",
+      "bbox": [
+        524,
+        373,
+        552,
+        384
+      ]
+    },
+    "advertiser": {
+      "value": "LORILLARD",
+      "anchor": "ADVERTISER",
+      "bbox": [
+        464,
+        223,
+        523,
+        234
+      ]
+    },
+    "product": {
+      "value": "NEWPORT",
+      "anchor": "PRODUCT",
+      "bbox": [
+        475,
+        256,
+        522,
+        267
+      ]
+    },
+    "ad#": {
+      "value": "NPT- 533- 7",
+      "anchor": "AD#",
+      "bbox": [
+        96,
+        376,
+        120,
+        387
+      ]
+    },
+    "caption": {
+      "value": "FOUNTAIN COUPLE",
+      "anchor": "CAPTION",
+      "bbox": [
+        229,
+        374,
+        272,
+        385
+      ]
+    },
+    "space": {
+      "value": "P5CE",
+      "anchor": "SPACE",
+      "bbox": [
+        377,
+        373,
+        411,
+        384
+      ]
+    },
+    "po": {
+      "value": "#77219",
+      "anchor": "PO",
+      "bbox": [
+        98,
+        453,
+        112,
+        463
+      ]
+    },
+    "position_urgently_requested": {
+      "value": "",
+      "anchor": "POSITION URGENTLY REQUESTED",
+      "bbox": [
+        96,
+        518,
+        249,
+        529
+      ]
+    },
+    "copy_instructions": {
+      "value": "",
+      "anchor": "COPY INSTRUCTIONS",
+      "bbox": [
+        96,
+        613,
+        194,
+        624
+      ]
+    },
+    "surgeon_generals_warning": {
+      "value": "",
+      "anchor": "SURGEON GENERALS WARNING",
+      "bbox": [
+        461,
+        619,
+        578,
+        631
+      ]
+    },
+    "important_instructions": {
+      "value": "",
+      "anchor": "IMPORTANT INSTRUCTIONS",
+      "bbox": [
+        96,
+        676,
+        220,
+        687
+      ]
+    },
+    "space_billing_instructions": {
+      "value": "",
+      "anchor": "SPACE BILLING INSTRUCTIONS",
+      "bbox": [
+        448,
+        672,
+        589,
+        685
+      ]
+    },
+    "the_space_is_being_brdered_by": {
+      "value": "",
+      "anchor": "THE SPACE IS BEING BRDERED BY",
+      "bbox": [
+        447,
+        701,
+        579,
+        714
+      ]
+    }
+  },
+  "ocr_blocks": [
+    {
+      "text": "TO:",
+      "label": "question",
+      "bbox": [
+        99,
+        196,
+        114,
+        206
+      ]
+    },
+    {
+      "text": "ATTN:",
+      "label": "question",
+      "bbox": [
+        156,
+        242,
+        184,
+        253
+      ]
+    },
+    {
+      "text": "DATE:",
+      "label": "question",
+      "bbox": [
+        496,
+        191,
+        523,
+        202
+      ]
+    },
+    {
+      "text": "ADVERTISER:",
+      "label": "question",
+      "bbox": [
+        464,
+        223,
+        523,
+        234
+      ]
+    },
+    {
+      "text": "PRODUCT:",
+      "label": "question",
+      "bbox": [
+        475,
+        256,
+        522,
+        267
+      ]
+    },
+    {
+      "text": "LORILLARD",
+      "label": "answer",
+      "bbox": [
+        536,
+        223,
+        590,
+        233
+      ]
+    },
+    {
+      "text": "NEWPORT",
+      "label": "answer",
+      "bbox": [
+        538,
+        256,
+        585,
+        267
+      ]
+    },
+    {
+      "text": "AD#:",
+      "label": "question",
+      "bbox": [
+        96,
+        376,
+        120,
+        387
+      ]
+    },
+    {
+      "text": "CAPTION:",
+      "label": "question",
+      "bbox": [
+        229,
+        374,
+        272,
+        385
+      ]
+    },
+    {
+      "text": "SPACE:",
+      "label": "question",
+      "bbox": [
+        377,
+        373,
+        411,
+        384
+      ]
+    },
+    {
+      "text": "DATE:",
+      "label": "question",
+      "bbox": [
+        524,
+        373,
+        552,
+        384
+      ]
+    },
+    {
+      "text": "P5CE",
+      "label": "answer",
+      "bbox": [
+        377,
+        404,
+        402,
+        415
+      ]
+    },
+    {
+      "text": "PO",
+      "label": "question",
+      "bbox": [
+        98,
+        453,
+        112,
+        463
+      ]
+    },
+    {
+      "text": "#77219",
+      "label": "answer",
+      "bbox": [
+        115,
+        453,
+        144,
+        463
+      ]
+    },
+    {
+      "text": "ATTN:",
+      "label": "question",
+      "bbox": [
+        447,
+        827,
+        475,
+        837
+      ]
+    },
+    {
+      "text": "93106788",
+      "label": "other",
+      "bbox": [
+        677,
+        792,
+        695,
+        865
+      ]
+    },
+    {
+      "text": "Cigarette",
+      "label": "other",
+      "bbox": [
+        582,
+        617,
+        617,
+        630
+      ]
+    },
+    {
+      "text": "LORILLARD MEDIA SERVICES ONE PARK AVENUE, NEW YORK, NY 10016- 5896 MAGAZINE INSERTION ORDER",
+      "label": "header",
+      "bbox": [
+        208,
+        81,
+        555,
+        143
+      ]
+    },
+    {
+      "text": "ESSENCE 1500 BROADWAY NEW YORK, NY 10036",
+      "label": "answer",
+      "bbox": [
+        156,
+        196,
+        259,
+        236
+      ]
+    },
+    {
+      "text": "JOYCE WINSTON",
+      "label": "answer",
+      "bbox": [
+        191,
+        242,
+        273,
+        252
+      ]
+    },
+    {
+      "text": "MARCH 17, 1995",
+      "label": "answer",
+      "bbox": [
+        538,
+        193,
+        616,
+        201
+      ]
+    },
+    {
+      "text": "THIS ADVERTISEMENT COMPLIES WITH THE FTC REQUIREMENT FOR A WARNING STATEMENT AND TAR AND NICOTINE LINE WHICH MUST APPEAR IN ALL CIGARETTE ADVERTISING CHECK MATERIAL YOU RECEIVE AGAINST THE PROOF TO BE SURE IT IS CORRECT, UNDER NO CIRCUMSTANCES ARE TO YOU RUN SUBSTITUTE MATERIALS, ALTERIOR OR OMIT ANY COPY WITHOUT PRIOR APPROVAL FROM LORILLARD MEDIA SERVICES.",
+      "label": "other",
+      "bbox": [
+        96,
+        302,
+        659,
+        354
+      ]
+    },
+    {
+      "text": "NPT- 533- 7",
+      "label": "answer",
+      "bbox": [
+        98,
+        405,
+        155,
+        418
+      ]
+    },
+    {
+      "text": "FOUNTAIN COUPLE",
+      "label": "answer",
+      "bbox": [
+        229,
+        402,
+        324,
+        417
+      ]
+    },
+    {
+      "text": "JUNE 1995",
+      "label": "answer",
+      "bbox": [
+        525,
+        404,
+        576,
+        415
+      ]
+    },
+    {
+      "text": "IF UNABLE TO INSERT ON THE DATE ORDERED KINDLY NOTIFY US AT ONCE AND WAIT FOR NEW INSERTION DATE. NO CREDIT CAN BE ALLOWED SHOULD THIS ADVERTISEMENT APPEAR INCORRECTLY OR ON A DATE OTHER THAN THAT AUTHORIZED.",
+      "label": "other",
+      "bbox": [
+        96,
+        478,
+        648,
+        504
+      ]
+    },
+    {
+      "text": "POSITION URGENTLY REQUESTED:",
+      "label": "question",
+      "bbox": [
+        96,
+        518,
+        249,
+        529
+      ]
+    },
+    {
+      "text": "FAR FORWARD, OPPOSITE FULL EDITORIAL",
+      "label": "other",
+      "bbox": [
+        96,
+        549,
+        305,
+        560
+      ]
+    },
+    {
+      "text": "- No coupon ad on backing page.",
+      "label": "other",
+      "bbox": [
+        96,
+        581,
+        240,
+        592
+      ]
+    },
+    {
+      "text": "- Maintain at least six page separation from bompetitive ads.",
+      "label": "other",
+      "bbox": [
+        253,
+        580,
+        499,
+        593
+      ]
+    },
+    {
+      "text": "- No aditional/ advertising matter to cigarette within 6 pages of our ad.",
+      "label": "other",
+      "bbox": [
+        96,
+        595,
+        430,
+        608
+      ]
+    },
+    {
+      "text": "COPY INSTRUCTIONS:",
+      "label": "question",
+      "bbox": [
+        96,
+        613,
+        194,
+        624
+      ]
+    },
+    {
+      "text": "5 COLOR PROOF ATTACHED, FILM FROM COLLIER WITH \"D\" WARNING",
+      "label": "other",
+      "bbox": [
+        96,
+        642,
+        430,
+        657
+      ]
+    },
+    {
+      "text": "SURGEON GENERALS WARNING",
+      "label": "question",
+      "bbox": [
+        461,
+        619,
+        578,
+        631
+      ]
+    },
+    {
+      "text": "Smoke contains carbon Monoxide",
+      "label": "other",
+      "bbox": [
+        459,
+        630,
+        600,
+        641
+      ]
+    },
+    {
+      "text": "IMPORTANT INSTRUCTIONS:",
+      "label": "question",
+      "bbox": [
+        96,
+        676,
+        220,
+        687
+      ]
+    },
+    {
+      "text": "A. Check material carefully against proof to make sure it corresponds in every respect",
+      "label": "other",
+      "bbox": [
+        96,
+        703,
+        269,
+        736
+      ]
+    },
+    {
+      "text": "B. Please inspect repro material immediately. They should produce good printing results. Advise us promptly if Hor satisfactory",
+      "label": "other",
+      "bbox": [
+        95,
+        744,
+        292,
+        778
+      ]
+    },
+    {
+      "text": "C. Poor printing will not be paid for.",
+      "label": "other",
+      "bbox": [
+        95,
+        786,
+        250,
+        798
+      ]
+    },
+    {
+      "text": "D. Advise us at once if instructions are not clear.",
+      "label": "other",
+      "bbox": [
+        96,
+        807,
+        277,
+        830
+      ]
+    },
+    {
+      "text": "E. Under no circumstances are you to space out our advertisement without specific instructions from us.",
+      "label": "other",
+      "bbox": [
+        95,
+        839,
+        287,
+        873
+      ]
+    },
+    {
+      "text": "SPACE BILLING INSTRUCTIONS:",
+      "label": "question",
+      "bbox": [
+        448,
+        672,
+        589,
+        685
+      ]
+    },
+    {
+      "text": "The space is being brdered by:",
+      "label": "question",
+      "bbox": [
+        447,
+        701,
+        579,
+        714
+      ]
+    },
+    {
+      "text": "LOAILLARD MEDIA SERVICES",
+      "label": "other",
+      "bbox": [
+        448,
+        722,
+        577,
+        734
+      ]
+    },
+    {
+      "text": "Direct all invoices and full checking copies of all regional and national additions to:",
+      "label": "other",
+      "bbox": [
+        447,
+        751,
+        622,
+        773
+      ]
+    },
+    {
+      "text": "LORILLARD MEDIA SERVICES ONE PARK AVENUE 17TH FLOOR NEW YORK NEW YORK 10016- 5896",
+      "label": "other",
+      "bbox": [
+        448,
+        785,
+        605,
+        828
+      ]
+    },
+    {
+      "text": "STEVE MOLLOY",
+      "label": "other",
+      "bbox": [
+        479,
+        827,
+        546,
+        836
+      ]
+    }
+  ]
+}

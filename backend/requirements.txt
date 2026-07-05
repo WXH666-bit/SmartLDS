@@ -1,0 +1,11 @@
+paddlepaddle<3
+paddleocr<3
+flask
+flask-cors
+opencv-python
+pillow
+playwright
+faker
+pymupdf
+pyyaml
+openpyxl
