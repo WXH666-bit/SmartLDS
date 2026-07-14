@@ -578,3 +578,66 @@ templates:
     - order_no
     - total_amount
     - courier
+  bol_201_learned:
+    keywords:
+    - 华贸进出口有限公司
+    - 中华人民共和国海关进口货物报关单
+    - 数量及单位
+    - 电子元器件
+    has_table: false
+    fields:
+      company:
+        label: company
+        anchors:
+        - 经营单位
+        position: right
+        validator: auto_company
+      customs_no:
+        label: customs_no
+        anchors:
+        - 海关编号
+        position: right
+        validator: bl_no
+      declare_date:
+        label: declare_date
+        anchors:
+        - 申报日期
+        position: right
+        validator: auto_declare_date
+      goods_name:
+        label: goods_name
+        anchors:
+        - 商品名称
+        position: right
+        validator: auto_goods_name
+      import_port:
+        label: import_port
+        anchors:
+        - 进口口岸
+        position: right
+        validator: auto_import_port
+      origin:
+        label: origin
+        anchors:
+        - 原产国
+        position: right
+      receiver:
+        label: receiver
+        anchors:
+        - 经营单位
+        position: right
+        validator: auto_receiver
+      transport:
+        label: transport
+        anchors:
+        - 运输方式
+        position: right
+    output:
+    - company
+    - customs_no
+    - declare_date
+    - goods_name
+    - import_port
+    - origin
+    - receiver
+    - transport

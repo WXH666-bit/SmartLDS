@@ -6,6 +6,27 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 物流单证智能识别系统 — 基于 OCR 与版面分析，从 PDF/图片中提取物流单证的关键字段（Shipper、B/L No.、Gross Weight 等），输出结构化 JSON。Python + PaddleOCR + Flask 后端 + Vue3 前端，课程设计项目。
 
+## Current Engineering Status
+
+As of 2026-07-14, the first two hardening phases are implemented:
+
+- ZIP upload no longer uses `extractall()`. It validates member paths, limits member count, limits total uncompressed size, and only writes allowed document/image files.
+- Route-level `job_id` validation is enabled for task endpoints. Job paths are resolved under the upload root and history deletion no longer creates empty directories for missing IDs.
+- Jobs can be restored from disk after restart using `result.json`, `blocks.json`, `corrections.json`, and `original.*`.
+- Single-file and batch recognition now share `run_recognition_pipeline()`, so both persist `result.json` and `blocks.json`.
+- Corrections are merged back into field results and exported JSON/XLSX. Frontend reload now displays corrected values instead of reverting to OCR values.
+- Multi-page PDFs are still processed page 1 only, but `meta.page_count`, `meta.processed_page`, and warnings make this limitation explicit.
+- Frontend API base defaults to relative `/api` and supports `VITE_API_BASE_URL`.
+
+Latest verification:
+
+```bash
+.venv\Scripts\python.exe -m compileall -q backend run.py test.py
+cd frontend && npm.cmd run build
+```
+
+Frontend production build passes but still reports a large chunk warning (~1 MB JS). This is a performance follow-up, not a correctness failure.
+
 ## Common Commands
 
 ```bash
@@ -36,6 +57,12 @@ cd frontend && npm run dev
 # 一键启动（后端 + 前端）
 python run.py
 
+# 后端语法/导入编译检查
+.venv\Scripts\python.exe -m compileall -q backend run.py test.py
+
+# 前端生产构建
+cd frontend && npm.cmd run build
+
 # 生成未知版式测试数据（报关单 + 入库单，bol_201~210）
 cd backend && python gen_new_templates.py
 
@@ -61,6 +88,20 @@ PDF/图片 → preprocess.py → ocr_engine.py → layout_parser.py → field_ex
 | 字段提取 | `field_extractor.py` | 锚点法：三级值定位(内联+右侧+下方)，模糊匹配，正则清洗，版式识别，97.9% 准确率 |
 | Few-shot | `fewshot.py` | 从 1~5 份标注样本自动发现锚点+位置+校验规则，生成 YAML 配置 |
 | 配置 | `config.yaml` | 每版式自包含（keywords + fields + output），仅 validators 全局共享；新增版式只改 YAML |
+
+### Backend API Notes
+
+`backend/app.py` is now responsible for more than routing. Important helpers:
+
+| Helper | Purpose |
+|------|------|
+| `job_dir(job_id, create=True)` | Validates task id and resolves the task directory under `uploads/` |
+| `load_job(job_id)` | Restores in-memory job state from disk artifacts |
+| `apply_corrections(result, corrections)` | Deep-copies OCR result and overlays human corrections into fields |
+| `safe_extract_allowed_zip(zip_path, extract_dir)` | Safe ZIP extraction with traversal and size checks |
+| `run_recognition_pipeline(job)` | Shared single/batch recognition pipeline and persistence path |
+
+When changing recognition behavior, update `run_recognition_pipeline()` first; do not duplicate logic separately in `/api/recognize/<id>` and `/api/recognize/batch`.
 
 ### OCR Engine API
 
@@ -152,7 +193,20 @@ KIE 模块根据 `template` 字段自动选择对应的 anchor 配置。
 - **未识别版式处理**：上传未知版式时前端显示 OCR 文本块预览 + Few-shot 学习引导，不再静默失败
 - **识别历史**：顶栏「历史」按钮，列出所有已完成任务，点击新标签页查看。支持逐条删除 + 一键清空全部。API: `GET /api/history` + `DELETE /api/history/<id>` + `DELETE /api/history`
 - **自包含版式配置**：config.yaml 重构为每个模板自包含结构（keywords + fields + output 全在模板内部），不再使用全局 `fields`/`field_labels`/`output_schema`/`template_overrides` 四个分离 section。仅 `validators` 全局共享。旧格式文件首次加载时自动内存迁移。
+- **FUNSD 不是物流模板**：当前 `funsd_public` 只是用少量固定字段做跨域验证。FUNSD 本质是通用表单 question-answer linking，不适合继续强行套物流锚点抽取法。若要提升 FUNSD，应单独实现 FUNSD 模式，输出动态 question-answer pairs。
+- **手写识别不是当前强项**：PaddleOCR 默认通用印刷体模型适合清晰打印件。手写、连笔、低清扫描、表格线干扰属于不同 OCR/HTR 任务，不能只靠锚点规则修好。
 - Playwright Chromium 已安装在 `C:\Users\18246\AppData\Local\ms-playwright\`
+
+## Safety and Maintenance Rules
+
+- The repository often has a dirty worktree with generated data and local reports. Do not revert unrelated changes.
+- Use `rg`/`rg --files` for search. On Windows, prefer PowerShell-native safe filesystem operations.
+- Use `apply_patch` for manual source edits.
+- Avoid editing generated datasets unless the task explicitly asks for data regeneration.
+- Do not reintroduce raw ZIP `extractall()`.
+- Do not bypass `job_dir()` for task paths.
+- Do not add a second recognition path for batch processing; keep batch and single recognition unified.
+- If adding a new form family, decide whether it belongs to logistics anchor extraction, Few-shot YAML generation, or a separate mode such as FUNSD question-answer extraction.
 
 ## Progress
 
@@ -170,5 +224,6 @@ KIE 模块根据 `template` 字段自动选择对应的 anchor 配置。
 - ✅ Few-shot 版式自适应 + 内联标签提取 + GT值惩罚 + 一键应用到 config.yaml
 - ✅ GPU 加速：PaddleOCR RTX 4060，0.28s/份，9x 提速
 - ✅ 未识别版式处理：OCR 文本块预览 + Few-shot 引导
+- ✅ 工程硬化：安全 ZIP、job_id/path 校验、磁盘恢复、校正回显/导出一致、单张/批量 pipeline 统一
 - ⏳ Day 21: 收尾（README、课程设计报告），详见 `TASKS.md`
 - 详细设计见 `.claude/plans/composed-conjuring-eich.md`
