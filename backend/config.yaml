@@ -1,1 +1,580 @@
-# 动态 Schema 配置文件 - 待实现
+validators:
+  bl_no:
+    description: 提单号 — 2~4位字母 + 6~10位数字
+    pattern: '[A-Z]{2,4}\d{6,10}'
+  date:
+    description: 日期 — dd/mm/yyyy 或 dd-mm-yyyy
+    pattern: \d{1,2}[/-]\d{1,2}[/-]\d{2,4}
+  weight:
+    description: 重量 — 去掉 KGS/KG/TONS 单位后缀，取数值部分
+    pattern: '[\d,]+\.?\d*'
+    strip_suffix: KGS,KG,TONS
+  volume:
+    description: 体积 — 去掉 CBM 单位后缀，取数值部分
+    pattern: '[\d,]+\.?\d*'
+    strip_suffix: CBM
+  place_date:
+    description: 签发地+日期合并 — 分离地点部分（去掉末尾的逗号+日期）
+field_defaults:
+  value: ''
+  cleaned: ''
+  confidence: 0.0
+  status: not_found
+  anchor_text: ''
+  rect:
+  - 0
+  - 0
+  - 0
+  - 0
+templates:
+  maersk_style:
+    keywords:
+    - MAERSK
+    - MAERSK LINE
+    - BILL OF LADING
+    - 海运提单
+    has_table: true
+    fields:
+      shipper:
+        label: 托运人
+        anchors:
+        - Shipper
+        - SHIPPER
+        - 托运人
+        position: right
+      consignee:
+        label: 收货人
+        anchors:
+        - Consignee
+        - CONSIGNEE
+        - 收货人
+        - 收货方
+        position: right
+      notify_party:
+        label: 通知方
+        anchors:
+        - Notify Party
+        - Notify
+        - NOTIFY
+        - 通知方
+        - 通知人
+        position: right
+      bl_no:
+        label: 提单号
+        anchors:
+        - B/L No.
+        - B/L No
+        - BL No.
+        - 提单号
+        - 订舱号
+        - B/L
+        position: either
+        validator: bl_no
+      pol:
+        label: 装货港
+        anchors:
+        - Port of Loading
+        - 装货港
+        - POL
+        position: right
+      pod:
+        label: 卸货港
+        anchors:
+        - Port of Discharge
+        - 卸货港
+        - POD
+        position: right
+      por:
+        label: 收货地
+        anchors:
+        - Place of Receipt
+        - 收货地
+        - POR
+        position: right
+      delivery:
+        label: 交货地
+        anchors:
+        - Place of Delivery
+        - 交货地
+        - Delivery
+        position: right
+      vessel:
+        label: 船名
+        anchors:
+        - Vessel
+        - VESSEL
+        - 船名
+        position: right
+      voyage:
+        label: 航次
+        anchors:
+        - Voyage No.
+        - Voyage
+        - 航次
+        position: right
+      total_gross_weight:
+        label: 总毛重
+        anchors:
+        - Total Gross Weight
+        - TOTAL GROSS WEIGHT
+        - 总毛重
+        - 毛重
+        - G.W.(KGS)
+        position: right
+        validator: weight
+        search_in: all
+      total_measurement:
+        label: 总体积
+        anchors:
+        - Total Measurement
+        - TOTAL MEASUREMENT
+        - 总体积
+        - 'CBM:'
+        position: right
+        validator: volume
+        search_in: all
+      freight:
+        label: 运费条款
+        anchors:
+        - Freight & Charges
+        - Freight
+        - FREIGHT
+        - 运费条款
+        - 运费
+        position: right
+        search_in: all
+      issue_place:
+        label: 签发地
+        anchors:
+        - Place of Issue
+        - Issue Place
+        - 签发地
+        - Place & Date of Issue
+        position: right
+        validator: place_date
+        search_in: all
+      issue_date:
+        label: 签发日期
+        anchors:
+        - Date of Issue
+        - 签发日期
+        - Date
+        - 日期
+        position: either
+        validator: date
+        search_in: all
+    output:
+    - shipper
+    - consignee
+    - notify_party
+    - bl_no
+    - pol
+    - pod
+    - por
+    - delivery
+    - vessel
+    - voyage
+    - total_gross_weight
+    - total_measurement
+    - freight
+    - issue_place
+    - issue_date
+  cosco_style:
+    keywords:
+    - COSCO
+    - COSCO SHIPPING
+    - 订舱委托书
+    - Booking Note
+    has_table: false
+    fields:
+      shipper:
+        label: 托运人
+        anchors:
+        - Shipper
+        - SHIPPER
+        - 托运人
+        position: right
+      consignee:
+        label: 收货人
+        anchors:
+        - Consignee
+        - CONSIGNEE
+        - 收货人
+        - 收货方
+        position: right
+      notify_party:
+        label: 通知方
+        anchors:
+        - Notify Party
+        - Notify
+        - NOTIFY
+        - 通知方
+        - 通知人
+        position: right
+      bl_no:
+        label: 提单号
+        anchors:
+        - B/L No.
+        - B/L No
+        - BL No.
+        - 提单号
+        - 订舱号
+        - B/L
+        position: either
+        validator: bl_no
+      pol:
+        label: 装货港
+        anchors:
+        - Port of Loading
+        - 装货港
+        - POL
+        position: right
+      pod:
+        label: 卸货港
+        anchors:
+        - Port of Discharge
+        - 卸货港
+        - POD
+        position: right
+      por:
+        label: 收货地
+        anchors:
+        - '收货地 POR:'
+        - 收货地
+        - POR
+        position: right
+      delivery:
+        label: 交货地
+        anchors:
+        - '交货地 Delivery:'
+        - 交货地
+        - Delivery
+        position: right
+      vessel:
+        label: 船名
+        anchors:
+        - Vessel
+        - VESSEL
+        - 船名
+        position: right
+      voyage:
+        label: 航次
+        anchors:
+        - Voyage No.
+        - Voyage
+        - 航次
+        position: right
+      freight:
+        label: 运费条款
+        anchors:
+        - Freight & Charges
+        - Freight
+        - FREIGHT
+        - 运费条款
+        - 运费
+        position: right
+        search_in: all
+      issue_place:
+        label: 签发地
+        anchors:
+        - Place of Issue
+        - Issue Place
+        - 签发地
+        - Place & Date of Issue
+        position: right
+        validator: place_date
+        search_in: all
+      issue_date:
+        label: 签发日期
+        anchors:
+        - Date of Issue
+        - 签发日期
+        - Date
+        - 日期
+        position: either
+        validator: date
+        search_in: all
+    output:
+    - shipper
+    - consignee
+    - notify_party
+    - bl_no
+    - pol
+    - pod
+    - por
+    - delivery
+    - vessel
+    - voyage
+    - freight
+    - issue_place
+    - issue_date
+  simple_style:
+    keywords:
+    - SHIPPING ORDER
+    - 货运委托书
+    has_table: false
+    fields:
+      shipper:
+        label: 托运人
+        anchors:
+        - Shipper
+        - SHIPPER
+        - 托运人
+        position: right
+      consignee:
+        label: 收货人
+        anchors:
+        - Consignee
+        - CONSIGNEE
+        - 收货人
+        - 收货方
+        position: right
+      notify_party:
+        label: 通知方
+        anchors:
+        - Notify Party
+        - Notify
+        - NOTIFY
+        - 通知方
+        - 通知人
+        position: right
+      bl_no:
+        label: 提单号
+        anchors:
+        - B/L No.
+        - B/L No
+        - BL No.
+        - 提单号
+        - 订舱号
+        - B/L
+        position: either
+        validator: bl_no
+      pol:
+        label: 装货港
+        anchors:
+        - Port of Loading
+        - 装货港
+        - POL
+        position: right
+      pod:
+        label: 卸货港
+        anchors:
+        - Port of Discharge
+        - 卸货港
+        - POD
+        position: right
+      vessel:
+        label: 船名
+        anchors:
+        - Vessel
+        - VESSEL
+        - 船名
+        position: right
+      voyage:
+        label: 航次
+        anchors:
+        - Voyage No.
+        - Voyage
+        - 航次
+        position: right
+      freight:
+        label: 运费条款
+        anchors:
+        - Freight & Charges
+        - Freight
+        - FREIGHT
+        - 运费条款
+        - 运费
+        position: right
+        search_in: all
+      issue_place:
+        label: 签发地
+        anchors:
+        - Place of Issue
+        - Issue Place
+        - 签发地
+        - Place & Date of Issue
+        position: right
+        validator: place_date
+        search_in: all
+      issue_date:
+        label: 签发日期
+        anchors:
+        - Date of Issue
+        - 签发日期
+        - Date
+        - 日期
+        position: either
+        validator: date
+        search_in: all
+    output:
+    - shipper
+    - consignee
+    - notify_party
+    - bl_no
+    - pol
+    - pod
+    - vessel
+    - voyage
+    - freight
+    - issue_place
+    - issue_date
+  funsd_public:
+    keywords:
+    - 'FROM:'
+    - 'TO:'
+    - 'SUBJECT:'
+    - 'DIVISION:'
+    - 'REGION:'
+    has_table: false
+    fields:
+      sender:
+        label: 发件人
+        anchors:
+        - 'FROM:'
+        - FROM
+        - From
+        position: right
+      recipient:
+        label: 收件人
+        anchors:
+        - 'TO:'
+        - TO
+        - To
+        position: right
+      subject:
+        label: 主题
+        anchors:
+        - 'SUBJECT:'
+        - SUBJECT
+        - Subject
+        position: right
+      division:
+        label: 分区
+        anchors:
+        - 'DIVISION:'
+        - DIVISION
+        - Division
+        position: right
+      region:
+        label: 区域
+        anchors:
+        - 'REGION:'
+        - REGION
+        - Region
+        position: right
+    output:
+    - sender
+    - recipient
+    - subject
+    - division
+    - region
+  real_scan:
+    keywords:
+    - 运单
+    - 快递
+    - 订单
+    - 外卖
+    - 配送
+    - Track
+    - Express
+    - 取餐
+    - 骑手
+    has_table: false
+    fields:
+      tracking_no:
+        label: 运单号
+        anchors:
+        - 运单号
+        - 运单
+        - 快递单
+        - Tracking
+        - 单号
+        position: right
+      sender_name:
+        label: 寄件人
+        anchors:
+        - 寄件人
+        - 寄件
+        - 发件人
+        - 发件
+        - Sender
+        position: right
+      sender_phone:
+        label: 寄件电话
+        anchors:
+        - 寄件电话
+        - 寄件人电话
+        - 电话
+        position: right
+      sender_addr:
+        label: 寄件地址
+        anchors:
+        - 寄件地址
+        - 寄件人地址
+        - 地址
+        position: right
+      recipient_name:
+        label: 收件人
+        anchors:
+        - 收件人
+        - 收件
+        - 收货人
+        - 收货
+        - Recipient
+        position: right
+      recipient_phone:
+        label: 收件电话
+        anchors:
+        - 收件电话
+        - 收件人电话
+        - 电话
+        position: right
+      recipient_addr:
+        label: 收件地址
+        anchors:
+        - 收件地址
+        - 收件人地址
+        - 地址
+        position: right
+      order_no:
+        label: 订单号
+        anchors:
+        - 订单号
+        - 订单
+        - Order No
+        - 订单编号
+        - 编号
+        position: right
+      total_amount:
+        label: 合计金额
+        anchors:
+        - 合计
+        - 金额
+        - 实付
+        - Total
+        - 商品合计
+        - ¥
+        - ￥
+        position: right
+      courier:
+        label: 快递公司
+        anchors:
+        - 快递公司
+        - 快递
+        - Courier
+        - 配送
+        - 物流
+        - 承运
+        position: right
+    output:
+    - tracking_no
+    - sender_name
+    - sender_phone
+    - sender_addr
+    - recipient_name
+    - recipient_phone
+    - recipient_addr
+    - order_no
+    - total_amount
+    - courier

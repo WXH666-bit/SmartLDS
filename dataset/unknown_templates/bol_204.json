@@ -1,0 +1,17 @@
+{
+  "template": "customs_declaration",
+  "customs_no": "CUS30674341",
+  "declare_date": "2024/01/08",
+  "import_port": "天津海关",
+  "transport": "铁路",
+  "company": "华贸进出口有限公司",
+  "receiver": "华贸进出口有限公司",
+  "goods_name": "纺织品",
+  "qty": "97",
+  "unit": "件",
+  "total_price": "38642",
+  "currency": "EUR",
+  "origin": "日本",
+  "gross_weight": "4771",
+  "net_weight": "2601"
+}

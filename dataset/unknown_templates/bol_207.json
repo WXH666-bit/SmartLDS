@@ -1,0 +1,17 @@
+{
+  "template": "warehouse_receipt",
+  "receipt_no": "RK20253551",
+  "date": "2024/10/08",
+  "supplier": "恒达制造有限公司",
+  "warehouse": "C区-02库",
+  "item_code1": "MAT-004",
+  "item_name1": "螺栓",
+  "spec1": "M12",
+  "qty1": "25",
+  "unit1": "件",
+  "item_code2": "MAT-003",
+  "item_name2": "液压油",
+  "spec2": "46号",
+  "qty2": "172",
+  "unit2": "个"
+}

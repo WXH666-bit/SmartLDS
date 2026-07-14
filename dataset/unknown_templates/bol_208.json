@@ -1,0 +1,17 @@
+{
+  "template": "warehouse_receipt",
+  "receipt_no": "RK20252837",
+  "date": "2024/01/13",
+  "supplier": "恒达制造有限公司",
+  "warehouse": "B区-03库",
+  "item_code1": "MAT-001",
+  "item_name1": "不锈钢管",
+  "spec1": "25mm",
+  "qty1": "26",
+  "unit1": "套",
+  "item_code2": "MAT-004",
+  "item_name2": "螺栓",
+  "spec2": "M12",
+  "qty2": "85",
+  "unit2": "个"
+}

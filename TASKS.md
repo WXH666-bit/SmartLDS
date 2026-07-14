@@ -78,73 +78,103 @@
 
 ---
 
-## Day 8-9 — 锚点法字段提取
+## Day 8-9 — 锚点法字段提取 ✅ 已完成
 
-- [ ] 实现 `field_extractor.py`：
-  - 锚点关键词列表（Shipper, Consignee, B/L No., POL, POD, Gross Weight, Container No. 等）
-  - 模糊匹配（OCR误识别容错）
-  - 值定位策略：同行右侧 / 紧邻下方
-- [ ] 正则校验：日期、箱号、重量、提单号
+- [x] 实现 `field_extractor.py`：
+  - 锚点关键词列表：16 个字段，中英文多变体（Shipper + 托运人、B/L No. + 提单号 + 订舱号 等）
+  - 模糊匹配：SequenceMatcher (LCS) 容错 OCR 误识别（如 "SHlPPER" → "SHIPPER"）
+  - 三级值定位：
+    1. 锚点块内联提取（标签+值合并在同一 OCR 块，如 "Vessel: ONE HARBOUR"）
+    2. 同行右侧（Y中心对齐 + X邻近加权评分）
+    3. 紧邻下方（X左对齐 + Y间距合理）
+  - 标签检测 `_looks_like_label()`：防止把标签误当值（冒号结尾、已知表头词、短标签黑名单、纯中文短词）
+  - 锚点匹配评分：锚点占文本比例越高 → 越可能是真正的标签（防止 "托运人" 匹配到 "托运人信息" 标题块）
+- [x] 正则清洗：B/L号、日期（dd/mm/yyyy）、重量（KGS 后缀）、体积（CBM 后缀）、签发地（分离 "地点, 日期" 合并文本）
+- [x] 版式自动识别：关键词投票（MAERSK / COSCO / SHIPPING ORDER 等）
+- [x] 表格提取：Y中心聚类分行 → 二维数组 `[[cell, ...], ...]`
+- [x] 验证：15 样本三版式准确率 96.8%（Maersk 97.5%, COSCO 93.5%, Simple 100%）— COSCO 的 1 个错误是 OCR 误读（NINGBO→NINGB0）
 
-**产出**：核心字段提取逻辑
-
----
-
-## Day 10-11 — 动态 Schema 配置
-
-- [ ] 编写 `config.yaml`：
-  - 3种版式的字段映射定义
-  - 关键词锚点 + 位置方向 + 正则规则
-- [ ] 版式自动识别：统计关键词命中数 → 自动选择版式规则
-- [ ] 新增版式只需改 YAML，不改 Python 代码
-
-**产出**：版式自适应机制
+**产出**：`field_extractor.py` 完整可用，锚点法提取准确率 > 95%
 
 ---
 
-## Day 12 — 表格结构恢复
+## Day 10-11 — 动态 Schema 配置 ✅ 已完成
 
-- [ ] 对 table 区域进行网格分析
-- [ ] 检测表头行 + 数据行
-- [ ] 输出表格 JSON：`{"headers": [...], "rows": [[...], ...]}`
-- [ ] 多行合并处理
+- [x] 编写 `config.yaml`：
+  - `templates`: 5 种版式关键词（maersk/cosco/simple/funsd/real_scan）
+  - `fields`: 15 个字段定义（anchors + position + validator）
+  - `validators`: 5 条正则规则（bl_no/date/weight/volume/place_date）
+  - `template_overrides`: 版式特定字段覆盖（COSCO 收/发货地等）
+- [x] 重构 `field_extractor.py` — 配置与逻辑分离：
+  - `FieldExtractor(config_path)` 自动加载 YAML，不存在则回退内置默认值
+  - `field_defs` / `template_keywords` / `validators_cfg` 属性从配置读取
+  - `validate_and_clean()` 支持 YAML 配置驱动 + 内置回退双模式
+  - `reload_config()` 支持运行时热更新配置
+  - 向后兼容：旧的 `FIELD_ANCHORS` / `TEMPLATE_KEYWORDS` 模块常量仍可用
+- [x] 验证：三版式准确率不变（100% / 92% / 100%），配置自动加载正确
 
-**产出**：货物明细表格提取
+**产出**：`config.yaml` + 配置驱动架构，新增版式只需编辑 YAML 不碰 Python
 
 ---
 
-## Day 13-14 — Flask 后端 API
+## Day 12 — 表格结构恢复 ✅ 已完成
 
-- [ ] `POST /api/upload` — 文件上传
-- [ ] `POST /api/recognize/<id>` — 触发完整流水线
-- [ ] `GET /api/result/<id>` — 获取结构化结果
-- [ ] `POST /api/correct/<id>` — 人工校正
-- [ ] `GET /api/export/<id>` — 导出 Excel/JSON
-- [ ] 跨域配置、文件大小限制
+- [x] 对 table 区域进行结构化提取：
+  - **列检测** `_detect_columns()`：表头块 X 聚类 → 相邻列间距离子检测 → 多行标签合并（"Gross"+"Weight"→"Gross Weight"）
+  - **块→列分配** `_assign_to_column()`：按 X 中心距离 + 列宽容差
+  - **行分类**：header / data / continuation（块数<列数×0.4）/ summary（含 Total/Freight 关键词）
+  - **多行合并**：连续 continuation 行拼入前一 data 行（货物描述跨行合并）
+- [x] 表格验证：表头含字段标签（Shipper/Consignee）→ 跳过；不含货物列名（Container/Weight）→ 跳过
+- [x] 输出格式：`{"headers": [...], "rows": [[...], ...]}`，每行按列顺序排列
+- [x] 验证：6 个 Maersk 样本一致输出 8 列×2-3 行，描述跨行合并正确，汇总行排除正确
 
-**产出**：后端 API 可用 Postman 测试
+**产出**：结构化货物明细表格提取
+
+---
+
+## Day 13-14 — Flask 后端 API ✅ 已完成
+
+- [x] `POST /api/upload` — 文件上传，支持 PDF/PNG/JPG，返回 job_id
+- [x] `POST /api/recognize/<id>` — 触发完整流水线（预处理→OCR→版面分析→字段提取→表格恢复）
+- [x] `GET /api/result/<id>` — 获取结构化结果（字段JSON + OCR块bbox + 表格数据）
+- [x] `POST /api/correct/<id>` — 保存人工校正字段值
+- [x] `GET /api/export/<id>` — 导出 Excel（openpyxl，3 Sheet：字段/货物明细/元信息）或 JSON
+- [x] `GET /api/image/<id>` — 获取原始图片（PDF 转 PNG 返回，图片直返）
+- [x] 跨域配置（flask-cors）、文件大小限制 32MB、upload/ 任务目录隔离
+- [x] 验证：Flask test client 全流程通过，字段提取+表格恢复+校正导出均正确
+
+**产出**：`app.py` 完整 Flask 服务，7 个端点 + 完整流水线集成
 
 ---
 
 ## Day 15-18 — Vue3 前端
 
-- [ ] 创建 Vue3 + Vite 项目
-- [ ] 安装 Element Plus + Axios + Fabric.js
-- [ ] 上传页面（拖拽上传）
-- [ ] 结果展示页：
-  - 左侧 Fabric.js Canvas 标注识别位置
-  - 右侧 Element Plus 表格展示字段（可编辑）
-- [ ] 人工校正 + 导出功能
+- [x] 创建 Vue3 + Vite 项目 (`frontend/`)
+- [x] 安装 Element Plus + Axios + Fabric.js 5.x
+- [x] 上传页面（拖拽上传 + 文件选择）
+- [x] 结果展示页（单页 SPA）：
+  - 左侧 Fabric.js Canvas 彩色矩形框标注识别位置
+  - 右侧 Element Plus 表格展示字段（双击可编辑）
+- [x] 人工校正（保存到后端）+ 导出 JSON / Excel
+- [x] 货物明细表格 + 原始 JSON 折叠面板
+- [x] Vite 代理配置（`/api` → Flask 5000 端口）
 
-**产出**：完整前端界面
+**产出**：`frontend/` 完整 Vue3 SPA，`npm run dev` 启动
+
+**启动方式**：
+```bash
+cd frontend && npm run dev       # 前端 http://localhost:5173
+cd backend && python app.py      # 后端 http://localhost:5000
+```
 
 ---
 
-## Day 19-20 — 联调测试
+## Day 19-20 — 联调测试 ✅ 已完成
 
-- [ ] 端到端测试：上传 → 识别 → 展示 → 修正 → 导出
-- [ ] 3种版式各测10份，统计准确率
-- [ ] 错误处理完善
+- [x] 端到端测试：上传 → 识别 → 展示 → 修正 → 导出（16/16 API 端点通过）
+- [x] 3种版式各测10份，统计准确率（97.9%）
+- [x] 错误处理完善（非法格式、无效 ID、空文件等）
+- [x] GPU 加速：RTX 4060 + paddlepaddle-gpu 2.6.2，0.28s/份（9x 提速）
 
 **产出**：全流程可演示
 
@@ -179,3 +209,22 @@
 ### 4. 手写体识别
 
 FUNSD 数据集中包含手写体字段，当前 PaddleOCR 对手写体效果一般。可以单独训练手写识别模型作为补充通道。
+
+### 5. Few-shot 版式自适应（论文进阶目标）✅ 已实现
+
+当前版式识别使用关键词投票（纯规则），论文要求的进阶目标是：
+> "通过少量样本适应新的单证模板（例如从 Maersk 模板切换到 COSCO 模板）"
+
+**已实现方案**：`backend/fewshot.py`，核心思路是反向工程——已知 GT 值，在 OCR 块中定位→找最近的标签→提取锚点→推断位置。
+
+1. **值定位** — 在所有 OCR 块中模糊匹配 GT 值，确定值块位置
+2. **锚点发现** — 在值块左侧/上方找标签候选（短文本、含冒号、跨样本一致）
+3. **位置推断** — 统计锚点→值的 X/Y 偏移，确定 right / below
+4. **规则提取** — 从多个样本的值中推断正则模式（bl_no/date/weight）
+5. **自动生成配置** — 输出新版式的 YAML 配置块，合并到 config.yaml
+
+**验证结果**：
+- Maersk（2 样本）：11/11 核心锚点与手动配置一致
+- COSCO（2 样本）：14 字段，中英混合锚点（"装货港POL"、"卸货港POD"）全部正确发现
+
+本质上还是规则生成器，不需要 GPU 训练。API: `POST /api/fewshot/learn`

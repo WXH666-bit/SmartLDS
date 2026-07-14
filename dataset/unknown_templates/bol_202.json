@@ -1,0 +1,17 @@
+{
+  "template": "customs_declaration",
+  "customs_no": "CUS85698979",
+  "declare_date": "2024/10/03",
+  "import_port": "深圳海关",
+  "transport": "空运",
+  "company": "华贸进出口有限公司",
+  "receiver": "华贸进出口有限公司",
+  "goods_name": "电子元器件",
+  "qty": "10",
+  "unit": "件",
+  "total_price": "44347",
+  "currency": "USD",
+  "origin": "美国",
+  "gross_weight": "2011",
+  "net_weight": "2677"
+}

@@ -1,0 +1,17 @@
+{
+  "template": "customs_declaration",
+  "customs_no": "CUS96608407",
+  "declare_date": "2024/11/20",
+  "import_port": "宁波海关",
+  "transport": "海运",
+  "company": "中商国际贸易公司",
+  "receiver": "华贸进出口有限公司",
+  "goods_name": "电子元器件",
+  "qty": "86",
+  "unit": "件",
+  "total_price": "21007",
+  "currency": "RMB",
+  "origin": "德国",
+  "gross_weight": "2399",
+  "net_weight": "3775"
+}

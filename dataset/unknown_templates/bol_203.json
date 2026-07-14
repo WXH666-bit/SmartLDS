@@ -1,0 +1,17 @@
+{
+  "template": "customs_declaration",
+  "customs_no": "CUS22433284",
+  "declare_date": "2024/04/12",
+  "import_port": "宁波海关",
+  "transport": "公路",
+  "company": "华贸进出口有限公司",
+  "receiver": "华贸进出口有限公司",
+  "goods_name": "电子元器件",
+  "qty": "83",
+  "unit": "件",
+  "total_price": "17695",
+  "currency": "EUR",
+  "origin": "日本",
+  "gross_weight": "442",
+  "net_weight": "357"
+}

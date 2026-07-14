@@ -1,0 +1,522 @@
+{
+  "generated_at": "2026-07-14T10:52:24.118616",
+  "summary": {
+    "total": 70,
+    "synth_count": 50,
+    "synth_acc": 97.9,
+    "funsd_count": 10,
+    "real_count": 10,
+    "maersk_acc": 97.53,
+    "cosco_acc": 97.53,
+    "simple_acc": 99.24
+  },
+  "by_template": {
+    "maersk_style": {
+      "accuracy": 97.53,
+      "correct": 237,
+      "total": 243
+    },
+    "cosco_style": {
+      "accuracy": 97.53,
+      "correct": 237,
+      "total": 243
+    },
+    "simple_style": {
+      "accuracy": 99.24,
+      "correct": 131,
+      "total": 132
+    }
+  },
+  "details": [
+    {
+      "bol": "001",
+      "template": "maersk_style",
+      "acc": 100.0,
+      "correct": 13,
+      "total": 13
+    },
+    {
+      "bol": "004",
+      "template": "maersk_style",
+      "acc": 100.0,
+      "correct": 13,
+      "total": 13
+    },
+    {
+      "bol": "007",
+      "template": "maersk_style",
+      "acc": 100.0,
+      "correct": 13,
+      "total": 13
+    },
+    {
+      "bol": "010",
+      "template": "maersk_style",
+      "acc": 92.31,
+      "correct": 12,
+      "total": 13
+    },
+    {
+      "bol": "013",
+      "template": "maersk_style",
+      "acc": 100.0,
+      "correct": 13,
+      "total": 13
+    },
+    {
+      "bol": "016",
+      "template": "maersk_style",
+      "acc": 100.0,
+      "correct": 13,
+      "total": 13
+    },
+    {
+      "bol": "019",
+      "template": "maersk_style",
+      "acc": 92.31,
+      "correct": 12,
+      "total": 13
+    },
+    {
+      "bol": "022",
+      "template": "maersk_style",
+      "acc": 100.0,
+      "correct": 13,
+      "total": 13
+    },
+    {
+      "bol": "025",
+      "template": "maersk_style",
+      "acc": 92.31,
+      "correct": 12,
+      "total": 13
+    },
+    {
+      "bol": "028",
+      "template": "maersk_style",
+      "acc": 100.0,
+      "correct": 13,
+      "total": 13
+    },
+    {
+      "bol": "031",
+      "template": "maersk_style",
+      "acc": 100.0,
+      "correct": 13,
+      "total": 13
+    },
+    {
+      "bol": "034",
+      "template": "maersk_style",
+      "acc": 100.0,
+      "correct": 13,
+      "total": 13
+    },
+    {
+      "bol": "037",
+      "template": "maersk_style",
+      "acc": 92.31,
+      "correct": 12,
+      "total": 13
+    },
+    {
+      "bol": "040",
+      "template": "maersk_style",
+      "acc": 84.62,
+      "correct": 11,
+      "total": 13
+    },
+    {
+      "bol": "043",
+      "template": "maersk_style",
+      "acc": 100.0,
+      "correct": 13,
+      "total": 13
+    },
+    {
+      "bol": "046",
+      "template": "maersk_style",
+      "acc": 100.0,
+      "correct": 13,
+      "total": 13
+    },
+    {
+      "bol": "049",
+      "template": "maersk_style",
+      "acc": 100.0,
+      "correct": 13,
+      "total": 13
+    },
+    {
+      "bol": "002",
+      "template": "cosco_style",
+      "acc": 92.31,
+      "correct": 12,
+      "total": 13
+    },
+    {
+      "bol": "005",
+      "template": "cosco_style",
+      "acc": 100.0,
+      "correct": 13,
+      "total": 13
+    },
+    {
+      "bol": "008",
+      "template": "cosco_style",
+      "acc": 100.0,
+      "correct": 13,
+      "total": 13
+    },
+    {
+      "bol": "011",
+      "template": "cosco_style",
+      "acc": 100.0,
+      "correct": 13,
+      "total": 13
+    },
+    {
+      "bol": "014",
+      "template": "cosco_style",
+      "acc": 92.31,
+      "correct": 12,
+      "total": 13
+    },
+    {
+      "bol": "017",
+      "template": "cosco_style",
+      "acc": 92.31,
+      "correct": 12,
+      "total": 13
+    },
+    {
+      "bol": "020",
+      "template": "cosco_style",
+      "acc": 100.0,
+      "correct": 13,
+      "total": 13
+    },
+    {
+      "bol": "023",
+      "template": "cosco_style",
+      "acc": 92.31,
+      "correct": 12,
+      "total": 13
+    },
+    {
+      "bol": "026",
+      "template": "cosco_style",
+      "acc": 100.0,
+      "correct": 13,
+      "total": 13
+    },
+    {
+      "bol": "029",
+      "template": "cosco_style",
+      "acc": 100.0,
+      "correct": 13,
+      "total": 13
+    },
+    {
+      "bol": "032",
+      "template": "cosco_style",
+      "acc": 100.0,
+      "correct": 13,
+      "total": 13
+    },
+    {
+      "bol": "035",
+      "template": "cosco_style",
+      "acc": 100.0,
+      "correct": 13,
+      "total": 13
+    },
+    {
+      "bol": "038",
+      "template": "cosco_style",
+      "acc": 92.31,
+      "correct": 12,
+      "total": 13
+    },
+    {
+      "bol": "041",
+      "template": "cosco_style",
+      "acc": 100.0,
+      "correct": 13,
+      "total": 13
+    },
+    {
+      "bol": "044",
+      "template": "cosco_style",
+      "acc": 92.31,
+      "correct": 12,
+      "total": 13
+    },
+    {
+      "bol": "047",
+      "template": "cosco_style",
+      "acc": 100.0,
+      "correct": 13,
+      "total": 13
+    },
+    {
+      "bol": "050",
+      "template": "cosco_style",
+      "acc": 100.0,
+      "correct": 13,
+      "total": 13
+    },
+    {
+      "bol": "003",
+      "template": "simple_style",
+      "acc": 100.0,
+      "correct": 11,
+      "total": 11
+    },
+    {
+      "bol": "006",
+      "template": "simple_style",
+      "acc": 100.0,
+      "correct": 11,
+      "total": 11
+    },
+    {
+      "bol": "009",
+      "template": "simple_style",
+      "acc": 100.0,
+      "correct": 11,
+      "total": 11
+    },
+    {
+      "bol": "012",
+      "template": "simple_style",
+      "acc": 100.0,
+      "correct": 11,
+      "total": 11
+    },
+    {
+      "bol": "015",
+      "template": "cosco_style",
+      "acc": 100.0,
+      "correct": 11,
+      "total": 11
+    },
+    {
+      "bol": "018",
+      "template": "simple_style",
+      "acc": 100.0,
+      "correct": 11,
+      "total": 11
+    },
+    {
+      "bol": "021",
+      "template": "simple_style",
+      "acc": 100.0,
+      "correct": 11,
+      "total": 11
+    },
+    {
+      "bol": "024",
+      "template": "maersk_style",
+      "acc": 100.0,
+      "correct": 11,
+      "total": 11
+    },
+    {
+      "bol": "027",
+      "template": "simple_style",
+      "acc": 100.0,
+      "correct": 11,
+      "total": 11
+    },
+    {
+      "bol": "030",
+      "template": "simple_style",
+      "acc": 100.0,
+      "correct": 11,
+      "total": 11
+    },
+    {
+      "bol": "033",
+      "template": "simple_style",
+      "acc": 100.0,
+      "correct": 11,
+      "total": 11
+    },
+    {
+      "bol": "036",
+      "template": "simple_style",
+      "acc": 100.0,
+      "correct": 11,
+      "total": 11
+    },
+    {
+      "bol": "039",
+      "template": "simple_style",
+      "acc": 100.0,
+      "correct": 11,
+      "total": 11
+    },
+    {
+      "bol": "042",
+      "template": "cosco_style",
+      "acc": 100.0,
+      "correct": 11,
+      "total": 11
+    },
+    {
+      "bol": "045",
+      "template": "simple_style",
+      "acc": 90.91,
+      "correct": 10,
+      "total": 11
+    },
+    {
+      "bol": "048",
+      "template": "maersk_style",
+      "acc": 100.0,
+      "correct": 11,
+      "total": 11
+    },
+    {
+      "bol": "161",
+      "template": "funsd_public",
+      "acc": 0.0,
+      "correct": 0,
+      "total": 1
+    },
+    {
+      "bol": "163",
+      "template": "funsd_public",
+      "acc": 0.0,
+      "correct": 0,
+      "total": 1
+    },
+    {
+      "bol": "165",
+      "template": "funsd_public",
+      "acc": 0.0,
+      "correct": 0,
+      "total": 0
+    },
+    {
+      "bol": "167",
+      "template": "unknown",
+      "acc": 0.0,
+      "correct": 0,
+      "total": 0
+    },
+    {
+      "bol": "169",
+      "template": "unknown",
+      "acc": 0.0,
+      "correct": 0,
+      "total": 1
+    },
+    {
+      "bol": "171",
+      "template": "unknown",
+      "acc": 0.0,
+      "correct": 0,
+      "total": 0
+    },
+    {
+      "bol": "173",
+      "template": "unknown",
+      "acc": 0.0,
+      "correct": 0,
+      "total": 0
+    },
+    {
+      "bol": "175",
+      "template": "unknown",
+      "acc": 0.0,
+      "correct": 0,
+      "total": 0
+    },
+    {
+      "bol": "177",
+      "template": "unknown",
+      "acc": 0.0,
+      "correct": 0,
+      "total": 1
+    },
+    {
+      "bol": "179",
+      "template": "unknown",
+      "acc": 0.0,
+      "correct": 0,
+      "total": 0
+    },
+    {
+      "bol": "181",
+      "template": "real_scan",
+      "acc": 0.0,
+      "correct": 0,
+      "total": 0
+    },
+    {
+      "bol": "183",
+      "template": "real_scan",
+      "acc": 0.0,
+      "correct": 0,
+      "total": 0
+    },
+    {
+      "bol": "185",
+      "template": "real_scan",
+      "acc": 0.0,
+      "correct": 0,
+      "total": 0
+    },
+    {
+      "bol": "187",
+      "template": "unknown",
+      "acc": 0.0,
+      "correct": 0,
+      "total": 0
+    },
+    {
+      "bol": "189",
+      "template": "real_scan",
+      "acc": 50.0,
+      "correct": 1,
+      "total": 2
+    },
+    {
+      "bol": "191",
+      "template": "real_scan",
+      "acc": 0.0,
+      "correct": 0,
+      "total": 2
+    },
+    {
+      "bol": "193",
+      "template": "real_scan",
+      "acc": 0.0,
+      "correct": 0,
+      "total": 0
+    },
+    {
+      "bol": "195",
+      "template": "unknown",
+      "acc": 0.0,
+      "correct": 0,
+      "total": 0
+    },
+    {
+      "bol": "197",
+      "template": "unknown",
+      "acc": 0.0,
+      "correct": 0,
+      "total": 0
+    },
+    {
+      "bol": "199",
+      "template": "real_scan",
+      "acc": 0.0,
+      "correct": 0,
+      "total": 2
+    }
+  ]
+}

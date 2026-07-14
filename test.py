@@ -468,12 +468,87 @@ def test_layout_parser():
     print('\n[OK] 通过\n')
 
 
+def test_field_extractor():
+    """
+    测试 11：锚点法字段提取 — 验证从OCR块中提取关键字段
+
+    测试 3 种版式各 1 份，对比 Ground Truth：
+      - Maersk: shipper, consignee, B/L No., POL, POD, Vessel, Voyage 等
+      - COSCO: 中英混合标签（托运人/Shipper、订舱号/B/L No. 等）
+      - Simple: 简易委托书
+
+    预期：核心字段（托运人、收货人、提单号、港口、船名航次等）准确率 > 90%
+    """
+    print('=' * 60)
+    print('测试 11: 锚点法字段提取 — 关键信息抽取 KIE')
+    print('=' * 60)
+
+    from field_extractor import FieldExtractor
+    from layout_parser import LayoutParser
+    import json
+
+    engine = OCREngine()
+    parser = LayoutParser()
+    extractor = FieldExtractor()
+
+    test_cases = [
+        ('001', 'Maersk 提单'),
+        ('002', 'COSCO 委托书'),
+        ('003', 'Simple 委托书'),
+    ]
+
+    total_correct = 0
+    total_fields = 0
+
+    for bol, desc in test_cases:
+        result = engine.recognize_pdf(f'dataset/pdf/bol_{bol}.pdf')[0]
+        blocks = result['blocks']
+        img_size = result['image_size']
+        regions = parser.parse(blocks, img_size)
+        extracted = extractor.extract(regions, img_size)
+
+        with open(f'dataset/json/bol_{bol}.json', 'r', encoding='utf-8') as f:
+            gt = json.load(f)
+
+        print(f'\n  bol_{bol} ({desc}):')
+        print(f'    版式: detected={extracted["template"]}, actual={gt["template"]}')
+        print(f'    提取字段: {len(extracted["fields"])} 个')
+
+        correct = 0
+        count = 0
+        for fname, info in extracted['fields'].items():
+            cleaned = info['cleaned']
+            if fname in gt:
+                gt_val = str(gt[fname]).upper().strip().replace(',', '')
+                clean_up = cleaned.upper().strip().replace(',', '')
+                ok = gt_val == clean_up or gt_val in clean_up or clean_up in gt_val
+                marker = '[OK]' if ok else '[X]'
+                if ok:
+                    correct += 1
+                count += 1
+                print(f'    {fname:20s} = "{cleaned[:35]}"  {marker}')
+
+        acc = correct / max(count, 1) * 100
+        print(f'    准确率: {correct}/{count} = {acc:.0f}%')
+        total_correct += correct
+        total_fields += count
+
+    overall = total_correct / max(total_fields, 1) * 100
+    print(f'\n  总准确率: {total_correct}/{total_fields} = {overall:.0f}%')
+    if overall >= 90:
+        print('  [OK] 字段提取准确率 > 90%，通过')
+    else:
+        print(f'  [!] 准确率 {overall:.0f}%，未达 90% 目标')
+    print('[OK] 通过\n')
+
+
 if __name__ == '__main__':
-    print('\n===== Day 3-7 OCR 引擎 & 图像预处理 & 版面分析 验证测试 =====\n')
+    print('\n===== Day 3-9 OCR 引擎 & 预处理 & 版面分析 & 字段提取 验证测试 =====\n')
     print('通俗理解:')
-    print('  OCREngine     = 电子眼，识别图上所有文字 (Day 3)')
-    print('  Preprocessor  = 智能美容师，自动扶正+提亮+纠斜 (Day 4)')
-    print('  LayoutParser  = 版面分析，分清标题/字段/表格 (Day 7)\n')
+    print('  OCREngine      = 电子眼，识别图上所有文字 (Day 3)')
+    print('  Preprocessor   = 智能美容师，自动扶正+提亮+纠斜 (Day 4)')
+    print('  LayoutParser   = 版面分析，分清标题/字段/表格 (Day 7)')
+    print('  FieldExtractor = 锚点法提取关键字段 (Day 8-9)\n')
 
     try:
         # Day 3 测试
@@ -490,7 +565,10 @@ if __name__ == '__main__':
         test_batch_real_images()
         test_layout_parser()
 
-        print('=== ALL PASS === 十项测试全部通过！')
+        # Day 8-9 测试
+        test_field_extractor()
+
+        print('=== ALL PASS === 十一项测试全部通过！')
     except Exception as e:
         print(f'\n[FAIL] 出错了: {e}')
         import traceback

@@ -71,6 +71,17 @@ class LayoutParser:
             else:
                 body_blocks.extend(row)
 
+        # 纠错：如果 table 区域包含字段标签（Shipper/Consignee 等），说明版面分析误判
+        # 这些块应该回退到 body 区域
+        if table_blocks:
+            table_texts = " ".join(b["text"] for b in table_blocks).upper()
+            field_kw = ["SHIPPER", "CONSIGNEE", "NOTIFY", "B/L NO", "PORT OF",
+                        "VESSEL:", "VOYAGE"]
+            if any(kw in table_texts for kw in field_kw):
+                # 把所有 table 块移到 body
+                body_blocks.extend(table_blocks)
+                table_blocks = []
+
         return {
             "header": header_blocks,
             "body": body_blocks,

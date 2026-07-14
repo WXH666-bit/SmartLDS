@@ -1,0 +1,17 @@
+{
+  "template": "warehouse_receipt",
+  "receipt_no": "RK20255351",
+  "date": "2024/05/13",
+  "supplier": "瑞丰供应链管理公司",
+  "warehouse": "B区-03库",
+  "item_code1": "MAT-002",
+  "item_name1": "轴承",
+  "spec1": "6205",
+  "qty1": "173",
+  "unit1": "件",
+  "item_code2": "MAT-004",
+  "item_name2": "螺栓",
+  "spec2": "M12",
+  "qty2": "58",
+  "unit2": "件"
+}
