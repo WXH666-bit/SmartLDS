@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-14T10:52:24.118616",
+  "generated_at": "2026-07-15T09:53:22.540693",
   "summary": {
     "total": 70,
     "synth_count": 50,
@@ -411,7 +411,7 @@
       "template": "unknown",
       "acc": 0.0,
       "correct": 0,
-      "total": 1
+      "total": 0
     },
     {
       "bol": "171",
@@ -439,7 +439,7 @@
       "template": "unknown",
       "acc": 0.0,
       "correct": 0,
-      "total": 1
+      "total": 0
     },
     {
       "bol": "179",
