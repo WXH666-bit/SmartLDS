@@ -36,6 +36,18 @@ from ocr_engine import OCREngine
 from preprocess import Preprocessor
 from layout_parser import LayoutParser
 from field_extractor import FieldExtractor
+from vision_fallback import (
+    VisionFallbackClient,
+    add_meta_warning,
+    attach_quality_meta,
+    default_vision_settings,
+    evaluate_recognition_quality,
+    merge_vision_fallback_result,
+    normalize_vision_model,
+    provider_defaults,
+    public_vision_settings,
+    vision_settings_options,
+)
 
 # ================================================================
 # Flask 应用初始化
@@ -57,6 +69,7 @@ _engine = None
 _preprocessor = None
 _parser = None
 _extractor = None
+_vision_fallback = None
 JOB_ID_RE = re.compile(r"^[0-9a-f]{12}$")
 MAX_ZIP_MEMBERS = 300
 MAX_ZIP_UNCOMPRESSED = 256 * 1024 * 1024
@@ -93,12 +106,88 @@ def get_extractor():
     return _extractor
 
 
+def get_vision_fallback():
+    global _vision_fallback
+    if _vision_fallback is None:
+        _vision_fallback = VisionFallbackClient(settings=load_vision_settings(include_secret=True))
+    return _vision_fallback
+
+
+def reset_vision_fallback():
+    global _vision_fallback
+    _vision_fallback = None
+
+
 def is_valid_job_id(job_id: str) -> bool:
     return bool(JOB_ID_RE.fullmatch(job_id or ""))
 
 
 def _uploads_root() -> Path:
     return Path(app.config["UPLOAD_FOLDER"]).resolve()
+
+
+def vision_settings_path() -> str:
+    root = _uploads_root()
+    root.mkdir(parents=True, exist_ok=True)
+    return str(_ensure_under_root(root / "vision_settings.json", root))
+
+
+def load_vision_settings(include_secret: bool = False) -> dict:
+    settings = default_vision_settings()
+    saved = read_json_file(vision_settings_path(), {}) or {}
+    if isinstance(saved, dict):
+        settings.update(saved)
+
+    provider_cfg = provider_defaults(settings.get("provider"))
+    settings["model"] = normalize_vision_model(settings.get("provider"), settings.get("model"))
+    if not settings.get("base_url"):
+        settings["base_url"] = provider_cfg["default_base_url"]
+
+    try:
+        settings["threshold"] = float(settings.get("threshold", 0.55))
+    except (TypeError, ValueError):
+        settings["threshold"] = 0.55
+    settings["enabled"] = bool(settings.get("enabled"))
+
+    if include_secret:
+        return settings
+    return public_vision_settings(settings)
+
+
+def save_vision_settings(data: dict) -> dict:
+    current = load_vision_settings(include_secret=True)
+    provider = str(data.get("provider") or current.get("provider") or "qwen")
+    provider_cfg = provider_defaults(provider)
+
+    updated = {
+        "enabled": bool(data.get("enabled", current.get("enabled", False))),
+        "provider": provider,
+        "model": normalize_vision_model(provider, data.get("model") or provider_cfg["default_model"]),
+        "base_url": str(data.get("base_url") or provider_cfg["default_base_url"]).strip(),
+        "api_key": current.get("api_key", ""),
+        "threshold": data.get("threshold", current.get("threshold", 0.55)),
+    }
+
+    api_key = data.get("api_key", None)
+    if api_key is not None and str(api_key).strip():
+        updated["api_key"] = str(api_key).strip()
+
+    try:
+        updated["threshold"] = max(0.0, min(1.0, float(updated["threshold"])))
+    except (TypeError, ValueError):
+        updated["threshold"] = 0.55
+
+    write_json_file(vision_settings_path(), updated)
+    reset_vision_fallback()
+    return public_vision_settings(updated)
+
+
+def clear_vision_settings() -> dict:
+    path = vision_settings_path()
+    if os.path.exists(path):
+        os.remove(path)
+    reset_vision_fallback()
+    return public_vision_settings(default_vision_settings())
 
 
 def _ensure_under_root(path: Path, root: Path) -> Path:
@@ -151,6 +240,12 @@ def apply_corrections(result: dict | None, corrections: dict | None) -> dict:
         for fname, corrected_val in clean_corrections.items():
             if fname in fields and isinstance(fields[fname], dict):
                 fields[fname]["corrected"] = corrected_val
+    return result_copy
+
+
+def strip_debug(result: dict | None) -> dict:
+    result_copy = copy.deepcopy(result or {})
+    result_copy.pop("debug", None)
     return result_copy
 
 
@@ -247,6 +342,31 @@ def is_pdf(filename: str) -> bool:
     return filename.rsplit(".", 1)[1].lower() == "pdf" if "." in filename else False
 
 
+def render_first_page_for_vision(file_path: str, file_type: str, tmp_dir: str) -> str:
+    """Return an image path suitable for vision fallback; render PDF page 1 when needed."""
+    if file_type == "pdf":
+        import fitz
+        from PIL import Image
+
+        doc = fitz.open(file_path)
+        pix = doc[0].get_pixmap(dpi=200)
+        img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+        doc.close()
+
+        image_path = os.path.join(tmp_dir, "vision_page_1.png")
+        img.save(image_path, format="PNG")
+        return image_path
+    return file_path
+
+
+def vision_fallback_threshold() -> float:
+    settings = load_vision_settings(include_secret=True)
+    try:
+        return float(os.getenv("VISION_FALLBACK_THRESHOLD", settings.get("threshold", 0.55)))
+    except (TypeError, ValueError):
+        return 0.55
+
+
 def run_recognition_pipeline(job: dict):
     file_path = job["file_path"]
     if not os.path.exists(file_path):
@@ -284,6 +404,49 @@ def run_recognition_pipeline(job: dict):
     if warnings:
         meta["warnings"] = warnings
     extracted["meta"] = meta
+
+    # 质量评分只依赖本地结果，默认总是执行；真正调用视觉模型还要看环境变量。
+    # 这样前端/导出都能看到本地识别置信度，同时避免高置信度样本产生额外成本。
+    quality = evaluate_recognition_quality(
+        extracted,
+        blocks=blocks,
+        threshold=vision_fallback_threshold(),
+    )
+    extracted = attach_quality_meta(extracted, quality, extraction_source="local_rules")
+
+    if quality.get("should_fallback"):
+        # 低置信度才尝试视觉兜底。未启用或失败时保留本地结果并写入 warning，
+        # 不让外部 API 状态影响基础 OCR/规则识别流程。
+        fallback = get_vision_fallback()
+        unavailable = fallback.unavailable_reason()
+        if unavailable:
+            fallback_result = {"success": False, "warning": unavailable}
+        else:
+            with tempfile.TemporaryDirectory(prefix="smartlds_vision_") as tmp_dir:
+                vision_image_path = render_first_page_for_vision(
+                    file_path,
+                    job.get("file_type", "pdf"),
+                    tmp_dir,
+                )
+                fallback_result = fallback.extract(
+                    vision_image_path,
+                    blocks=blocks,
+                    local_result=extracted,
+                    quality=quality,
+                )
+
+        if fallback_result.get("success"):
+            extracted = merge_vision_fallback_result(
+                extracted,
+                fallback_result.get("result", {}),
+                quality,
+            )
+        else:
+            warning = fallback_result.get("warning") or "视觉兜底未执行，已保留本地规则结果"
+            extracted = add_meta_warning(extracted, warning)
+            meta = dict(extracted.get("meta", {}))
+            meta["fallback_reason"] = ", ".join(quality.get("fallback_reasons", []))
+            extracted["meta"] = meta
 
     result_data = {
         **extracted,
@@ -400,6 +563,8 @@ def api_result(job_id):
         return jsonify({"job_id": job_id, "status": "error", "error": job.get("error", "")}), 500
 
     result = apply_corrections(job.get("result", {}), job.get("corrections", {}))
+    if request.args.get("debug") not in ("1", "true", "yes"):
+        result = strip_debug(result)
     result["status"] = job["status"]
     result["corrections"] = job.get("corrections", {})
     result["blocks"] = load_blocks(job_id)
@@ -459,7 +624,7 @@ def api_export(job_id):
     export_format = request.args.get("format", "json").lower()
 
     # 合并原始结果 + 校正
-    result = apply_corrections(job["result"], job.get("corrections", {}))
+    result = strip_debug(apply_corrections(job["result"], job.get("corrections", {})))
     fields = result.get("fields", {})
 
     if export_format == "xlsx":
@@ -503,12 +668,13 @@ def _export_excel(job_id, result, fields):
     corrections = result.get("corrections", {})
     for fname, info in fields.items():
         conf = info.get("confidence", 0)
+        display_name = info.get("label") or fname
         ws1.append([
-            fname,
+            display_name,
             info.get("value", ""),
             info.get("cleaned", ""),
             f"{conf:.0%}" if isinstance(conf, (int, float)) else str(conf),
-            info.get("anchor_text", ""),
+            info.get("anchor") or info.get("anchor_text", ""),
             corrections.get(fname, ""),
         ])
 
@@ -748,6 +914,7 @@ def api_config():
             f_info = {
                 "key": fname,
                 "label": fdef.get("label", fname),
+                "canonical_key": fdef.get("canonical_key", ""),
                 "anchors": fdef.get("anchors", []),
                 "position": fdef.get("position", "right"),
                 "validator": fdef.get("validator") or "",
@@ -821,6 +988,7 @@ def api_config_apply():
     template_name = data["template_name"]
     keywords = data.get("keywords", [])
     fields = data.get("fields", {})
+    validators = data.get("validators", {})
 
     # 构建自包含模板条目
     template_fields = {}
@@ -830,11 +998,25 @@ def api_config_apply():
             "anchors": fcfg.get("anchors", [fcfg.get("anchor", fname)]),
             "position": fcfg.get("position", "right"),
         }
+        if fcfg.get("canonical_key"):
+            entry["canonical_key"] = fcfg["canonical_key"]
         if fcfg.get("validator"):
             entry["validator"] = fcfg["validator"]
+        if fcfg.get("value_pattern"):
+            entry["value_pattern"] = fcfg["value_pattern"]
+        if fcfg.get("multi_line"):
+            entry["multi_line"] = True
+        if fcfg.get("allow_shared"):
+            entry["allow_shared"] = True
         if fcfg.get("search_in"):
             entry["search_in"] = fcfg["search_in"]
         template_fields[fname] = entry
+
+    if validators:
+        cfg.setdefault("validators", {})
+        for vname, vcfg in validators.items():
+            if isinstance(vcfg, dict):
+                cfg["validators"][vname] = vcfg
 
     if "templates" not in cfg:
         cfg["templates"] = {}
@@ -1006,6 +1188,42 @@ def api_fewshot_learn():
         return jsonify({"error": str(e)}), 500
     finally:
         shutil.rmtree(tmp_dir, ignore_errors=True)
+
+
+# ================================================================
+# API: 视觉兜底模型设置
+# ================================================================
+
+@app.route("/api/vision-settings", methods=["GET"])
+def api_vision_settings_get():
+    """获取视觉兜底设置；API Key 只返回掩码，不回传明文。"""
+    return jsonify({
+        "settings": load_vision_settings(include_secret=False),
+        "options": vision_settings_options(),
+    })
+
+
+@app.route("/api/vision-settings", methods=["POST"])
+def api_vision_settings_save():
+    """保存视觉兜底设置，包含供应商、模型、阈值和可选 API Key。"""
+    data = request.get_json(silent=True) or {}
+    settings = save_vision_settings(data)
+    return jsonify({
+        "success": True,
+        "settings": settings,
+        "options": vision_settings_options(),
+    })
+
+
+@app.route("/api/vision-settings", methods=["DELETE"])
+def api_vision_settings_clear():
+    """清除本地保存的视觉兜底设置和 API Key，恢复默认千问配置。"""
+    settings = clear_vision_settings()
+    return jsonify({
+        "success": True,
+        "settings": settings,
+        "options": vision_settings_options(),
+    })
 
 
 # ================================================================

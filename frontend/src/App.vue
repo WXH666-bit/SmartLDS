@@ -29,6 +29,7 @@
     <el-button size="small" text @click="showFewshot=true">Few-shot 学习</el-button>
     <el-button size="small" text @click="showHistory=true; loadHistory()" style="margin-left:12px">历史</el-button>
     <el-button size="small" text @click="showConfig=true; loadConfig()">版式管理</el-button>
+    <el-button size="small" type="primary" plain @click="showVisionSettings=true; loadVisionSettings()">模型设置</el-button>
   </header>
 
   <!-- ============ Body ============ -->
@@ -36,54 +37,80 @@
 
     <!-- === Upload Stage === -->
     <div v-if="!resultReady" class="upload-stage">
-      <!-- Hero illustration -->
-      <div class="hero-illustration">
-        <svg viewBox="0 0 300 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <!-- Document -->
-          <rect x="50" y="12" width="72" height="96" rx="6" fill="#fff" stroke="#cbd5e1" stroke-width="2"/>
-          <rect x="60" y="28" width="52" height="4" rx="2" fill="#e2e8f0"/>
-          <rect x="60" y="40" width="40" height="4" rx="2" fill="#e2e8f0"/>
-          <rect x="60" y="52" width="46" height="4" rx="2" fill="#e2e8f0"/>
-          <rect x="60" y="66" width="24" height="18" rx="3" fill="#dbeafe" stroke="#93c5fd" stroke-width="1.5"/>
-          <rect x="90" y="66" width="22" height="18" rx="3" fill="#dbeafe" stroke="#93c5fd" stroke-width="1.5"/>
-          <!-- Arrow from doc to cloud -->
-          <path d="M128 60 L172 60" stroke="#3b82f6" stroke-width="2.5" stroke-dasharray="6,3"/>
-          <polygon points="170,56 178,60 170,64" fill="#3b82f6"/>
-          <!-- Cloud with check -->
-          <path d="M190 38c-8 0-14-1-16 7-3-2-8-2-10 1-6 0-10 4-10 10s4 10 10 10h26c6 0 10-4 10-10s-4-10-10-10z" fill="#dbeafe" stroke="#93c5fd" stroke-width="2"/>
-          <path d="M199 54l4 5 8-9" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-          <!-- Decorative scanning lines -->
-          <line x1="140" y1="18" x2="140" y2="24" stroke="#94a3b8" stroke-width="1.5" opacity="0.5"/>
-          <line x1="140" y1="30" x2="140" y2="36" stroke="#94a3b8" stroke-width="1.5" opacity="0.5"/>
-          <line x1="182" y1="80" x2="182" y2="102" stroke="#94a3b8" stroke-width="1.5" opacity="0.5"/>
-          <!-- Small parcel -->
-          <rect x="216" y="52" width="34" height="28" rx="4" fill="#fef3c7" stroke="#fbbf24" stroke-width="2"/>
-          <line x1="233" y1="52" x2="233" y2="80" stroke="#fbbf24" stroke-width="1.5"/>
-          <line x1="216" y1="66" x2="250" y2="66" stroke="#fbbf24" stroke-width="1.5"/>
-          <text x="150" y="115" text-anchor="middle" font-size="10" fill="#94a3b8" font-family="system-ui">文档上传 · 智能识别 · 结构化提取</text>
-        </svg>
-      </div>
-
-      <!-- Dropzone + ZIP box side by side -->
-      <div class="upload-cols">
-        <div class="dz-box files-dz" :class="{ over: filesOver }"
-             @dragover.prevent="filesOver=true" @dragleave.prevent="filesOver=false"
-             @drop.prevent="filesOver=false; filesDropped($event)">
-          <div class="dz-icon">📄</div>
-          <p class="dz-title">拖拽文件到此处</p>
-          <p class="dz-hint">PDF · PNG · JPG · 最大 32MB</p>
-          <el-button type="primary" round @click="$refs.multiInput.click()">选择文件</el-button>
-          <input ref="multiInput" type="file" accept=".pdf,.png,.jpg,.jpeg" multiple hidden @change="onMultiChange">
+      <section class="home-hero">
+        <div class="hero-copy">
+          <el-tag size="small" effect="dark" class="hero-pill">SmartLDS · 单证结构化识别</el-tag>
+          <h2>把物流单证变成可校正、可导出的结构化字段</h2>
+          <p>本地规则优先，低置信度时可切换到视觉大模型兜底。适合提单、报关单、快递面单和复杂表单的混合识别流程。</p>
+          <div class="hero-actions">
+            <el-button type="primary" size="large" round @click="openMultiInput">上传单据</el-button>
+            <el-button size="large" round @click="showVisionSettings=true; loadVisionSettings()">配置大模型</el-button>
+          </div>
+          <div class="hero-metrics">
+            <div><b>规则优先</b><span>高置信度样本不花模型成本</span></div>
+            <div><b>原字段名</b><span>每个版式保留自己的 schema</span></div>
+            <div><b>可导出</b><span>JSON / Excel 一键保存</span></div>
+          </div>
         </div>
+        <div class="hero-card">
+          <div class="scan-card">
+            <div class="scan-top">
+              <span></span><span></span><span></span>
+            </div>
+            <div class="scan-title">BILL OF LADING</div>
+            <div class="scan-row"><i>Shipper</i><strong>Johnson PLC</strong></div>
+            <div class="scan-row"><i>B/L No.</i><strong>BL10398483</strong></div>
+            <div class="scan-row"><i>Port</i><strong>SHANGHAI → HAMBURG</strong></div>
+            <div class="scan-light"></div>
+          </div>
+        </div>
+      </section>
 
-        <div class="dz-box zip-dz" :class="{ over: zipOver }"
-             @dragover.prevent="zipOver=true" @dragleave.prevent="zipOver=false"
-             @drop.prevent="zipOver=false; zipDropped($event)">
-          <div class="dz-icon">📦</div>
-          <p class="dz-title">拖入 ZIP 压缩包</p>
-          <p class="dz-hint">自动解压全部文件</p>
-          <el-button type="primary" round @click="$refs.zipInput.click()">选择 ZIP</el-button>
-          <input ref="zipInput" type="file" accept=".zip" hidden @change="onZipChange">
+      <div class="upload-panel">
+        <div class="upload-cols">
+          <div class="dz-box files-dz" :class="{ over: filesOver }"
+               @dragover.prevent="filesOver=true" @dragleave.prevent="filesOver=false"
+               @drop.prevent="filesOver=false; filesDropped($event)">
+            <div class="dz-icon file-icon" aria-hidden="true">
+              <svg viewBox="0 0 96 96" fill="none">
+                <rect x="25" y="14" width="42" height="58" rx="8" fill="url(#fileBody)" />
+                <path d="M58 14v15c0 4 3 7 7 7h15L58 14Z" fill="#dbeafe" />
+                <rect x="33" y="38" width="26" height="4" rx="2" fill="#60a5fa" opacity=".9" />
+                <rect x="33" y="49" width="31" height="4" rx="2" fill="#93c5fd" />
+                <rect x="33" y="60" width="20" height="4" rx="2" fill="#bfdbfe" />
+                <path d="M20 77h52" stroke="#2563eb" stroke-width="4" stroke-linecap="round" opacity=".18" />
+                <defs>
+                  <linearGradient id="fileBody" x1="25" y1="14" x2="73" y2="76" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#eff6ff" />
+                    <stop offset="1" stop-color="#dbeafe" />
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
+            <p class="dz-title">拖拽 PDF / 图片到这里</p>
+            <p class="dz-hint">支持 PDF、PNG、JPG，单文件最大 32MB</p>
+            <el-button type="primary" round @click="openMultiInput">选择文件</el-button>
+            <input ref="multiInput" type="file" accept=".pdf,.png,.jpg,.jpeg" multiple hidden @change="onMultiChange">
+          </div>
+
+          <div class="dz-box zip-dz" :class="{ over: zipOver }"
+               @dragover.prevent="zipOver=true" @dragleave.prevent="zipOver=false"
+               @drop.prevent="zipOver=false; zipDropped($event)">
+            <div class="dz-icon zip-icon" aria-hidden="true">
+              <svg viewBox="0 0 96 96" fill="none">
+                <path d="M48 13 78 30 48 47 18 30 48 13Z" fill="#fde68a" />
+                <path d="M18 30v35l30 18V47L18 30Z" fill="#f59e0b" />
+                <path d="M78 30v35L48 83V47l30-17Z" fill="#d97706" />
+                <path d="m35 20 30 17" stroke="#92400e" stroke-width="7" stroke-linecap="round" opacity=".45" />
+                <path d="M36 56h12v12H36z" fill="#fff7ed" opacity=".8" />
+                <path d="M24 73h48" stroke="#f59e0b" stroke-width="4" stroke-linecap="round" opacity=".2" />
+              </svg>
+            </div>
+            <p class="dz-title">批量导入 ZIP</p>
+            <p class="dz-hint">自动解压并加入待识别列表</p>
+            <el-button round @click="openZipInput">选择 ZIP</el-button>
+            <input ref="zipInput" type="file" accept=".zip" hidden @change="onZipChange">
+          </div>
         </div>
       </div>
 
@@ -116,6 +143,8 @@
         <div class="toolbar-left">
           <el-button size="small" @click="backToList">← 返回列表</el-button>
           <span class="meta-item"><b>{{ meta.template }}</b></span>
+          <span class="meta-item source-badge" :class="meta.extraction_source">{{ extractionSourceLabel }}</span>
+          <span v-if="meta.confidence !== undefined" class="meta-item">置信度 {{ Math.round((meta.confidence || 0)*100) }}%</span>
           <span class="meta-item">字段 {{ meta.fields_extracted }}/{{ meta.fields_total }}</span>
           <span class="meta-item">OCR {{ meta.ocr_blocks }} 块</span>
           <span v-if="tableData.headers.length" class="meta-item">表格 {{ tableData.rows.length }} 行</span>
@@ -209,6 +238,55 @@
       </div>
     </div>
   </el-drawer>
+
+  <!-- ============ Vision Model Settings ============ -->
+  <el-dialog v-model="showVisionSettings" title="视觉大模型兜底设置" width="620px" :close-on-click-modal="false">
+    <div v-if="visionSettingsLoading" style="text-align:center;padding:32px">
+      <el-icon class="is-loading" :size="28"><Loading /></el-icon>
+    </div>
+    <el-form v-else label-width="110px" class="vision-form">
+      <el-alert
+        type="info"
+        :closable="false"
+        show-icon
+        title="默认仍先跑本地 PaddleOCR + 规则抽取；只有低置信度、unknown 或复杂表单时才调用这里配置的大模型。"
+        style="margin-bottom:16px"
+      />
+      <el-form-item label="启用兜底">
+        <el-switch v-model="visionSettings.enabled" active-text="启用" inactive-text="关闭" />
+      </el-form-item>
+      <el-form-item label="模型供应商">
+        <el-select v-model="visionSettings.provider" style="width:100%" @change="onVisionProviderChange">
+          <el-option v-for="p in visionOptions.providers" :key="p.key" :label="p.label" :value="p.key" />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="模型">
+        <el-select v-model="visionSettings.model" filterable allow-create style="width:100%">
+          <el-option v-for="m in currentVisionModels" :key="m.value" :label="m.label" :value="m.value" />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="API Key">
+        <el-input v-model="visionSettings.api_key" type="password" show-password clearable placeholder="留空则保留已保存的 key" />
+        <div class="form-hint">
+          <span v-if="visionSettings.has_api_key">已保存：{{ visionSettings.masked_api_key }}</span>
+          <span v-else>尚未保存 API Key</span>
+        </div>
+      </el-form-item>
+      <el-form-item label="触发阈值">
+        <el-slider v-model="visionSettings.threshold" :min="0.1" :max="0.95" :step="0.01" show-input />
+      </el-form-item>
+      <el-form-item label="接口地址">
+        <el-input v-model="visionSettings.base_url" clearable />
+        <div class="form-hint">千问默认使用 DashScope OpenAI 兼容模式；通常不用改。</div>
+      </el-form-item>
+      <div class="vision-actions">
+        <el-button type="danger" plain @click="clearVisionSettings">清除保存</el-button>
+        <div class="spacer"></div>
+        <el-button @click="showVisionSettings=false">取消</el-button>
+        <el-button type="primary" :loading="visionSettingsSaving" @click="saveVisionSettings">保存设置</el-button>
+      </div>
+    </el-form>
+  </el-dialog>
 
   <!-- ============ Few-shot Dialog ============ -->
   <el-dialog v-model="showFewshot" title="Few-shot 版式学习" width="640px" :close-on-click-modal="false">
@@ -344,6 +422,26 @@ const showConfig = ref(false)
 const configLoading = ref(false)
 const configTemplates = ref([])
 
+// Vision fallback settings
+const showVisionSettings = ref(false)
+const visionSettingsLoading = ref(false)
+const visionSettingsSaving = ref(false)
+const visionOptions = reactive({ providers: [] })
+const visionSettings = reactive({
+  enabled: false,
+  provider: 'qwen',
+  model: 'qwen3.6-plus',
+  base_url: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+  api_key: '',
+  threshold: 0.55,
+  has_api_key: false,
+  masked_api_key: ''
+})
+const currentVisionModels = computed(() => {
+  const provider = visionOptions.providers.find(p => p.key === visionSettings.provider)
+  return provider?.models || []
+})
+
 // History
 const showHistory = ref(false)
 const historyList = ref([])
@@ -383,6 +481,72 @@ async function deleteTemplate(name) {
   } catch (e) { ElMessage.error('删除失败: ' + (e.response?.data?.error || e.message)) }
 }
 
+function applyVisionSettingsPayload(payload) {
+  const data = payload || {}
+  if (data.options?.providers) visionOptions.providers = data.options.providers
+  const s = data.settings || {}
+  Object.assign(visionSettings, {
+    enabled: !!s.enabled,
+    provider: s.provider || 'qwen',
+    model: s.model || 'qwen3.6-plus',
+    base_url: s.base_url || 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+    api_key: '',
+    threshold: Number(s.threshold ?? 0.55),
+    has_api_key: !!s.has_api_key,
+    masked_api_key: s.masked_api_key || ''
+  })
+}
+
+async function loadVisionSettings() {
+  visionSettingsLoading.value = true
+  try {
+    const { data } = await api.getVisionSettings()
+    applyVisionSettingsPayload(data)
+  } catch (e) {
+    ElMessage.error('加载模型设置失败')
+  } finally {
+    visionSettingsLoading.value = false
+  }
+}
+
+function onVisionProviderChange() {
+  const provider = visionOptions.providers.find(p => p.key === visionSettings.provider)
+  if (!provider) return
+  visionSettings.model = provider.default_model || provider.models?.[0]?.value || visionSettings.model
+  visionSettings.base_url = provider.default_base_url || visionSettings.base_url
+}
+
+async function saveVisionSettings() {
+  visionSettingsSaving.value = true
+  try {
+    const payload = {
+      enabled: visionSettings.enabled,
+      provider: visionSettings.provider,
+      model: visionSettings.model,
+      base_url: visionSettings.base_url,
+      threshold: visionSettings.threshold
+    }
+    if (visionSettings.api_key.trim()) payload.api_key = visionSettings.api_key.trim()
+    const { data } = await api.saveVisionSettings(payload)
+    applyVisionSettingsPayload(data)
+    ElMessage.success('模型设置已保存')
+  } catch (e) {
+    ElMessage.error('保存模型设置失败: ' + (e.response?.data?.error || e.message))
+  } finally {
+    visionSettingsSaving.value = false
+  }
+}
+
+async function clearVisionSettings() {
+  try {
+    const { data } = await api.clearVisionSettings()
+    applyVisionSettingsPayload(data)
+    ElMessage.success('模型设置已清除，恢复默认千问配置')
+  } catch (e) {
+    ElMessage.error('清除模型设置失败')
+  }
+}
+
 const resultReady = computed(() => phase.value==='done' && !!viewingJobId.value)
 const pipelineStep = computed(() => {
   if (phase.value==='done') return 3
@@ -390,12 +554,25 @@ const pipelineStep = computed(() => {
   if (fileList.value.length) return 1
   return 0
 })
+const extractionSourceLabel = computed(() => {
+  if (meta.extraction_source === 'vision_fallback') return '视觉兜底'
+  if (meta.extraction_source === 'local_rules_with_vision_patch') return '规则+视觉修补'
+  return '规则识别'
+})
 
 function formatSize(bytes) {
   if (!bytes || bytes < 0) return '-'
   if (bytes < 1024) return bytes + ' B'
   if (bytes < 1048576) return (bytes/1024).toFixed(1) + ' KB'
   return (bytes/1048576).toFixed(1) + ' MB'
+}
+
+function openMultiInput() {
+  multiInput.value?.click()
+}
+
+function openZipInput() {
+  zipInput.value?.click()
 }
 
 // ============ File handling ============
@@ -494,7 +671,8 @@ function showResult(data) {
     const display = corrections[name] ?? info.corrected ?? info.cleaned ?? info.value ?? ''
     return {
       name,
-      label: (info.label && info.label!==name) ? `${name} (${info.label})` : name,
+      label: info.label || name,
+      canonicalKey: info.canonical_key || '',
       found: info.status!=='not_found',
       display,
       confidence: info.confidence ? Math.round(info.confidence*100)+'%' : '',
@@ -623,7 +801,8 @@ async function fsApplyResult() {
     const { data } = await api.applyConfig({
       template_name: name,
       keywords: fsResult.value.keywords,
-      fields: fsResult.value.fields
+      fields: fsResult.value.fields,
+      validators: fsResult.value.validators || {}
     })
     ElMessage.success(`已应用版式 "${data.template}"，添加 ${data.fields_count} 个字段`)
     showFewshot.value = false
@@ -706,17 +885,53 @@ function doExport(fmt) { const a=document.createElement('a'); a.href=api.exportU
 
 .body{flex:1;overflow:hidden;display:flex}
 
-/* Hero */
-.hero-illustration{width:100%;max-width:500px;margin-bottom:8px}
-.hero-illustration svg{width:100%;height:auto}
+/* Home */
+.upload-stage{flex:1;display:flex;flex-direction:column;align-items:center;padding:34px 24px;gap:22px;overflow-y:auto;background:
+  radial-gradient(circle at 15% 10%,rgba(59,130,246,.18),transparent 30%),
+  radial-gradient(circle at 85% 5%,rgba(16,185,129,.12),transparent 26%),
+  linear-gradient(180deg,#f8fbff 0%,#f1f5f9 100%)}
+.home-hero{width:min(1120px,100%);display:grid;grid-template-columns:minmax(0,1.2fr) 420px;gap:32px;align-items:center}
+.hero-copy{padding:18px 0}
+.hero-pill{border:none;background:linear-gradient(135deg,#2563eb,#7c3aed);font-weight:700}
+.hero-copy h2{font-size:42px;line-height:1.08;margin:18px 0 14px;color:#0f172a;letter-spacing:-1.2px}
+.hero-copy p{max-width:620px;font-size:15px;line-height:1.8;color:#64748b;margin:0}
+.hero-actions{display:flex;gap:12px;margin-top:24px}
+.hero-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:26px;max-width:680px}
+.hero-metrics div{padding:14px 16px;border:1px solid rgba(148,163,184,.24);background:rgba(255,255,255,.72);backdrop-filter:blur(10px);border-radius:16px;box-shadow:0 10px 30px rgba(15,23,42,.04)}
+.hero-metrics b{display:block;font-size:14px;color:#0f172a;margin-bottom:4px}
+.hero-metrics span{font-size:12px;color:#64748b}
+.hero-card{display:flex;justify-content:center}
+.scan-card{position:relative;width:360px;min-height:330px;border-radius:28px;background:linear-gradient(145deg,#ffffff,#edf4ff);box-shadow:0 30px 80px rgba(37,99,235,.22);border:1px solid rgba(255,255,255,.8);padding:24px;overflow:hidden}
+.scan-card:before{content:"";position:absolute;inset:18px;border:1px dashed rgba(37,99,235,.25);border-radius:22px}
+.scan-top{display:flex;gap:6px;position:relative;z-index:1}
+.scan-top span{width:10px;height:10px;border-radius:50%;background:#cbd5e1}
+.scan-title{position:relative;z-index:1;margin:28px 0 20px;font-size:22px;font-weight:900;color:#1d4ed8;letter-spacing:.6px}
+.scan-row{position:relative;z-index:1;display:flex;justify-content:space-between;gap:14px;padding:13px 0;border-bottom:1px solid #e2e8f0}
+.scan-row i{font-style:normal;color:#64748b;font-size:12px}.scan-row strong{font-size:13px;color:#0f172a;text-align:right}
+.scan-light{position:absolute;left:-20%;right:-20%;top:48%;height:32px;background:linear-gradient(90deg,transparent,rgba(59,130,246,.18),transparent);transform:rotate(-8deg);animation:scanline 2.4s ease-in-out infinite}
+@keyframes scanline{0%,100%{top:22%;opacity:.25}50%{top:72%;opacity:.85}}
 
 /* Upload */
-.upload-stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;gap:24px;overflow-y:auto}
-.upload-cols{display:flex;gap:20px;max-width:840px;width:100%}
-.dz-box{flex:1;max-width:400px;padding:56px 32px;border:2px dashed #d1d5db;border-radius:16px;text-align:center;background:#fff;transition:all .3s;display:flex;flex-direction:column;align-items:center;gap:14px}
-.dz-box:hover{border-color:#94a3b8;box-shadow:0 2px 12px rgba(0,0,0,.04)}
-.dz-box.over{border-color:#3b82f6;background:#eff6ff;box-shadow:0 4px 24px rgba(59,130,246,.1)}
-.dz-icon{font-size:52px}.dz-title{font-size:16px;font-weight:600;color:#374151}.dz-hint{font-size:13px;color:#94a3b8}
+.upload-panel{width:min(960px,100%);background:linear-gradient(135deg,rgba(255,255,255,.9),rgba(248,250,252,.76));border:1px solid rgba(226,232,240,.9);border-radius:26px;padding:18px;box-shadow:0 22px 70px rgba(15,23,42,.09);backdrop-filter:blur(16px)}
+.upload-cols{display:flex;gap:16px;width:100%}
+.dz-box{flex:1;position:relative;isolation:isolate;overflow:hidden;padding:36px 28px;border:1px solid rgba(203,213,225,.9);border-radius:20px;text-align:center;background:linear-gradient(180deg,#fff,rgba(248,250,252,.96));transition:transform .25s,box-shadow .25s,border-color .25s;display:flex;flex-direction:column;align-items:center;gap:12px}
+.dz-box:before{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1px;background:linear-gradient(135deg,rgba(59,130,246,.72),rgba(14,165,233,.08),rgba(16,185,129,.45));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.25;transition:opacity .25s;pointer-events:none}
+.dz-box:after{content:"";position:absolute;top:-80%;left:-30%;width:50%;height:240%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.72),transparent);transform:rotate(22deg) translateX(-180%);transition:transform .55s ease;z-index:-1;pointer-events:none}
+.dz-box>*{position:relative;z-index:1}
+.dz-box:hover{border-color:rgba(96,165,250,.8);transform:translateY(-3px);box-shadow:0 18px 42px rgba(37,99,235,.14)}
+.dz-box:hover:before,.dz-box.over:before{opacity:.95}
+.dz-box:hover:after,.dz-box.over:after{transform:rotate(22deg) translateX(360%)}
+.dz-box.over{border-color:#2563eb;background:linear-gradient(180deg,#eff6ff,#fff);box-shadow:0 20px 48px rgba(59,130,246,.2)}
+.zip-dz:before{background:linear-gradient(135deg,rgba(245,158,11,.72),rgba(251,191,36,.08),rgba(59,130,246,.32))}
+.dz-icon{width:86px;height:86px;border-radius:26px;display:flex;align-items:center;justify-content:center;position:relative;box-shadow:inset 0 1px 0 rgba(255,255,255,.78),0 16px 36px rgba(15,23,42,.1);transition:transform .25s,box-shadow .25s}
+.dz-icon:after{content:"";position:absolute;inset:14px;border-radius:20px;background:rgba(255,255,255,.34);filter:blur(14px);z-index:-1;pointer-events:none}
+.dz-box:hover .dz-icon,.dz-box.over .dz-icon{transform:translateY(-4px) scale(1.04);box-shadow:inset 0 1px 0 rgba(255,255,255,.85),0 20px 42px rgba(37,99,235,.16)}
+.dz-icon svg{width:68px;height:68px;display:block;filter:drop-shadow(0 9px 12px rgba(15,23,42,.1))}
+.file-icon{background:radial-gradient(circle at 30% 20%,#fff 0,#eff6ff 34%,#dbeafe 100%)}
+.zip-icon{background:radial-gradient(circle at 30% 20%,#fff 0,#fff7ed 34%,#ffedd5 100%)}
+.dz-box :deep(.el-button){font-weight:800;box-shadow:0 10px 22px rgba(37,99,235,.13);transition:transform .2s,box-shadow .2s}
+.dz-box :deep(.el-button:hover){transform:translateY(-1px);box-shadow:0 14px 28px rgba(37,99,235,.18)}
+.dz-title{font-size:16px;font-weight:800;color:#1e293b;margin:0}.dz-hint{font-size:13px;color:#94a3b8;margin:0}
 
 /* File pool */
 .file-pool{width:840px;max-width:95%}
@@ -738,6 +953,10 @@ function doExport(fmt) { const a=document.createElement('a'); a.href=api.exportU
 .result-toolbar{display:flex;justify-content:space-between;align-items:center;padding:10px 20px;background:#fff;border-bottom:1px solid #e5e7eb;flex-shrink:0;gap:12px;box-shadow:0 1px 3px rgba(0,0,0,.03)}
 .toolbar-left,.toolbar-right{display:flex;align-items:center;gap:10px}
 .meta-item{font-size:12px;color:#64748b;padding:2px 8px;background:#f8fafc;border-radius:4px}
+.source-badge{font-weight:700}
+.source-badge.local_rules{color:#2563eb;background:#eff6ff}
+.source-badge.vision_fallback{color:#7c2d12;background:#ffedd5}
+.source-badge.local_rules_with_vision_patch{color:#166534;background:#dcfce7}
 
 .dual-pane{flex:1;display:flex;overflow:hidden;gap:2px;background:#d1d5db}
 .pane-original{flex:1;overflow:auto;background:#e5e7eb;display:flex;align-items:flex-start;justify-content:center;min-width:0}
@@ -748,7 +967,7 @@ function doExport(fmt) { const a=document.createElement('a'); a.href=api.exportU
 .field-card{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:#fff;border:1px solid #f1f5f9;font-size:13px;transition:all .2s}
 .field-card:hover{border-color:#e2e8f0;box-shadow:0 1px 4px rgba(0,0,0,.04)}
 .field-card.miss{opacity:.45;background:#fafafa}
-.fc-label{min-width:110px;font-weight:600;flex-shrink:0;font-size:11px;white-space:nowrap;color:#64748b;text-transform:uppercase;letter-spacing:.4px}
+.fc-label{min-width:110px;font-weight:600;flex-shrink:0;font-size:11px;white-space:nowrap;color:#64748b;letter-spacing:.4px}
 .fc-value{flex:1;cursor:pointer;word-break:break-all;border-radius:4px;padding:3px 6px;transition:.15s;color:#1e293b;font-weight:500}
 .fc-value:hover{background:#f0f9ff}
 .fc-value.empty{color:#cbd5e1;font-style:italic;font-weight:400}
@@ -797,6 +1016,11 @@ function doExport(fmt) { const a=document.createElement('a'); a.href=api.exportU
 .hc-right{flex-shrink:0}
 .hc-time{font-size:11px;color:#cbd5e1}
 
+/* Vision settings */
+.vision-form{padding-top:4px}
+.form-hint{font-size:12px;color:#94a3b8;line-height:1.6;margin-top:6px}
+.vision-actions{display:flex;align-items:center;gap:10px;margin-top:18px}
+
 /* Config drawer */
 .config-drawer{display:flex;flex-direction:column;gap:16px}
 .config-card{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:16px}
@@ -815,4 +1039,15 @@ function doExport(fmt) { const a=document.createElement('a'); a.href=api.exportU
 .field-name{font-weight:500;color:#374151}
 .cc-anchor{margin:0 2px 2px 0}
 .pos-icon{font-size:16px;color:#3b82f6;font-weight:700}
+
+@media (max-width: 980px){
+  .topbar{gap:10px;padding:10px 14px;flex-wrap:wrap}
+  .pipeline-steps{display:none}
+  .home-hero{grid-template-columns:1fr}
+  .hero-card{display:none}
+  .hero-copy h2{font-size:32px}
+  .hero-metrics{grid-template-columns:1fr}
+  .upload-cols{flex-direction:column}
+  .pane-fields{min-width:320px;flex-basis:46%}
+}
 </style>

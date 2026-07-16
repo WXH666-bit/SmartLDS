@@ -49,6 +49,15 @@ export default {
   applyConfig(data) {
     return API.post('/config/apply', data)
   },
+  getVisionSettings() {
+    return API.get('/vision-settings')
+  },
+  saveVisionSettings(data) {
+    return API.post('/vision-settings', data)
+  },
+  clearVisionSettings() {
+    return API.delete('/vision-settings')
+  },
   fewshotLearn(formData) {
     return API.post('/fewshot/learn', formData, { timeout: 300000 })
   },

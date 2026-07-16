@@ -15,6 +15,21 @@ validators:
     strip_suffix: CBM
   place_date:
     description: 签发地+日期合并 — 分离地点部分（去掉末尾的逗号+日期）
+  auto_company:
+    description: company auto-generated
+    pattern: ^[A-Za-z][A-Za-z][A-Za-z][A-Za-z][A-Za-z][A-Za-z][A-Za-z][A-Za-z].*$
+  auto_declare_date:
+    description: declare_date auto-generated
+    pattern: ^2024/\d\d/\d\d$
+  auto_goods_name:
+    description: goods_name auto-generated
+    pattern: ^[A-Za-z][A-Za-z][A-Za-z].*$
+  auto_import_port:
+    description: import_port auto-generated
+    pattern: ^[A-Za-z][A-Za-z]海关$
+  auto_receiver:
+    description: receiver auto-generated
+    pattern: ^[A-Za-z][A-Za-z][A-Za-z][A-Za-z][A-Za-z][A-Za-z][A-Za-z][A-Za-z].*$
 field_defaults:
   value: ''
   cleaned: ''
@@ -35,23 +50,28 @@ templates:
     - 海运提单
     has_table: true
     fields:
-      shipper:
-        label: 托运人
+      Shipper:
+        label: Shipper
+        canonical_key: shipper
         anchors:
         - Shipper
         - SHIPPER
         - 托运人
         position: right
-      consignee:
-        label: 收货人
+        multi_line: true
+      Consignee:
+        label: Consignee
+        canonical_key: consignee
         anchors:
         - Consignee
         - CONSIGNEE
         - 收货人
         - 收货方
         position: right
-      notify_party:
-        label: 通知方
+        multi_line: true
+      Notify Party:
+        label: Notify Party
+        canonical_key: notify_party
         anchors:
         - Notify Party
         - Notify
@@ -59,8 +79,10 @@ templates:
         - 通知方
         - 通知人
         position: right
-      bl_no:
-        label: 提单号
+        multi_line: true
+      B/L No.:
+        label: B/L No.
+        canonical_key: bl_no
         anchors:
         - B/L No.
         - B/L No
@@ -70,50 +92,58 @@ templates:
         - B/L
         position: either
         validator: bl_no
-      pol:
-        label: 装货港
+        value_pattern: '[A-Z]{2,4}\d{6,10}'
+      Port of Loading:
+        label: Port of Loading
+        canonical_key: pol
         anchors:
         - Port of Loading
         - 装货港
         - POL
         position: right
-      pod:
-        label: 卸货港
+      Port of Discharge:
+        label: Port of Discharge
+        canonical_key: pod
         anchors:
         - Port of Discharge
         - 卸货港
         - POD
         position: right
-      por:
-        label: 收货地
+      Place of Receipt:
+        label: Place of Receipt
+        canonical_key: por
         anchors:
         - Place of Receipt
         - 收货地
         - POR
         position: right
-      delivery:
-        label: 交货地
+      Place of Delivery:
+        label: Place of Delivery
+        canonical_key: delivery
         anchors:
         - Place of Delivery
         - 交货地
         - Delivery
         position: right
-      vessel:
-        label: 船名
+      Vessel:
+        label: Vessel
+        canonical_key: vessel
         anchors:
         - Vessel
         - VESSEL
         - 船名
         position: right
-      voyage:
-        label: 航次
+      Voyage No.:
+        label: Voyage No.
+        canonical_key: voyage
         anchors:
         - Voyage No.
         - Voyage
         - 航次
         position: right
-      total_gross_weight:
-        label: 总毛重
+      Total Gross Weight:
+        label: Total Gross Weight
+        canonical_key: total_gross_weight
         anchors:
         - Total Gross Weight
         - TOTAL GROSS WEIGHT
@@ -122,9 +152,11 @@ templates:
         - G.W.(KGS)
         position: right
         validator: weight
+        value_pattern: '[\d,]+\.?\d*\s*(KGS|KG|TONS)?'
         search_in: all
-      total_measurement:
-        label: 总体积
+      Total Measurement:
+        label: Total Measurement
+        canonical_key: total_measurement
         anchors:
         - Total Measurement
         - TOTAL MEASUREMENT
@@ -132,9 +164,11 @@ templates:
         - 'CBM:'
         position: right
         validator: volume
+        value_pattern: '[\d,]+\.?\d*\s*(CBM)?'
         search_in: all
-      freight:
-        label: 运费条款
+      Freight & Charges:
+        label: Freight & Charges
+        canonical_key: freight
         anchors:
         - Freight & Charges
         - Freight
@@ -143,42 +177,33 @@ templates:
         - 运费
         position: right
         search_in: all
-      issue_place:
-        label: 签发地
+      Place & Date of Issue:
+        label: Place & Date of Issue
+        canonical_key: place_date_of_issue
         anchors:
+        - Place & Date of Issue
         - Place of Issue
         - Issue Place
+        - 签发地 & 日期
         - 签发地
-        - Place & Date of Issue
         position: right
         validator: place_date
         search_in: all
-      issue_date:
-        label: 签发日期
-        anchors:
-        - Date of Issue
-        - 签发日期
-        - Date
-        - 日期
-        position: either
-        validator: date
-        search_in: all
     output:
-    - shipper
-    - consignee
-    - notify_party
-    - bl_no
-    - pol
-    - pod
-    - por
-    - delivery
-    - vessel
-    - voyage
-    - total_gross_weight
-    - total_measurement
-    - freight
-    - issue_place
-    - issue_date
+    - Shipper
+    - Consignee
+    - Notify Party
+    - B/L No.
+    - Port of Loading
+    - Port of Discharge
+    - Place of Receipt
+    - Place of Delivery
+    - Vessel
+    - Voyage No.
+    - Total Gross Weight
+    - Total Measurement
+    - Freight & Charges
+    - Place & Date of Issue
   cosco_style:
     keywords:
     - COSCO
@@ -187,32 +212,17 @@ templates:
     - Booking Note
     has_table: false
     fields:
-      shipper:
-        label: 托运人
+      托运人 Shipper:
+        label: 托运人 Shipper
         anchors:
         - Shipper
         - SHIPPER
         - 托运人
         position: right
-      consignee:
-        label: 收货人
-        anchors:
-        - Consignee
-        - CONSIGNEE
-        - 收货人
-        - 收货方
-        position: right
-      notify_party:
-        label: 通知方
-        anchors:
-        - Notify Party
-        - Notify
-        - NOTIFY
-        - 通知方
-        - 通知人
-        position: right
-      bl_no:
-        label: 提单号
+        multi_line: true
+        canonical_key: shipper
+      订舱号 B/L No.:
+        label: 订舱号 B/L No.
         anchors:
         - B/L No.
         - B/L No
@@ -222,49 +232,78 @@ templates:
         - B/L
         position: either
         validator: bl_no
-      pol:
-        label: 装货港
+        value_pattern: '[A-Z]{2,4}\d{6,10}'
+        canonical_key: bl_no
+      收货人 Consignee:
+        label: 收货人 Consignee
+        anchors:
+        - Consignee
+        - CONSIGNEE
+        - 收货人
+        - 收货方
+        position: right
+        multi_line: true
+        canonical_key: consignee
+      通知方 Notify:
+        label: 通知方 Notify
+        anchors:
+        - Notify Party
+        - Notify
+        - NOTIFY
+        - 通知方
+        - 通知人
+        position: right
+        multi_line: true
+        canonical_key: notify_party
+      装货港 POL:
+        label: 装货港 POL
         anchors:
         - Port of Loading
         - 装货港
         - POL
         position: right
-      pod:
-        label: 卸货港
+        canonical_key: pol
+      卸货港 POD:
+        label: 卸货港 POD
         anchors:
         - Port of Discharge
         - 卸货港
         - POD
         position: right
-      por:
-        label: 收货地
-        anchors:
-        - '收货地 POR:'
-        - 收货地
-        - POR
-        position: right
-      delivery:
-        label: 交货地
-        anchors:
-        - '交货地 Delivery:'
-        - 交货地
-        - Delivery
-        position: right
-      vessel:
-        label: 船名
+        canonical_key: pod
+      船名 Vessel:
+        label: 船名 Vessel
         anchors:
         - Vessel
         - VESSEL
         - 船名
         position: right
-      voyage:
-        label: 航次
+        canonical_key: vessel
+      航次 Voyage:
+        label: 航次 Voyage
         anchors:
         - Voyage No.
         - Voyage
         - 航次
         position: right
-      freight:
+        canonical_key: voyage
+      收货地 POR:
+        label: 收货地 POR
+        anchors:
+        - '收货地 POR:'
+        - 收货地
+        - POR
+        position: right
+        canonical_key: por
+      交货地 Delivery:
+        label: 交货地 Delivery
+        anchors:
+        - '交货地 Delivery:'
+        - 交货地
+        - Delivery
+        position: right
+        canonical_key: delivery
+      运费条款:
         label: 运费条款
         anchors:
         - Freight & Charges
@@ -274,8 +313,9 @@ templates:
         - 运费
         position: right
         search_in: all
-      issue_place:
-        label: 签发地
+        canonical_key: freight
+      签发地 & 日期:
+        label: 签发地 & 日期
         anchors:
         - Place of Issue
         - Issue Place
@@ -283,63 +323,39 @@ templates:
         - Place & Date of Issue
         position: right
         validator: place_date
+        allow_shared: true
         search_in: all
-      issue_date:
-        label: 签发日期
-        anchors:
-        - Date of Issue
-        - 签发日期
-        - Date
-        - 日期
-        position: either
-        validator: date
-        search_in: all
+        canonical_key: place_date_of_issue
     output:
-    - shipper
-    - consignee
-    - notify_party
-    - bl_no
-    - pol
-    - pod
-    - por
-    - delivery
-    - vessel
-    - voyage
-    - freight
-    - issue_place
-    - issue_date
+    - 托运人 Shipper
+    - 订舱号 B/L No.
+    - 收货人 Consignee
+    - 通知方 Notify
+    - 装货港 POL
+    - 卸货港 POD
+    - 船名 Vessel
+    - 航次 Voyage
+    - 收货地 POR
+    - 交货地 Delivery
+    - 运费条款
+    - 签发地 & 日期
   simple_style:
     keywords:
     - SHIPPING ORDER
     - 货运委托书
     has_table: false
     fields:
-      shipper:
-        label: 托运人
+      Shipper:
+        label: Shipper
         anchors:
         - Shipper
         - SHIPPER
         - 托运人
         position: right
-      consignee:
-        label: 收货人
-        anchors:
-        - Consignee
-        - CONSIGNEE
-        - 收货人
-        - 收货方
-        position: right
-      notify_party:
-        label: 通知方
-        anchors:
-        - Notify Party
-        - Notify
-        - NOTIFY
-        - 通知方
-        - 通知人
-        position: right
-      bl_no:
-        label: 提单号
+        multi_line: true
+        canonical_key: shipper
+      B/L No.:
+        label: B/L No.
         anchors:
         - B/L No.
         - B/L No
@@ -349,36 +365,63 @@ templates:
         - B/L
         position: either
         validator: bl_no
-      pol:
-        label: 装货港
+        value_pattern: '[A-Z]{2,4}\d{6,10}'
+        canonical_key: bl_no
+      Consignee:
+        label: Consignee
+        anchors:
+        - Consignee
+        - CONSIGNEE
+        - 收货人
+        - 收货方
+        position: right
+        multi_line: true
+        canonical_key: consignee
+      Notify:
+        label: Notify
+        anchors:
+        - Notify Party
+        - Notify
+        - NOTIFY
+        - 通知方
+        - 通知人
+        position: right
+        multi_line: true
+        canonical_key: notify_party
+      POL:
+        label: POL
         anchors:
         - Port of Loading
         - 装货港
         - POL
         position: right
-      pod:
-        label: 卸货港
+        canonical_key: pol
+      POD:
+        label: POD
         anchors:
         - Port of Discharge
         - 卸货港
         - POD
         position: right
-      vessel:
-        label: 船名
+        canonical_key: pod
+      Vessel:
+        label: Vessel
         anchors:
         - Vessel
         - VESSEL
         - 船名
         position: right
-      voyage:
-        label: 航次
+        canonical_key: vessel
+      Voyage:
+        label: Voyage
         anchors:
         - Voyage No.
         - Voyage
         - 航次
         position: right
-      freight:
-        label: 运费条款
+        canonical_key: voyage
+      Freight:
+        label: Freight
         anchors:
         - Freight & Charges
         - Freight
@@ -387,8 +430,9 @@ templates:
         - 运费
         position: right
         search_in: all
-      issue_place:
-        label: 签发地
+        canonical_key: freight
+      Issue Place:
+        label: Issue Place
         anchors:
         - Place of Issue
         - Issue Place
@@ -396,9 +440,11 @@ templates:
         - Place & Date of Issue
         position: right
         validator: place_date
+        allow_shared: true
         search_in: all
-      issue_date:
-        label: 签发日期
+        canonical_key: issue_place
+      Date:
+        label: Date
         anchors:
         - Date of Issue
         - 签发日期
@@ -406,19 +452,22 @@ templates:
         - 日期
         position: either
         validator: date
+        value_pattern: \d{1,2}[/-]\d{1,2}[/-]\d{2,4}
+        allow_shared: true
         search_in: all
+        canonical_key: issue_date
     output:
-    - shipper
-    - consignee
-    - notify_party
-    - bl_no
-    - pol
-    - pod
-    - vessel
-    - voyage
-    - freight
-    - issue_place
-    - issue_date
+    - Shipper
+    - B/L No.
+    - Consignee
+    - Notify
+    - POL
+    - POD
+    - Vessel
+    - Voyage
+    - Freight
+    - Issue Place
+    - Date
   funsd_public:
     keywords:
     - 'FROM:'
@@ -428,47 +477,52 @@ templates:
     - 'REGION:'
     has_table: false
     fields:
-      sender:
-        label: 发件人
+      FROM:
+        label: FROM
         anchors:
         - 'FROM:'
         - FROM
         - From
         position: right
-      recipient:
-        label: 收件人
+        canonical_key: sender
+      TO:
+        label: TO
         anchors:
         - 'TO:'
         - TO
         - To
         position: right
-      subject:
-        label: 主题
+        canonical_key: recipient
+      SUBJECT:
+        label: SUBJECT
         anchors:
         - 'SUBJECT:'
         - SUBJECT
         - Subject
         position: right
-      division:
-        label: 分区
+        canonical_key: subject
+      DIVISION:
+        label: DIVISION
         anchors:
         - 'DIVISION:'
         - DIVISION
         - Division
         position: right
-      region:
-        label: 区域
+        canonical_key: division
+      REGION:
+        label: REGION
         anchors:
         - 'REGION:'
         - REGION
         - Region
         position: right
+        canonical_key: region
     output:
-    - sender
-    - recipient
-    - subject
-    - division
-    - region
+    - FROM
+    - TO
+    - SUBJECT
+    - DIVISION
+    - REGION
   real_scan:
     keywords:
     - 运单
@@ -482,7 +536,7 @@ templates:
     - 骑手
     has_table: false
     fields:
-      tracking_no:
+      运单号:
         label: 运单号
         anchors:
         - 运单号
@@ -491,7 +545,8 @@ templates:
         - Tracking
         - 单号
         position: right
-      sender_name:
+        canonical_key: tracking_no
+      寄件人:
         label: 寄件人
         anchors:
         - 寄件人
@@ -500,21 +555,26 @@ templates:
         - 发件
         - Sender
         position: right
-      sender_phone:
+        multi_line: true
+        canonical_key: sender_name
+      寄件电话:
         label: 寄件电话
         anchors:
         - 寄件电话
         - 寄件人电话
         - 电话
         position: right
-      sender_addr:
+        canonical_key: sender_phone
+      寄件地址:
         label: 寄件地址
         anchors:
         - 寄件地址
         - 寄件人地址
         - 地址
         position: right
-      recipient_name:
+        multi_line: true
+        canonical_key: sender_addr
+      收件人:
         label: 收件人
         anchors:
         - 收件人
@@ -523,21 +583,26 @@ templates:
         - 收货
         - Recipient
         position: right
-      recipient_phone:
+        multi_line: true
+        canonical_key: recipient_name
+      收件电话:
         label: 收件电话
         anchors:
         - 收件电话
         - 收件人电话
         - 电话
         position: right
-      recipient_addr:
+        canonical_key: recipient_phone
+      收件地址:
         label: 收件地址
         anchors:
         - 收件地址
         - 收件人地址
         - 地址
         position: right
-      order_no:
+        multi_line: true
+        canonical_key: recipient_addr
+      订单号:
         label: 订单号
         anchors:
         - 订单号
@@ -546,7 +611,9 @@ templates:
         - 订单编号
         - 编号
         position: right
-      total_amount:
+        value_pattern: '[A-Z0-9-]{6,}'
+        canonical_key: order_no
+      合计金额:
         label: 合计金额
         anchors:
         - 合计
@@ -557,7 +624,9 @@ templates:
         - ¥
         - ￥
         position: right
-      courier:
+        value_pattern: '[¥￥]?\s*\d+(\.\d+)?'
+        canonical_key: total_amount
+      快递公司:
         label: 快递公司
         anchors:
         - 快递公司
@@ -567,77 +636,15 @@ templates:
         - 物流
         - 承运
         position: right
+        canonical_key: courier
     output:
-    - tracking_no
-    - sender_name
-    - sender_phone
-    - sender_addr
-    - recipient_name
-    - recipient_phone
-    - recipient_addr
-    - order_no
-    - total_amount
-    - courier
-  bol_201_learned:
-    keywords:
-    - 华贸进出口有限公司
-    - 中华人民共和国海关进口货物报关单
-    - 数量及单位
-    - 电子元器件
-    has_table: false
-    fields:
-      company:
-        label: company
-        anchors:
-        - 经营单位
-        position: right
-        validator: auto_company
-      customs_no:
-        label: customs_no
-        anchors:
-        - 海关编号
-        position: right
-        validator: bl_no
-      declare_date:
-        label: declare_date
-        anchors:
-        - 申报日期
-        position: right
-        validator: auto_declare_date
-      goods_name:
-        label: goods_name
-        anchors:
-        - 商品名称
-        position: right
-        validator: auto_goods_name
-      import_port:
-        label: import_port
-        anchors:
-        - 进口口岸
-        position: right
-        validator: auto_import_port
-      origin:
-        label: origin
-        anchors:
-        - 原产国
-        position: right
-      receiver:
-        label: receiver
-        anchors:
-        - 经营单位
-        position: right
-        validator: auto_receiver
-      transport:
-        label: transport
-        anchors:
-        - 运输方式
-        position: right
-    output:
-    - company
-    - customs_no
-    - declare_date
-    - goods_name
-    - import_port
-    - origin
-    - receiver
-    - transport
+    - 运单号
+    - 寄件人
+    - 寄件电话
+    - 寄件地址
+    - 收件人
+    - 收件电话
+    - 收件地址
+    - 订单号
+    - 合计金额
+    - 快递公司

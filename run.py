@@ -22,6 +22,11 @@ def kill_port(port):
     except Exception:
         pass
 
+def ensure_running(process, name):
+    if process.poll() is not None:
+        print(f"错误: {name} 启动失败，退出码 {process.returncode}", file=sys.stderr)
+        sys.exit(process.returncode or 1)
+
 def main():
     # 清理旧 Vite 进程
     kill_port(8080)
@@ -40,22 +45,25 @@ def main():
     backend = subprocess.Popen(
         [venv_py, "app.py"],
         cwd=os.path.join(ROOT, "backend"),
-        env=env,
-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        env=env
     )
 
     # 给后端几秒加载 PaddleOCR 模型
     time.sleep(6)
+    ensure_running(backend, "Flask 后端")
 
     # 启动前端
     npm = "npm.cmd" if sys.platform == "win32" else "npm"
     frontend = subprocess.Popen(
         [npm, "run", "dev", "--", "--host", "--port", "8080"],
-        cwd=os.path.join(ROOT, "frontend"),
-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        cwd=os.path.join(ROOT, "frontend")
     )
 
     time.sleep(3)
+    if frontend.poll() is not None:
+        try: backend.terminate()
+        except Exception: pass
+    ensure_running(frontend, "Vue3 前端")
     print("  后端: http://localhost:5000/api/health")
     print("  前端: http://localhost:8080")
     print("  Ctrl+C 停止\n")

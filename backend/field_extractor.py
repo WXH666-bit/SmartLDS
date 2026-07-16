@@ -374,6 +374,8 @@ class FieldExtractor:
         """
         self.fuzzy_threshold = fuzzy_threshold
         self.config = self._load_config(config_path)
+        self._last_template_scores = {}
+        self._last_extraction_debug = {}
 
     # ============================================================
     # 配置加载
@@ -399,10 +401,105 @@ class FieldExtractor:
                 pass
 
         return {
-            "templates": dict(_DEFAULT_TEMPLATES_CONFIG),
+            "templates": FieldExtractor._migrate_default_templates_to_source_schema(
+                dict(_DEFAULT_TEMPLATES_CONFIG)
+            ),
             "validators": dict(_DEFAULT_VALIDATORS),
             "field_defaults": dict(_DEFAULT_FIELD_DEFAULTS),
         }
+
+    @staticmethod
+    def _migrate_default_templates_to_source_schema(templates):
+        """Keep built-in fallback templates aligned with source-label schema."""
+        mappings = {
+            "maersk_style": {
+                "shipper": ("Shipper", "Shipper"),
+                "consignee": ("Consignee", "Consignee"),
+                "notify_party": ("Notify Party", "Notify Party"),
+                "bl_no": ("B/L No.", "B/L No."),
+                "pol": ("Port of Loading", "Port of Loading"),
+                "pod": ("Port of Discharge", "Port of Discharge"),
+                "por": ("Place of Receipt", "Place of Receipt"),
+                "delivery": ("Place of Delivery", "Place of Delivery"),
+                "vessel": ("Vessel", "Vessel"),
+                "voyage": ("Voyage No.", "Voyage No."),
+                "total_gross_weight": ("Total Gross Weight", "Total Gross Weight"),
+                "total_measurement": ("Total Measurement", "Total Measurement"),
+                "freight": ("Freight & Charges", "Freight & Charges"),
+                "issue_place": ("Place & Date of Issue", "Place & Date of Issue"),
+            },
+            "cosco_style": {
+                "shipper": ("托运人 Shipper", "托运人 Shipper"),
+                "bl_no": ("订舱号 B/L No.", "订舱号 B/L No."),
+                "consignee": ("收货人 Consignee", "收货人 Consignee"),
+                "notify_party": ("通知方 Notify", "通知方 Notify"),
+                "pol": ("装货港 POL", "装货港 POL"),
+                "pod": ("卸货港 POD", "卸货港 POD"),
+                "vessel": ("船名 Vessel", "船名 Vessel"),
+                "voyage": ("航次 Voyage", "航次 Voyage"),
+                "por": ("收货地 POR", "收货地 POR"),
+                "delivery": ("交货地 Delivery", "交货地 Delivery"),
+                "freight": ("运费条款", "运费条款"),
+                "issue_place": ("签发地 & 日期", "签发地 & 日期"),
+            },
+            "simple_style": {
+                "shipper": ("Shipper", "Shipper"),
+                "bl_no": ("B/L No.", "B/L No."),
+                "consignee": ("Consignee", "Consignee"),
+                "notify_party": ("Notify", "Notify"),
+                "pol": ("POL", "POL"),
+                "pod": ("POD", "POD"),
+                "vessel": ("Vessel", "Vessel"),
+                "voyage": ("Voyage", "Voyage"),
+                "freight": ("Freight", "Freight"),
+                "issue_place": ("Issue Place", "Issue Place"),
+                "issue_date": ("Date", "Date"),
+            },
+            "funsd_public": {
+                "sender": ("FROM", "FROM"),
+                "recipient": ("TO", "TO"),
+                "subject": ("SUBJECT", "SUBJECT"),
+                "division": ("DIVISION", "DIVISION"),
+                "region": ("REGION", "REGION"),
+            },
+            "real_scan": {
+                "tracking_no": ("运单号", "运单号"),
+                "sender_name": ("寄件人", "寄件人"),
+                "sender_phone": ("寄件电话", "寄件电话"),
+                "sender_addr": ("寄件地址", "寄件地址"),
+                "recipient_name": ("收件人", "收件人"),
+                "recipient_phone": ("收件电话", "收件电话"),
+                "recipient_addr": ("收件地址", "收件地址"),
+                "order_no": ("订单号", "订单号"),
+                "total_amount": ("合计金额", "合计金额"),
+                "courier": ("快递公司", "快递公司"),
+            },
+        }
+
+        migrated = {}
+        for template_name, template in templates.items():
+            mapping = mappings.get(template_name)
+            if not mapping:
+                migrated[template_name] = template
+                continue
+
+            old_fields = template.get("fields", {})
+            new_fields = {}
+            new_output = []
+            for old_key, (new_key, label) in mapping.items():
+                field_cfg = old_fields.get(old_key)
+                if not field_cfg:
+                    continue
+                field_cfg = dict(field_cfg)
+                field_cfg["label"] = label
+                field_cfg["canonical_key"] = old_key
+                new_fields[new_key] = field_cfg
+                new_output.append(new_key)
+            new_template = dict(template)
+            new_template["fields"] = new_fields
+            new_template["output"] = new_output
+            migrated[template_name] = new_template
+        return migrated
 
     @staticmethod
     def _migrate_config(old_cfg):
@@ -518,6 +615,10 @@ class FieldExtractor:
         # 提取字段（只迭代当前版式定义的字段）
         fields = {}
         used_value_ids = set()
+        self._last_extraction_debug = {
+            "template_scores": self._last_template_scores,
+            "fields": {},
+        }
 
         for field_name, cfg in tpl_fields.items():
             if field_name not in output_list:
@@ -529,7 +630,8 @@ class FieldExtractor:
             )
             if result:
                 fields[field_name] = result
-                used_value_ids.add(id(result["_block"]))
+                for bid in result.get("_block_ids", [id(result["_block"])]):
+                    used_value_ids.add(bid)
 
         # 提取表格
         table_data = self._extract_table(table_blocks)
@@ -544,7 +646,12 @@ class FieldExtractor:
             "template": template,
         }
 
-        return self.normalize(result, img_size=image_size, blocks=blocks)
+        normalized = self.normalize(result, img_size=image_size, blocks=blocks)
+        normalized["debug"] = {
+            "extraction": self._last_extraction_debug,
+            "note": "FUNSD is currently treated as fixed-schema compatibility data; a future generic form mode should output question-answer pairs.",
+        }
+        return normalized
 
     def normalize(self, raw_result, img_size=None, blocks=None):
         """
@@ -577,6 +684,7 @@ class FieldExtractor:
             if info and isinstance(info, dict):
                 normalized_fields[fname] = {
                     "label": fdef.get("label", fname),
+                    "canonical_key": fdef.get("canonical_key", fname),
                     "value": info.get("value", defaults["value"]),
                     "cleaned": info.get("cleaned", defaults["cleaned"]),
                     "confidence": info.get("confidence", defaults["confidence"]),
@@ -587,6 +695,7 @@ class FieldExtractor:
             else:
                 entry = dict(defaults)
                 entry["label"] = fdef.get("label", fname)
+                entry["canonical_key"] = fdef.get("canonical_key", fname)
                 normalized_fields[fname] = entry
 
         # 合并校正值
@@ -602,7 +711,9 @@ class FieldExtractor:
                 extra.update({k: info.get(k, defaults[k]) for k in defaults
                               if k in ("value", "cleaned", "confidence", "anchor_text", "rect")})
                 extra["status"] = "extracted"
-                extra["label"] = all_fields.get(fname, {}).get("label", fname)
+                fdef = all_fields.get(fname, {})
+                extra["label"] = fdef.get("label", fname)
+                extra["canonical_key"] = fdef.get("canonical_key", fname)
                 normalized_fields[fname] = extra
 
         meta = {
@@ -631,18 +742,54 @@ class FieldExtractor:
     # ================================================================
 
     def _detect_template(self, blocks):
-        """关键词投票选版式（关键词列表来自 config.yaml 或内置默认值）"""
+        """加权关键词评分选版式（关键词列表来自 config.yaml 或内置默认值）"""
         all_text = " ".join(b["text"] for b in blocks).upper()
 
         scores = {}
         for tpl, keywords in self.template_keywords.items():
             if not keywords:
                 continue
-            hits = sum(1 for kw in keywords if kw.upper() in all_text)
-            if hits > 0:
-                scores[tpl] = hits
+            total_weight = 0.0
+            matched_weight = 0.0
+            matched = []
+            for kw in keywords:
+                kw_upper = str(kw).upper().strip()
+                if not kw_upper:
+                    continue
+                weight = min(3.0, 1.0 + len(kw_upper) / 14.0)
+                total_weight += weight
+                if kw_upper in all_text:
+                    matched_weight += weight
+                    matched.append(kw)
 
-        return max(scores, key=scores.get) if scores else "unknown"
+            if matched:
+                confidence = matched_weight / max(total_weight, 1.0)
+                scores[tpl] = {
+                    "score": round(confidence, 4),
+                    "matched": matched,
+                    "matched_count": len(matched),
+                    "keywords_count": len(keywords),
+                }
+
+        self._last_template_scores = scores
+        if not scores:
+            return "unknown"
+
+        ranked = sorted(scores.items(), key=lambda item: item[1]["score"], reverse=True)
+        best_tpl, best_info = ranked[0]
+        best_score = best_info["score"]
+        second_score = ranked[1][1]["score"] if len(ranked) > 1 else 0.0
+        gap = best_score - second_score
+
+        # One strong unique keyword is enough for known logistics templates, but
+        # weak/conflicting evidence should stay unknown instead of forcing a template.
+        if best_score < 0.18:
+            return "unknown"
+        if best_info["matched_count"] == 1 and gap < 0.03:
+            return "unknown"
+        if best_info["matched_count"] == 1 and best_score < 0.28 and gap < 0.08:
+            return "unknown"
+        return best_tpl
 
     # ================================================================
     # 单字段提取
@@ -652,10 +799,10 @@ class FieldExtractor:
         """
         尝试从 search_pool 中提取指定字段
 
-        策略优先级:
-          1. 锚点块内部提取（标签+值合并在同一 OCR 块内，如 "Vessel: ONE HARBOUR"）
-          2. 同行右侧独立值块
-          3. 紧邻下方独立值块
+        策略:
+          1. 生成 inline / right / below 候选
+          2. 按锚点匹配、几何位置、OCR 置信度、校验、占用冲突统一打分
+          3. 选择最高分候选，而不是第一个可用候选
 
         :return: dict 或 None
         """
@@ -663,92 +810,237 @@ class FieldExtractor:
         position = cfg.get("position", "right")
         validator_name = cfg.get("validator")
         validator_cfg = self.validators_cfg.get(validator_name) if validator_name else None
+        allow_shared = bool(cfg.get("allow_shared"))
+        field_debug = {
+            "anchors": anchors,
+            "candidates": [],
+            "rejected": [],
+            "selected": None,
+        }
+        self._last_extraction_debug["fields"][field_name] = field_debug
 
         # Step 1: 找锚点块（按匹配分数排序）
         anchor_matches = self._find_anchor_blocks(search_pool, anchors)
         if not anchor_matches:
+            field_debug["rejected"].append({"reason": "no_anchor_match"})
             return None
 
-        # Step 2: 逐个锚点尝试，直到找到有效值
+        candidates = []
         for anchor_block, score, matched_anchor in anchor_matches:
             # --- 策略 1: 从锚点块内部提取（标签+值合并） ---
             inline_value = self._extract_inline_value(anchor_block, matched_anchor)
             if inline_value:
-                cleaned = inline_value.strip()
-                if cleaned and len(cleaned) > 1:
-                    cleaned_value, regex_ok = validate_and_clean(
-                        field_name, cleaned,
-                        validator_cfg=validator_cfg, field_cfg=cfg
-                    )
-                    return {
-                        "value": cleaned,
-                        "cleaned": cleaned_value,
-                        "regex_valid": regex_ok,
-                        "confidence": round(score * 0.3 + anchor_block.get("confidence", 0.8) * 0.7, 4),
-                        "anchor_text": matched_anchor,
-                        "rect": anchor_block["rect"],
-                        "bbox": anchor_block.get("bbox", []),
-                        "_block": anchor_block,
-                    }
+                cand = self._build_value_candidate(
+                    field_name, cfg, anchor_block, score, matched_anchor,
+                    anchor_block, inline_value.strip(), "inline", 1.0,
+                    used_value_ids, allow_shared, validator_cfg, validator_name,
+                    search_pool,
+                )
+                (candidates if cand.get("accepted") else field_debug["rejected"]).append(cand)
 
             # --- 策略 2/3: 外部值块 ---
-            value_block = None
-
             if position in ("right", "either"):
-                value_block = self._find_value_right(
-                    anchor_block, search_pool, used_value_ids
-                )
-
-            if value_block is None and position in ("below", "either"):
-                value_block = self._find_value_below(
-                    anchor_block, search_pool, used_value_ids
-                )
-
-            # 共享值块：issue_date 和 issue_place 可能从同一块取值
-            # （如 "NINGBO, 14/11/2025" 被 issue_place 用了，issue_date 也应能取）
-            if value_block is None and field_name in ("issue_date",):
-                value_block = self._find_value_right(
-                    anchor_block, search_pool, None  # 不排斥已用块
-                )
-                if value_block is None:
-                    value_block = self._find_value_below(
-                        anchor_block, search_pool, None
+                for geom_score, value_block in self._find_value_right_candidates(
+                    anchor_block, search_pool
+                ):
+                    cand = self._build_value_candidate(
+                        field_name, cfg, anchor_block, score, matched_anchor,
+                        value_block, value_block["text"].strip(), "right", geom_score,
+                        used_value_ids, allow_shared, validator_cfg, validator_name,
+                        search_pool,
                     )
+                    (candidates if cand.get("accepted") else field_debug["rejected"]).append(cand)
 
-            if value_block is None:
-                continue
+            if position in ("below", "either"):
+                for geom_score, value_block in self._find_value_below_candidates(
+                    anchor_block, search_pool
+                ):
+                    cand = self._build_value_candidate(
+                        field_name, cfg, anchor_block, score, matched_anchor,
+                        value_block, value_block["text"].strip(), "below", geom_score,
+                        used_value_ids, allow_shared, validator_cfg, validator_name,
+                        search_pool,
+                    )
+                    (candidates if cand.get("accepted") else field_debug["rejected"]).append(cand)
 
-            raw_value = value_block["text"].strip()
+        if not candidates:
+            return None
 
-            # 单位感知兼容性检查：weight 字段拒绝 CBM 值，volume 字段拒绝 KGS 值
-            # 防止 total_gross_weight 抢走 total_measurement 的值（反之亦然）
-            raw_upper = raw_value.upper()
-            if validator_name == "weight" and "CBM" in raw_upper:
-                continue  # 跳过此值块，尝试下一个锚点
-            if validator_name == "volume" and ("KGS" in raw_upper or "KG" in raw_upper):
-                continue  # 跳过此值块，尝试下一个锚点
+        candidates.sort(key=lambda c: c["score"], reverse=True)
+        field_debug["candidates"] = [self._candidate_debug(c) for c in candidates[:8]]
+        best = candidates[0]
+        field_debug["selected"] = self._candidate_debug(best)
 
-            cleaned = _clean_text(raw_value)
-            if cleaned is None:
-                continue
+        return {
+            "value": best["raw_value"],
+            "cleaned": best["cleaned"],
+            "regex_valid": best["regex_valid"],
+            "confidence": round(best["score"], 4),
+            "anchor_text": best["anchor"],
+            "rect": best["rect"],
+            "bbox": best.get("bbox", []),
+            "_block": best["candidate_block"],
+            "_block_ids": best.get("block_ids", [id(best["candidate_block"])]),
+        }
 
-            cleaned_value, regex_ok = validate_and_clean(
-                field_name, cleaned,
-                validator_cfg=validator_cfg, field_cfg=cfg
+    def _build_value_candidate(
+        self, field_name, cfg, anchor_block, anchor_score, matched_anchor,
+        value_block, raw_value, strategy, geom_score, used_value_ids,
+        allow_shared, validator_cfg, validator_name, search_pool,
+    ):
+        raw_value = (raw_value or "").strip()
+        reasons = [f"strategy:{strategy}", f"anchor:{matched_anchor}"]
+        reject_reasons = []
+
+        if not raw_value:
+            reject_reasons.append("empty_value")
+
+        raw_upper = raw_value.upper()
+        if validator_name == "weight" and "CBM" in raw_upper:
+            reject_reasons.append("weight_candidate_contains_cbm")
+        if validator_name == "volume" and ("KGS" in raw_upper or "KG" in raw_upper):
+            reject_reasons.append("volume_candidate_contains_weight_unit")
+
+        cleaned = _clean_text(raw_value)
+        if cleaned is None:
+            reject_reasons.append("looks_like_label_or_empty")
+            cleaned = raw_value
+
+        if _looks_like_label(raw_value):
+            reject_reasons.append("candidate_looks_like_label")
+        if _is_label_residue(raw_value):
+            reject_reasons.append("candidate_label_residue")
+
+        cleaned_value, regex_ok = validate_and_clean(
+            field_name, cleaned,
+            validator_cfg=validator_cfg, field_cfg=cfg
+        )
+
+        value_pattern = cfg.get("value_pattern")
+        pattern_ok = None
+        if value_pattern:
+            pattern_ok = bool(re.search(str(value_pattern), raw_value, re.IGNORECASE))
+            reasons.append("value_pattern_match" if pattern_ok else "value_pattern_miss")
+
+        block_ids = [id(value_block)]
+        merged_blocks = [value_block]
+        rect = list(value_block["rect"])
+        bbox = value_block.get("bbox", [])
+        if cfg.get("multi_line") and strategy in ("right", "below"):
+            merged_value, merged_blocks, rect = self._merge_multiline_value(
+                value_block, search_pool
             )
+            if merged_value != raw_value:
+                raw_value = merged_value
+                cleaned = _clean_text(raw_value) or raw_value
+                cleaned_value, regex_ok = validate_and_clean(
+                    field_name, cleaned,
+                    validator_cfg=validator_cfg, field_cfg=cfg
+                )
+                block_ids = [id(b) for b in merged_blocks]
+                reasons.append("multi_line_merge")
 
-            return {
-                "value": raw_value,
-                "cleaned": cleaned_value,
-                "regex_valid": regex_ok,
-                "confidence": round(score * 0.3 + value_block.get("confidence", 0.8) * 0.7, 4),
-                "anchor_text": matched_anchor,
-                "rect": value_block["rect"],
-                "bbox": value_block.get("bbox", []),
-                "_block": value_block,
-            }
+        used_conflict = any(bid in used_value_ids for bid in block_ids)
+        if used_conflict and not allow_shared:
+            reasons.append("used_value_penalty")
+        elif used_conflict and allow_shared:
+            reasons.append("shared_value_allowed")
 
-        return None
+        ocr_conf = value_block.get("confidence", 0.8)
+        has_validator_constraint = bool(validator_name or validator_cfg or value_pattern)
+        validation_score = 0.0
+        if regex_ok and has_validator_constraint:
+            validation_score += 0.12
+            reasons.append("validator_ok")
+        elif has_validator_constraint:
+            validation_score -= 0.10
+            reasons.append("validator_miss")
+        if pattern_ok is True:
+            validation_score += 0.10
+        elif pattern_ok is False:
+            validation_score -= 0.10
+
+        strategy_bonus = 0.06 if strategy == "inline" else 0.0
+        usage_penalty = 0.18 if used_conflict and not allow_shared else 0.0
+        label_penalty = 0.10 if _looks_like_label(raw_value) else 0.0
+
+        score = (
+            anchor_score * 0.32
+            + geom_score * 0.28
+            + ocr_conf * 0.22
+            + validation_score
+            + strategy_bonus
+            - usage_penalty
+            - label_penalty
+        )
+        score = max(0.0, min(1.0, score))
+
+        candidate = {
+            "field": field_name,
+            "anchor": matched_anchor,
+            "anchor_block": anchor_block,
+            "candidate_block": value_block,
+            "strategy": strategy,
+            "raw_value": raw_value,
+            "cleaned": cleaned_value,
+            "regex_valid": regex_ok,
+            "score": round(score, 4),
+            "reasons": reasons,
+            "reject_reasons": reject_reasons,
+            "rect": rect,
+            "bbox": bbox,
+            "block_ids": block_ids,
+            "accepted": not reject_reasons and score >= 0.25,
+        }
+        return candidate
+
+    @staticmethod
+    def _candidate_debug(candidate):
+        block = candidate.get("candidate_block", {})
+        anchor_block = candidate.get("anchor_block", {})
+        return {
+            "field": candidate.get("field"),
+            "anchor": candidate.get("anchor"),
+            "anchor_text": anchor_block.get("text", ""),
+            "strategy": candidate.get("strategy"),
+            "value": candidate.get("raw_value"),
+            "score": candidate.get("score"),
+            "reasons": candidate.get("reasons", []),
+            "reject_reasons": candidate.get("reject_reasons", []),
+            "rect": block.get("rect", candidate.get("rect", [])),
+        }
+
+    def _merge_multiline_value(self, first_block, candidates):
+        """向下合并同列连续文本块，用于地址/公司名等多行字段。"""
+        x1, y1, x2, y2 = first_block["rect"]
+        first_h = max(y2 - y1, 5)
+        merged = [first_block]
+
+        below = sorted(
+            (b for b in candidates if id(b) != id(first_block) and b["rect"][1] >= y2 - 2),
+            key=lambda b: (b["rect"][1], b["rect"][0]),
+        )
+        last_y2 = y2
+        for block in below:
+            bx1, by1, bx2, by2 = block["rect"]
+            if _looks_like_label(block["text"]) or _is_label_residue(block["text"]):
+                break
+            if by1 - last_y2 > max(first_h * 1.6, 60):
+                break
+            if abs(bx1 - x1) > max((x2 - x1) * 0.8, 120):
+                continue
+            merged.append(block)
+            last_y2 = max(last_y2, by2)
+            if len(merged) >= 4:
+                break
+
+        text = " ".join(b["text"].strip() for b in merged if b["text"].strip())
+        xs1 = [b["rect"][0] for b in merged]
+        ys1 = [b["rect"][1] for b in merged]
+        xs2 = [b["rect"][2] for b in merged]
+        ys2 = [b["rect"][3] for b in merged]
+        rect = [min(xs1), min(ys1), max(xs2), max(ys2)]
+        return text, merged, rect
 
     @staticmethod
     def _extract_inline_value(anchor_block, matched_anchor):
@@ -883,30 +1175,33 @@ class FieldExtractor:
     # ================================================================
 
     def _find_value_right(self, anchor_block, candidates, used_ids=None):
+        """兼容旧调用：返回右侧最高分候选块。"""
+        found = self._find_value_right_candidates(anchor_block, candidates)
+        return found[0][1] if found else None
+
+    def _find_value_right_candidates(self, anchor_block, candidates):
         """
-        在锚点同行右侧找值块
+        在锚点同行右侧找值块候选
 
         评分策略 (0~1):
           - Y 中心对齐  权重 0.6  （同行为王）
           - X 邻近      权重 0.3  （越近越好）
           - 非标签      权重 0.1  （不是另一个锚点）
 
-        :return: 最佳值 block 或 None
+        :return: [(score, block), ...]
         """
-        if used_ids is None:
-            used_ids = set()
-
         ax1, ay1, ax2, ay2 = anchor_block["rect"]
         anchor_h = max(ay2 - ay1, 5)
         anchor_cy = (ay1 + ay2) / 2.0
+        # Relative window: scale with line height and page layout rather than a
+        # fixed pixel value, but keep a sane minimum for low-resolution images.
+        max_x_gap = max(anchor_h * 14.0, 260.0)
 
         scored = []
 
         for block in candidates:
             bid = id(block)
             if bid == id(anchor_block):
-                continue
-            if bid in used_ids:
                 continue
 
             bx1, by1, bx2, by2 = block["rect"]
@@ -936,8 +1231,9 @@ class FieldExtractor:
 
             # ---- X 邻近分 (0~1) ----
             x_gap = max(0, bx1 - ax2)  # 锚点右边界到值块左边界的距离
-            # 邻近分：距离 500px 内有效，越近越高
-            x_score = max(0.0, 1.0 - x_gap / 500.0)
+            if x_gap > max_x_gap:
+                continue
+            x_score = max(0.0, 1.0 - x_gap / max_x_gap)
 
             # ---- 综合分 ----
             score = y_score * 0.6 + x_score * 0.4
@@ -946,38 +1242,37 @@ class FieldExtractor:
                 scored.append((score, block))
 
         scored.sort(key=lambda x: x[0], reverse=True)
-        return scored[0][1] if scored else None
+        return scored
 
     # ================================================================
     # 值定位 — 紧邻下方
     # ================================================================
 
     def _find_value_below(self, anchor_block, candidates, used_ids=None):
+        """兼容旧调用：返回下方最高分候选块。"""
+        found = self._find_value_below_candidates(anchor_block, candidates)
+        return found[0][1] if found else None
+
+    def _find_value_below_candidates(self, anchor_block, candidates):
         """
-        在锚点紧邻下方找值块
+        在锚点紧邻下方找值块候选
 
         条件:
           1. X 左边界与锚点左边界接近
           2. Y 在锚点下方且间距不太大
           3. 不是另一个标签
 
-        :return: 最佳值 block 或 None
+        :return: [(score, block), ...]
         """
-        if used_ids is None:
-            used_ids = set()
-
         ax1, ay1, ax2, ay2 = anchor_block["rect"]
         anchor_h = max(ay2 - ay1, 5)
         anchor_w = ax2 - ax1
-
-        best = None
-        best_gap = float('inf')
+        max_y_gap = max(anchor_h * 3.0, 80.0)
+        scored = []
 
         for block in candidates:
             bid = id(block)
             if bid == id(anchor_block):
-                continue
-            if bid in used_ids:
                 continue
 
             bx1, by1, bx2, by2 = block["rect"]
@@ -1000,14 +1295,17 @@ class FieldExtractor:
 
             # Y 间距合理 (< 3x 行高)
             y_gap = by1 - ay2
-            if y_gap > anchor_h * 3.0 or y_gap > 100:
+            if y_gap > max_y_gap:
                 continue
 
-            if y_gap < best_gap:
-                best_gap = y_gap
-                best = block
+            y_score = max(0.0, 1.0 - y_gap / max_y_gap)
+            x_score = max(0.0, 1.0 - x_diff / max(max(anchor_w * 2.0, 200), 1))
+            score = y_score * 0.65 + x_score * 0.35
+            if score > 0.25:
+                scored.append((score, block))
 
-        return best
+        scored.sort(key=lambda x: x[0], reverse=True)
+        return scored
 
     # ================================================================
     # 表格提取

@@ -294,7 +294,7 @@ FUNSD 和真实手写样本效果差，并不是单纯因为 PaddleOCR “不行
 
 ### 9.3 最新验证
 
-- Python 编译检查通过：`python -m compileall -q backend run.py test.py`
+- Python 编译检查通过：`python -m compileall -q backend tests run.py`
 - 前端生产构建通过：`npm.cmd run build`
 - 安全接口轻测通过：非法 `job_id` 返回 400；包含 `../evil.pdf` 的恶意 ZIP 返回 400
 - 前端仍有 Vite 大包警告，JS 约 1MB，属于后续性能优化项

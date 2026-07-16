@@ -1,10 +1,17 @@
 """
-批量测试脚本 — 运行多版式识别 + 生成可视化报告 PDF
-用法: cd backend && python batch_test.py
+批量评估脚本。
+
+运行方式：
+    python tests/batch_test.py
+
+这个脚本会跑较重的 OCR 批量评估，并在 batch_output/ 下生成 HTML/PDF 报告。
+它故意不命名为 test_*.py，避免 unittest discover 时自动加载 OCR 模型和扫描大量样本。
+快速单元测试请放在 tests/test_*.py。
 """
 
 import sys, os, json, io, time
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(ROOT_DIR, "backend"))
 
 import fitz
 import numpy as np
@@ -55,7 +62,7 @@ SAMPLES = [
     ("199", "真扫"),
 ]
 
-OUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "batch_output")
+OUT_DIR = os.path.join(ROOT_DIR, "batch_output")
 os.makedirs(OUT_DIR, exist_ok=True)
 
 

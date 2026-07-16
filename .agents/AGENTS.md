@@ -17,7 +17,9 @@ Primary source files:
 - `backend/preprocess.py`: grayscale, orientation, deskew, CLAHE
 - `backend/layout_parser.py`: row grouping and table region detection
 - `backend/field_extractor.py`: anchor-based field extraction and table recovery
+- `backend/vision_fallback.py`: low-confidence scoring and optional vision-model fallback
 - `backend/config.yaml`: self-contained template definitions
+- `tests/`: all test and evaluation scripts
 - `frontend/src/App.vue`: main UI
 - `frontend/src/api/index.js`: frontend API wrapper
 
@@ -33,20 +35,44 @@ The first two hardening phases have been completed:
 - Frontend displays corrected values after reload.
 - Multi-page PDFs still process page 1 only, but metadata now records `page_count`, `processed_page`, and warnings.
 - Frontend API base defaults to `/api` and can be overridden with `VITE_API_BASE_URL`.
+- Field schemas are now template-local: each template should output its own source document labels, while `canonical_key` is only metadata.
+- Low-confidence recognition can optionally route to `backend/vision_fallback.py`; this keeps local rules as the default path and uses a vision model only as a fallback.
+- Test files have been consolidated under `tests/`. Fast unit tests are named `test_*.py`; heavy/manual OCR checks are not.
 
 Known remaining limits:
 
-- FUNSD is not a normal logistics-template problem. It should eventually get a dedicated question-answer linking mode.
+- FUNSD is not a normal logistics-template problem. Low-confidence FUNSD can use vision fallback, but a dedicated question-answer linking mode is still the cleaner long-term route.
 - Handwriting is outside the strength of the current PaddleOCR print-oriented pipeline.
 - Frontend build passes but has a large chunk warning.
 - The repo may contain many generated or untracked files. Treat them as user-owned.
+
+## 当前补充约定
+
+- 识别输出优先使用“原单据字段名”。不同版式可以拥有完全独立的字段 schema；`canonical_key` 只做内部语义参考，不应该替代前端展示字段名。
+- 默认识别路线是本地 PaddleOCR + 规则抽取；只有低置信度、unknown、FUNSD/real_scan 覆盖率低等情况才考虑视觉大模型兜底。
+- 视觉兜底必须是可选能力：未配置 API key、未启用、超时或模型 JSON 不合法时，都应该返回本地结果并写入 `meta.warnings`。
+- 视觉兜底设置通过前端“模型设置”管理，后端接口是 `/api/vision-settings`。默认供应商是千问，API Key 保存在本地 `uploads/vision_settings.json`，不要写入源码或 `config.yaml`。
+- 测试脚本统一放在 `tests/`。快速单元测试命名为 `test_*.py`；会加载 OCR 模型或跑大量样本的人工/批量脚本不要用 `test_` 前缀。
 
 ## Commands
 
 Run backend compile checks:
 
 ```powershell
-.venv\Scripts\python.exe -m compileall -q backend run.py test.py
+.venv\Scripts\python.exe -m compileall -q backend tests run.py
+```
+
+Run unit tests:
+
+```powershell
+.venv\Scripts\python.exe -m unittest discover tests -p "test*.py"
+```
+
+Run heavier/manual OCR evaluation only when needed:
+
+```powershell
+.venv\Scripts\python.exe tests\manual_ocr_pipeline.py
+.venv\Scripts\python.exe tests\batch_test.py
 ```
 
 Run frontend build:
@@ -76,6 +102,15 @@ Run the combined launcher:
 python run.py
 ```
 
+Optional vision fallback environment:
+
+```powershell
+$env:VISION_FALLBACK_ENABLED="true"
+$env:DASHSCOPE_API_KEY="..."
+$env:VISION_FALLBACK_THRESHOLD="0.55"
+$env:VISION_FALLBACK_MODEL="qwen3.6-plus"
+```
+
 ## Engineering Rules
 
 - Search with `rg` or `rg --files`.
@@ -85,11 +120,15 @@ python run.py
 - Do not reintroduce `zipfile.extractall()` for user-provided ZIP files.
 - Do not build task paths by string concatenation outside `job_dir()`.
 - Do not duplicate recognition logic between single and batch endpoints. Change `run_recognition_pipeline()` first.
+- Keep automated tests in `tests/test_*.py`; put heavy/manual OCR scripts in `tests/` without the `test_` prefix.
 - If changing correction behavior, verify result reload and JSON/XLSX export.
 - If changing frontend API calls, keep relative `/api` support.
+- If changing vision fallback behavior, preserve the failure policy: no API key, disabled fallback, timeout, or invalid JSON must return local rules output plus `meta.warnings`, not a failed recognition job.
+- If changing template fields, preserve source-label output and keep `canonical_key` as metadata only.
 - When adding a form family, decide whether it belongs to:
   - logistics anchor extraction,
   - Few-shot YAML generation,
+  - vision fallback for low-confidence generic forms,
   - or a separate mode such as FUNSD question-answer extraction.
 
 ## Verification Expectations
@@ -97,6 +136,7 @@ python run.py
 For backend-only safety/data changes:
 
 - Run Python compile check.
+- Run fast unit tests when field extraction, config, or fallback logic changes.
 - Exercise a small Flask test client if possible for `job_id`, ZIP, result, correction, or export behavior.
 
 For frontend changes:
@@ -108,6 +148,7 @@ For OCR algorithm changes:
 
 - Avoid claiming quality improvements without a sample-level check.
 - Keep synthetic logistics accuracy separate from FUNSD and handwriting observations.
+- Use `tests/batch_test.py` for heavier report-style checks; do not include it in default unit-test discovery.
 
 ## Reporting
 

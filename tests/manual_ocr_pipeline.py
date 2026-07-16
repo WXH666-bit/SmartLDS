@@ -1,16 +1,19 @@
 """
-Day 3 + Day 4 — OCR 引擎 & 图像预处理 验证测试
+OCR 与预处理人工冒烟脚本。
 
-通俗解释：
-  - OCREngine:  电子眼，把图上所有文字找出来，告诉你"是什么、在哪、多准"
-  - Preprocessor: 图像美容师，拍照歪了帮你转正、光线暗帮你提亮、有噪点帮你抹掉
-    让 OCR 看得更清楚，识别出更多字
+运行方式：
+    python tests/manual_ocr_pipeline.py
 
-运行方式: python test.py
+这个文件用于手动查看 OCR 引擎和图像预处理流水线的实际效果。
+它会加载 OCR 模型并读取真实 PDF/图片，因此不纳入快速单元测试。
+自动化单元测试请放在 tests/test_*.py。
 """
 
 import sys
-sys.path.insert(0, 'backend')
+from pathlib import Path
+
+ROOT_DIR = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT_DIR / "backend"))
 from ocr_engine import OCREngine
 from preprocess import Preprocessor
 
