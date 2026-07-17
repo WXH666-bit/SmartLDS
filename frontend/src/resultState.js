@@ -76,3 +76,14 @@ export function buildResultPreview(result = {}, fieldRows = [], tableData = null
 export function buildResultPreviewJson(result = {}, fieldRows = [], tableData = null) {
   return JSON.stringify(buildResultPreview(result, fieldRows, tableData), null, 2)
 }
+
+export function buildFieldValueRows(fieldRows = []) {
+  return (fieldRows || [])
+    .filter(row => row?.found && String(row.display ?? '').trim())
+    .map(row => ({
+      label: row.label || row.name || '',
+      value: String(row.display ?? ''),
+      status: row.status || '',
+      confidence: row.confidence || '',
+    }))
+}

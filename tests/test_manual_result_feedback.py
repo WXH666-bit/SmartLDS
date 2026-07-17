@@ -10,6 +10,7 @@ import yaml
 import app as app_module
 from app import (
     apply_corrections,
+    apply_ocr_feedback_learning,
     build_export_json_payload,
     build_field_values,
     normalize_corrections_payload,
@@ -118,6 +119,48 @@ class ManualResultFeedbackTest(unittest.TestCase):
         self.assertEqual(result["fields"]["提单号"]["label"], "海运提单号")
         self.assertEqual(result["field_labels"], {"提单号": "海运提单号"})
         self.assertEqual(build_field_values(result["fields"]), {"海运提单号": "BL999"})
+
+    def test_ocr_feedback_learning_links_manual_value_to_ocr_offset(self):
+        target_template = {
+            "fields": {
+                "原产国": {
+                    "label": "原产国",
+                    "anchors": ["原产国"],
+                    "position": "right",
+                    "value_pattern": r"^[A-Z]+$",
+                }
+            }
+        }
+        final_fields = {
+            "原产国": {
+                "label": "原产国",
+                "corrected": "韩国",
+                "status": "corrected",
+            }
+        }
+        blocks = [
+            {"text": "原产国", "rect": [840, 356, 932, 393], "confidence": 1.0},
+            {"text": "韩国", "rect": [1114, 356, 1178, 395], "confidence": 1.0},
+        ]
+        warnings = []
+
+        changes = apply_ocr_feedback_learning(
+            target_template,
+            final_fields,
+            selected_fields=["原产国"],
+            blocks=blocks,
+            warnings=warnings,
+        )
+
+        field_cfg = target_template["fields"]["原产国"]
+        self.assertTrue(changes["applied"])
+        self.assertIn("原产国", changes["fields"])
+        self.assertEqual(field_cfg["position"], "right")
+        self.assertNotIn("value_pattern", field_cfg)
+        self.assertEqual(field_cfg["learned_sample_value"], "韩国")
+        self.assertIn("learned_value_offset", field_cfg)
+        self.assertGreater(field_cfg["learned_value_offset"]["dx"], 0)
+        self.assertTrue(any("value_pattern" in item for item in warnings))
 
     def test_build_export_json_payload_can_export_values_only(self):
         result = apply_corrections(

@@ -334,6 +334,140 @@ def _feedback_template_keywords(blocks: list[dict] | None, field_names: list[str
     return _merge_unique_strings([], keywords, limit=8)
 
 
+def _normalize_ocr_text(text: str | None) -> str:
+    return re.sub(r"\s+", "", str(text or "")).strip().lower()
+
+
+def _block_rect(block: dict | None) -> list[float] | None:
+    if not isinstance(block, dict):
+        return None
+    rect = block.get("rect")
+    if isinstance(rect, list) and len(rect) == 4:
+        try:
+            return [float(v) for v in rect]
+        except (TypeError, ValueError):
+            return None
+    bbox = block.get("bbox")
+    if isinstance(bbox, list) and bbox:
+        try:
+            xs = [float(p[0]) for p in bbox if isinstance(p, list) and len(p) >= 2]
+            ys = [float(p[1]) for p in bbox if isinstance(p, list) and len(p) >= 2]
+            if xs and ys:
+                return [min(xs), min(ys), max(xs), max(ys)]
+        except (TypeError, ValueError):
+            return None
+    return None
+
+
+def _find_ocr_text_block(blocks: list[dict] | None, text: str) -> dict | None:
+    target = _normalize_ocr_text(text)
+    if not target:
+        return None
+    candidates = []
+    for block in blocks or []:
+        block_text = _normalize_ocr_text(block.get("text"))
+        if not block_text:
+            continue
+        if block_text == target:
+            return block
+        if target in block_text or block_text in target:
+            candidates.append(block)
+    return candidates[0] if candidates else None
+
+
+def _find_anchor_text_block(blocks: list[dict] | None, anchors: list[str]) -> dict | None:
+    normalized = [_normalize_ocr_text(anchor) for anchor in anchors if _normalize_ocr_text(anchor)]
+    if not normalized:
+        return None
+    for block in blocks or []:
+        block_text = _normalize_ocr_text(block.get("text"))
+        if not block_text:
+            continue
+        if any(block_text == anchor or anchor in block_text for anchor in normalized):
+            return block
+    return None
+
+
+def _infer_learned_position(anchor_rect: list[float], value_rect: list[float]) -> str:
+    ax1, ay1, ax2, ay2 = anchor_rect
+    bx1, by1, bx2, by2 = value_rect
+    anchor_h = max(ay2 - ay1, 5.0)
+    anchor_cy = (ay1 + ay2) / 2.0
+    value_cy = (by1 + by2) / 2.0
+    if bx1 >= ax2 - 5 and abs(value_cy - anchor_cy) <= anchor_h * 1.4:
+        return "right"
+    if by1 >= ay2 - 5:
+        return "below"
+    return "right"
+
+
+def apply_ocr_feedback_learning(
+    target_template: dict,
+    final_fields: dict,
+    selected_fields: list[str],
+    blocks: list[dict] | None,
+    warnings: list[str],
+) -> dict:
+    """把人工/校正值反查到 OCR 坐标，学习锚点到值块的稳定偏移。"""
+    changes = {"applied": False, "fields": []}
+    target_fields = target_template.setdefault("fields", {})
+
+    for field_name in selected_fields:
+        info = final_fields.get(field_name)
+        if not isinstance(info, dict):
+            continue
+        value = str(info.get("corrected") or info.get("cleaned") or info.get("value") or "").strip()
+        if not value:
+            continue
+
+        entry = target_fields.get(field_name)
+        if not isinstance(entry, dict):
+            entry = {"label": info.get("label") or field_name, "anchors": _field_feedback_anchors(field_name, info)}
+            target_fields[field_name] = entry
+
+        anchors = _merge_unique_strings(entry.get("anchors", []), _field_feedback_anchors(field_name, info), limit=10)
+        entry["anchors"] = anchors
+
+        anchor_block = _find_anchor_text_block(blocks, anchors)
+        value_block = _find_ocr_text_block(blocks, value)
+        anchor_rect = _block_rect(anchor_block)
+        value_rect = _block_rect(value_block)
+        if not anchor_rect or not value_rect:
+            warnings.append(f"字段 '{field_name}' 的人工值未能反查到可靠 OCR 坐标，已保留普通字段结构")
+            continue
+
+        ax1, ay1, ax2, ay2 = anchor_rect
+        bx1, by1, bx2, by2 = value_rect
+        anchor_cx = (ax1 + ax2) / 2.0
+        anchor_cy = (ay1 + ay2) / 2.0
+        value_cx = (bx1 + bx2) / 2.0
+        value_cy = (by1 + by2) / 2.0
+        value_w = max(bx2 - bx1, 5.0)
+        value_h = max(by2 - by1, 5.0)
+        anchor_h = max(ay2 - ay1, 5.0)
+
+        entry["position"] = _infer_learned_position(anchor_rect, value_rect)
+        entry["learned_value_offset"] = {
+            "dx": round(value_cx - anchor_cx, 2),
+            "dy": round(value_cy - anchor_cy, 2),
+            "tolerance_x": round(max(value_w * 1.8, 80.0), 2),
+            "tolerance_y": round(max(value_h * 1.8, anchor_h * 1.8, 45.0), 2),
+        }
+        entry["learned_sample_value"] = value
+
+        value_pattern = entry.get("value_pattern")
+        if value_pattern and not re.search(str(value_pattern), value, re.IGNORECASE):
+            entry.pop("value_pattern", None)
+            entry.pop("validator", None)
+            warnings.append(f"字段 '{field_name}' 的旧 value_pattern 与人工值不匹配，已移除以免拦截后续识别")
+
+        if field_name not in changes["fields"]:
+            changes["fields"].append(field_name)
+        changes["applied"] = True
+
+    return changes
+
+
 def _valid_ai_position(position: str | None) -> str | None:
     position = str(position or "").strip().lower()
     return position if position in {"right", "below", "inline"} else None
@@ -1552,7 +1686,7 @@ def api_fewshot_from_result():
 
         if field_name in target_fields and isinstance(target_fields[field_name], dict):
             entry = target_fields[field_name]
-            entry["label"] = entry.get("label") or info.get("label") or field_name
+            entry["label"] = field_name if "__" in field_name else (entry.get("label") or info.get("label") or field_name)
             entry["anchors"] = _merge_unique_strings(entry.get("anchors", []), anchors, limit=8)
             entry.setdefault("position", info.get("position") or "right")
             if info.get("canonical_key") and not entry.get("canonical_key"):
@@ -1560,7 +1694,7 @@ def api_fewshot_from_result():
             updated.append(field_name)
         else:
             entry = {
-                "label": info.get("label") or field_name,
+                "label": field_name if "__" in field_name else (info.get("label") or field_name),
                 "anchors": anchors,
                 "position": info.get("position") or "right",
             }
@@ -1586,6 +1720,14 @@ def api_fewshot_from_result():
             table_updated = True
         else:
             warnings.append("当前结果没有可保存的表头，未更新表格结构")
+
+    ocr_learning = apply_ocr_feedback_learning(
+        target_template,
+        final_fields,
+        selected_fields=selected_fields,
+        blocks=load_blocks(job_id),
+        warnings=warnings,
+    )
 
     ai_changes = {"applied": False, "keywords": [], "fields": [], "table_headers": []}
     if ai_enhance:
@@ -1619,6 +1761,7 @@ def api_fewshot_from_result():
         "fields_updated": updated,
         "include_table": include_table,
         "table_updated": table_updated,
+        "ocr_learning": ocr_learning,
         "ai_enhanced": bool(ai_changes.get("applied")),
         "ai_changes": ai_changes,
         "warnings": warnings,

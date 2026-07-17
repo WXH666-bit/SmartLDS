@@ -320,10 +320,9 @@ def _looks_like_label(text):
     if text_upper in _TABLE_HEADER_WORDS:
         return True
 
-    # 4) 纯中文且极短（<5字），可能是标签 (e.g., "托运人", "收货人")
-    #    但中文公司名通常 >5 字，所以阈值设为 5
-    if re.match(r'^[一-鿿]{1,4}$', text):
-        return True
+    # 4) 纯中文短文本不再直接判为标签。
+    #    报关单里“韩国”“海运”“纺织品”这类值也很短；是否标签交给
+    #    后面的中文锚点关键词规则判断，避免误杀人工反哺后的真实值。
 
     # 5) 极短文本（≤5字符）且是已知缩写标签
     #    直接查 _SHORT_LABELS 集合，不依赖 isalpha()（因为 "B/L" 含斜杠）
@@ -842,6 +841,18 @@ class FieldExtractor:
                 )
                 (candidates if cand.get("accepted") else field_debug["rejected"]).append(cand)
 
+            for geom_score, value_block in self._find_learned_offset_candidates(
+                anchor_block, search_pool, cfg.get("learned_value_offset")
+            ):
+                cand = self._build_value_candidate(
+                    field_name, cfg, anchor_block, score, matched_anchor,
+                    value_block, value_block["text"].strip(), "learned_offset", geom_score,
+                    used_value_ids, allow_shared, validator_cfg, validator_name,
+                    search_pool,
+                )
+                cand["reasons"].append("learned_offset")
+                (candidates if cand.get("accepted") else field_debug["rejected"]).append(cand)
+
             # --- 策略 2/3: 外部值块 ---
             if position in ("right", "either"):
                 for geom_score, value_block in self._find_value_right_candidates(
@@ -1182,6 +1193,43 @@ class FieldExtractor:
         """兼容旧调用：返回右侧最高分候选块。"""
         found = self._find_value_right_candidates(anchor_block, candidates)
         return found[0][1] if found else None
+
+    def _find_learned_offset_candidates(self, anchor_block, candidates, learned_offset):
+        """按反哺学习到的锚点→值块中心偏移优先找候选。"""
+        if not isinstance(learned_offset, dict):
+            return []
+        try:
+            dx = float(learned_offset.get("dx", 0.0))
+            dy = float(learned_offset.get("dy", 0.0))
+            tol_x = max(float(learned_offset.get("tolerance_x", 80.0)), 20.0)
+            tol_y = max(float(learned_offset.get("tolerance_y", 45.0)), 15.0)
+        except (TypeError, ValueError):
+            return []
+
+        ax1, ay1, ax2, ay2 = anchor_block["rect"]
+        expected_cx = (ax1 + ax2) / 2.0 + dx
+        expected_cy = (ay1 + ay2) / 2.0 + dy
+
+        scored = []
+        for block in candidates:
+            if id(block) == id(anchor_block):
+                continue
+            if _looks_like_label(block["text"]) or _is_label_residue(block["text"]):
+                continue
+            bx1, by1, bx2, by2 = block["rect"]
+            block_cx = (bx1 + bx2) / 2.0
+            block_cy = (by1 + by2) / 2.0
+            nx = abs(block_cx - expected_cx) / tol_x
+            ny = abs(block_cy - expected_cy) / tol_y
+            distance = (nx * nx + ny * ny) ** 0.5
+            if distance > 1.8:
+                continue
+            score = max(0.0, 1.0 - distance / 1.8)
+            if score >= 0.20:
+                scored.append((score, block))
+
+        scored.sort(key=lambda x: x[0], reverse=True)
+        return scored
 
     def _find_value_right_candidates(self, anchor_block, candidates):
         """

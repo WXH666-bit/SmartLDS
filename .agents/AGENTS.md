@@ -38,6 +38,9 @@ The first two hardening phases have been completed:
 - Field schemas are now template-local: each template should output its own source document labels, while `canonical_key` is only metadata.
 - Low-confidence recognition can optionally route to `backend/vision_fallback.py`; this keeps local rules as the default path and uses a vision model only as a fallback.
 - Test files have been consolidated under `tests/`. Fast unit tests are named `test_*.py`; heavy/manual OCR checks are not.
+- Result page JSON preview has intentionally been rolled back to the simple first-version UI: a plain `JSON` collapse that shows the full JSON text only.
+- Manual correction, manual fields, manual table editing, export options, and feedback-to-template are supported. Keep these workflows compatible when changing result data shape.
+- Few-shot feedback can learn OCR value offsets from corrected/manual fields when the value and nearby anchor can be found in OCR blocks. This is what lets a corrected template recognize previously missing values on the next run.
 
 Known remaining limits:
 
@@ -53,6 +56,11 @@ Known remaining limits:
 - 视觉兜底必须是可选能力：未配置 API key、未启用、超时或模型 JSON 不合法时，都应该返回本地结果并写入 `meta.warnings`。
 - 视觉兜底设置通过前端“模型设置”管理，后端接口是 `/api/vision-settings`。默认供应商是千问，API Key 保存在本地 `uploads/vision_settings.json`，不要写入源码或 `config.yaml`。
 - 测试脚本统一放在 `tests/`。快速单元测试命名为 `test_*.py`；会加载 OCR 模型或跑大量样本的人工/批量脚本不要用 `test_` 前缀。
+- 结果页下方 JSON 展示区保持“第一版”样式：只保留一个标题为 `JSON` 的折叠块，展开后显示完整 JSON。不要再默认显示“字段键值 / 完整 JSON”双标签预览，避免和上方字段卡片重复。
+- 字段卡片是主要人工校正入口：字段值可双击修改，字段名也可双击修改。人工校正后的内容应同步到 JSON 预览、保存校正、导出 JSON/Excel 和反哺版式流程。
+- 表格展示仍在字段卡片和 JSON 折叠块之间；有表格时显示“货物明细”，无表格时不占位。表格人工编辑采用最终表格替换模式，并通过 `table_patch` 保存。
+- 反哺版式支持选择已有版式或创建新版式；如果字段值能在 OCR blocks 中找到，会尝试学习锚点和值之间的位置偏移。不要把反哺只理解成保存字段名，它也可能更新 anchors、validators、`learned_value_offset` 和表头结构。
+- 表格抽取当前仍偏向物流货物明细表。`has_table` 或表格表头参考不等于任意网格都会被自动结构化；普通中文网格/FUNSD 表单仍更适合后续 generic form 或视觉兜底路线。
 
 ## Commands
 
@@ -122,6 +130,8 @@ $env:VISION_FALLBACK_MODEL="qwen3.6-plus"
 - Do not duplicate recognition logic between single and batch endpoints. Change `run_recognition_pipeline()` first.
 - Keep automated tests in `tests/test_*.py`; put heavy/manual OCR scripts in `tests/` without the `test_` prefix.
 - If changing correction behavior, verify result reload and JSON/XLSX export.
+- If changing result-page JSON preview, keep the simple `JSON` collapse unless the user explicitly asks to restore the richer preview table.
+- If changing manual field/table correction, verify `node tests\frontend_result_state_check.mjs` in addition to backend unit tests.
 - If changing frontend API calls, keep relative `/api` support.
 - If changing vision fallback behavior, preserve the failure policy: no API key, disabled fallback, timeout, or invalid JSON must return local rules output plus `meta.warnings`, not a failed recognition job.
 - If changing template fields, preserve source-label output and keep `canonical_key` as metadata only.
@@ -141,6 +151,7 @@ For backend-only safety/data changes:
 
 For frontend changes:
 
+- Run `node tests\frontend_result_state_check.mjs` when result-page state, JSON preview, field editing, or table editing changes.
 - Run `npm.cmd run build`.
 - If build fails with `spawn EPERM` under sandbox, rerun with approval/escalation.
 

@@ -182,6 +182,54 @@ class EnhancedFieldExtractorTest(unittest.TestCase):
         self.assertNotIn("YYY", result["fields"])
         self.assertEqual(result["fields"]["XXX"]["value"], "VALUE-A")
 
+    def test_learned_value_offset_can_recover_far_same_row_value(self):
+        extractor = FieldExtractor()
+        extractor.config = {
+            "validators": {},
+            "field_defaults": {
+                "value": "",
+                "cleaned": "",
+                "confidence": 0.0,
+                "status": "not_found",
+                "anchor_text": "",
+                "rect": [0, 0, 0, 0],
+            },
+            "templates": {
+                "customs": {
+                    "keywords": ["CUSTOMS"],
+                    "fields": {
+                        "原产国": {
+                            "label": "原产国",
+                            "anchors": ["原产国"],
+                            "position": "right",
+                            "learned_value_offset": {
+                                "dx": 480.0,
+                                "dy": 0.0,
+                                "tolerance_x": 80.0,
+                                "tolerance_y": 40.0,
+                            },
+                        }
+                    },
+                    "output": ["原产国"],
+                }
+            },
+        }
+        blocks = [
+            block("CUSTOMS", 0, 0, 80, 20),
+            block("原产国", 10, 50, 80, 70),
+            block("韩国", 500, 50, 550, 70),
+        ]
+
+        result = extractor.extract(
+            {"header": [blocks[0]], "body": blocks[1:], "table": []},
+            [600, 120],
+            blocks=blocks,
+        )
+
+        self.assertEqual(result["template"], "customs")
+        self.assertEqual(result["fields"]["原产国"]["value"], "韩国")
+        self.assertIn("learned_offset", result["debug"]["extraction"]["fields"]["原产国"]["selected"]["reasons"])
+
     def test_fewshot_yaml_uses_source_label_with_canonical_key(self):
         learner = object.__new__(FewShotLearner)
         yaml_text = learner._generate_yaml(
