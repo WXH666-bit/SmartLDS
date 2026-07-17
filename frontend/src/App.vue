@@ -125,12 +125,20 @@
         </div>
         <div class="pool-grid">
           <div v-for="f in fileList" :key="f.job_id" class="pool-card"
-               :class="{ active: viewingJobId===f.job_id, done: f.status==='done' }"
+               :class="{ active: viewingJobId===f.job_id, done: f.status==='done', error: f.status==='error' }"
                @click="viewJob(f)">
-            <span class="pc-dot" :class="{ ok: f.status==='done', busy: f.status==='processing', err: f.status==='error' }"></span>
-            <span class="pc-name">{{ f.filename }}</span>
-            <span class="pc-size">{{ f.size }}</span>
-            <span v-if="f.status==='done'" class="pc-tpl">{{ f.template }}</span>
+            <span class="pc-dot" :class="{ ok: f.status==='done', busy: f.status==='processing' || f.status==='uploading', err: f.status==='error' }"></span>
+            <div class="pc-main">
+              <div class="pc-row">
+                <span class="pc-name">{{ f.filename }}</span>
+                <span class="pc-size">{{ f.size }}</span>
+                <span v-if="f.status==='done'" class="pc-tpl">{{ f.template }}</span>
+                <span class="pc-state" :class="f.status">{{ fileStatusLabel(f) }} · {{ fileProgress(f) }}%</span>
+              </div>
+              <div class="pc-progress">
+                <span class="pc-progress-fill" :class="f.status" :style="{ width: fileProgress(f) + '%' }"></span>
+              </div>
+            </div>
             <el-button size="small" text type="danger" @click.stop="removeFile(f.job_id)">✕</el-button>
           </div>
         </div>
@@ -150,10 +158,23 @@
           <span v-if="tableData.headers.length" class="meta-item">表格 {{ tableData.rows.length }} 行</span>
         </div>
         <div class="toolbar-right">
-          <el-button size="small" @click="doExport('json')">JSON</el-button>
-          <el-button size="small" @click="doExport('xlsx')">Excel</el-button>
+          <el-button size="small" type="primary" plain @click="openAddFieldDialog">添加字段</el-button>
+          <el-button size="small" type="primary" plain @click="openTableEditor">编辑表格</el-button>
+          <el-button size="small" type="success" plain @click="openFeedbackDialog">反哺版式</el-button>
+          <el-button size="small" @click="openExportDialog('json')">JSON</el-button>
+          <el-button size="small" @click="openExportDialog('xlsx')">Excel</el-button>
           <el-button size="small" type="warning" @click="doCorrect">保存校正</el-button>
         </div>
+      </div>
+      <div v-if="meta.warnings?.length" class="result-warning-bar">
+        <el-alert
+          v-for="(warning, index) in meta.warnings"
+          :key="index"
+          type="warning"
+          show-icon
+          :closable="false"
+          :title="warning"
+        />
       </div>
 
       <!-- 2-pane result -->
@@ -185,17 +206,37 @@
 
           <div v-if="!(meta.template==='unknown' || unknownDetected)" class="section-title">字段提取</div>
           <div class="field-cards">
-            <div v-for="row in fieldRows" :key="row.name" class="field-card" :class="{ miss: !row.found }">
-              <div class="fc-label">{{ row.label }}</div>
+            <div v-for="row in fieldRows" :key="row.name" class="field-card" :class="{ miss: !row.found, manual: row.manual }">
+              <div
+                v-if="!row.labelEditing"
+                class="fc-label"
+                title="双击修改字段名"
+                @dblclick="row.labelEditing=true; row.labelEditVal=row.label"
+              >{{ row.label }}</div>
+              <el-input
+                v-else
+                v-model="row.labelEditVal"
+                size="small"
+                class="fc-label-input"
+                @blur="finishFieldLabelEditAndSync(row)"
+                @keyup.enter="finishFieldLabelEditAndSync(row)"
+                autofocus
+              />
+              <el-tag v-if="row.manual" size="small" type="success" effect="plain">人工</el-tag>
               <div class="fc-value" v-if="!row.editing"
                    @dblclick="row.editing=true; row.editVal=row.display"
                    :class="{ empty: !row.display }">{{ row.display || '(空)' }}</div>
-              <el-input v-else v-model="row.editVal" size="small" @blur="row.display=row.editVal;row.editing=false" @keyup.enter="row.display=row.editVal;row.editing=false" autofocus />
+              <el-input v-else v-model="row.editVal" size="small" @blur="finishFieldEditAndSync(row)" @keyup.enter="finishFieldEditAndSync(row)" autofocus />
               <div class="fc-conf" v-if="row.confidence">{{ row.confidence }}</div>
+              <el-button v-if="row.manual" size="small" text type="danger" @click="removeManualField(row.name)">删除</el-button>
             </div>
           </div>
-          <div v-if="tableData.headers.length" class="cargo-box">
+          <div v-if="tableData.headers.length || tableData.rows.length" class="cargo-box">
             <div class="section-title">货物明细</div>
+            <div class="table-tools">
+              <el-tag v-if="tableData.source" size="small" effect="plain">{{ tableData.source }}</el-tag>
+              <el-button size="small" text type="primary" @click="openTableEditor">编辑</el-button>
+            </div>
             <el-table :data="tableData.rows" size="small" stripe border max-height="240">
               <el-table-column v-for="(h,i) in tableData.headers" :key="i" :prop="String(i)" :label="h" min-width="90" show-overflow-tooltip />
             </el-table>
@@ -207,6 +248,129 @@
       </div>
     </div>
   </main>
+
+  <!-- ============ Manual field dialog ============ -->
+  <el-dialog v-model="showAddField" title="添加人工字段" width="420px">
+    <el-form label-width="80px">
+      <el-form-item label="字段名">
+        <el-input v-model="newField.label" placeholder="例如：客户备注 / XXX字段" />
+      </el-form-item>
+      <el-form-item label="字段值">
+        <el-input v-model="newField.value" type="textarea" :rows="3" placeholder="填写字段值" />
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <el-button @click="showAddField=false">取消</el-button>
+      <el-button type="primary" @click="addManualField">添加</el-button>
+    </template>
+  </el-dialog>
+
+  <!-- ============ Manual table editor ============ -->
+  <el-dialog v-model="showTableEditor" title="编辑最终表格" width="760px" :close-on-click-modal="false">
+    <div class="table-editor">
+      <div class="table-editor-head">
+        <span class="te-title">表头列</span>
+        <el-button size="small" type="primary" plain @click="addTableColumn">新增列</el-button>
+        <el-button size="small" type="success" plain @click="addTableRow">新增行</el-button>
+      </div>
+      <div v-if="!tableEditor.headers.length" class="table-empty-tip">还没有表头，先新增一列即可创建人工表格。</div>
+      <div v-else class="table-edit-grid">
+        <div class="table-edit-header">
+          <div v-for="(h, colIndex) in tableEditor.headers" :key="'h'+colIndex" class="table-edit-cell table-edit-head-cell">
+            <el-input v-model="tableEditor.headers[colIndex]" size="small" placeholder="列名" />
+            <el-button size="small" text type="danger" @click="removeTableColumn(colIndex)">删列</el-button>
+          </div>
+          <div class="table-row-actions">操作</div>
+        </div>
+        <div v-for="(row, rowIndex) in tableEditor.rows" :key="'r'+rowIndex" class="table-edit-row">
+          <div v-for="(_, colIndex) in tableEditor.headers" :key="'c'+rowIndex+'_'+colIndex" class="table-edit-cell">
+            <el-input v-model="tableEditor.rows[rowIndex][colIndex]" size="small" />
+          </div>
+          <div class="table-row-actions">
+            <el-button size="small" text type="danger" @click="removeTableRow(rowIndex)">删行</el-button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <template #footer>
+      <el-button @click="showTableEditor=false">取消</el-button>
+      <el-button type="primary" @click="saveTableEditor">保存表格</el-button>
+    </template>
+  </el-dialog>
+
+  <!-- ============ Export options ============ -->
+  <el-dialog v-model="showExportDialog" :title="`导出 ${exportFormatLabel}`" width="460px">
+    <el-alert
+      type="info"
+      :closable="false"
+      show-icon
+      title="字段键值适合人工查看；字段明细适合调试和程序读取。"
+      style="margin-bottom:14px"
+    />
+    <el-checkbox v-model="exportOptions.field_values" class="export-option">
+      字段键值 <span>两列/键值对，最直观</span>
+    </el-checkbox>
+    <el-checkbox v-model="exportOptions.field_details" class="export-option">
+      字段明细 <span>包含状态、置信度、锚点等</span>
+    </el-checkbox>
+    <el-checkbox v-model="exportOptions.table" class="export-option">
+      表格数据 <span>导出最终表格/货物明细</span>
+    </el-checkbox>
+    <el-checkbox v-model="exportOptions.meta" class="export-option">
+      元信息 <span>任务、版式、识别时间等</span>
+    </el-checkbox>
+    <template #footer>
+      <el-button @click="showExportDialog=false">取消</el-button>
+      <el-button type="primary" @click="confirmExport">导出</el-button>
+    </template>
+  </el-dialog>
+
+  <!-- ============ Feedback current result into template ============ -->
+  <el-dialog v-model="showFeedback" title="反哺到指定版式" width="620px" :close-on-click-modal="false">
+    <el-alert
+      type="info"
+      :closable="false"
+      show-icon
+      title="可选择合并到已有版式，也可以用当前最终字段、人工新增字段和最终表头结构创建新版式；创建后会作为独立 schema 参与后续识别。"
+      style="margin-bottom:14px"
+    />
+    <el-form label-width="90px">
+      <el-form-item label="方式">
+        <el-radio-group v-model="feedback.mode">
+          <el-radio-button label="create">创建新版式</el-radio-button>
+          <el-radio-button label="merge">合并已有版式</el-radio-button>
+        </el-radio-group>
+      </el-form-item>
+      <el-form-item v-if="feedback.mode==='create'" label="新版式">
+        <el-input v-model="feedback.template_name" clearable placeholder="例如 customs_import_v1" />
+      </el-form-item>
+      <el-form-item v-if="feedback.mode==='merge'" label="目标版式">
+        <el-select v-model="feedback.template_name" filterable placeholder="选择要反哺的版式" style="width:100%">
+          <el-option v-for="tpl in configTemplates" :key="tpl.name" :label="tpl.name" :value="tpl.name" />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="字段">
+        <el-checkbox-group v-model="feedback.field_names" class="feedback-field-list">
+          <el-checkbox v-for="row in feedbackFieldOptions" :key="row.name" :label="row.name">
+            {{ row.label }} <span class="feedback-value">{{ row.display }}</span>
+          </el-checkbox>
+        </el-checkbox-group>
+      </el-form-item>
+      <el-form-item label="表格">
+        <el-checkbox v-model="feedback.include_table" :disabled="!tableData.headers.length">保存当前最终表头结构</el-checkbox>
+      </el-form-item>
+      <el-form-item label="AI 增强">
+        <el-switch
+          v-model="feedback.ai_enhance"
+          active-text="让视觉大模型辅助补锚点、校验和多行配置"
+        />
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <el-button @click="showFeedback=false">取消</el-button>
+      <el-button type="primary" :loading="feedback.loading" @click="submitFeedback">开始反哺</el-button>
+    </template>
+  </el-dialog>
 
   <!-- ============ History Drawer ============ -->
   <el-drawer v-model="showHistory" size="480px" direction="rtl">
@@ -393,10 +557,16 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Loading } from '@element-plus/icons-vue'
 import api from './api/index.js'
+import {
+  buildResultPreviewJson,
+  finishFieldEdit,
+  finishFieldLabelEdit,
+  isFieldRowFound,
+} from './resultState.js'
 
 // Check URL for ?job=xxx → auto-load result in new tab
 const urlParams = new URLSearchParams(window.location.search)
@@ -411,11 +581,41 @@ const viewingJobId = ref('')
 const viewingData = ref(null)        // cached result for current view
 const meta = reactive({})
 const fieldRows = ref([])
-const tableData = reactive({ headers: [], rows: [] })
+const tableData = reactive({ headers: [], rows: [], source: '' })
+const tableDirty = ref(false)
 const jsonText = ref('')
 const imageUrl = ref('')
 const unknownDetected = ref(false)
 const ocrPreview = ref([])  // OCR blocks for unknown template preview
+let progressTimer = null
+
+// 识别后人工补充：字段、表格、反哺指定版式
+const showAddField = ref(false)
+const newField = reactive({ label: '', value: '' })
+const manualDirty = ref(false)
+const showTableEditor = ref(false)
+const tableEditor = reactive({ headers: [], rows: [] })
+const showExportDialog = ref(false)
+const exportFormat = ref('json')
+const exportOptions = reactive({
+  field_values: true,
+  field_details: true,
+  table: true,
+  meta: true
+})
+const exportFormatLabel = computed(() => exportFormat.value === 'xlsx' ? 'Excel' : 'JSON')
+const showFeedback = ref(false)
+const feedback = reactive({
+  mode: 'merge',
+  template_name: '',
+  field_names: [],
+  include_table: true,
+  ai_enhance: false,
+  loading: false
+})
+const feedbackFieldOptions = computed(() =>
+  fieldRows.value.filter(row => row.found && String(row.display || '').trim())
+)
 
 // Config viewer
 const showConfig = ref(false)
@@ -575,6 +775,56 @@ function openZipInput() {
   zipInput.value?.click()
 }
 
+function fileProgress(file) {
+  const value = Number(file?.progress ?? 0)
+  if (!Number.isFinite(value)) return 0
+  return Math.max(0, Math.min(100, Math.round(value)))
+}
+
+function fileStatusLabel(file) {
+  if (file?.status === 'uploading') return '\u4e0a\u4f20\u4e2d'
+  if (file?.status === 'ready') return '\u5f85\u8bc6\u522b'
+  if (file?.status === 'processing') return '\u8bc6\u522b\u4e2d'
+  if (file?.status === 'done') return '\u5b8c\u6210'
+  if (file?.status === 'error') return '\u5931\u8d25'
+  return '\u7b49\u5f85'
+}
+
+function setFileProgress(file, progress) {
+  if (!file) return
+  file.progress = Math.max(0, Math.min(100, progress))
+}
+
+function hasActiveProgress() {
+  return fileList.value.some(file => ['uploading', 'processing'].includes(file.status))
+}
+
+function stopProgressTickerIfIdle() {
+  if (!progressTimer || hasActiveProgress()) return
+  clearInterval(progressTimer)
+  progressTimer = null
+}
+
+function startProgressTicker() {
+  if (progressTimer) return
+  progressTimer = setInterval(() => {
+    fileList.value.forEach(file => {
+      if (file.status === 'uploading') {
+        setFileProgress(file, Math.min(28, (file.progress || 8) + 4))
+      } else if (file.status === 'processing') {
+        const current = file.progress || 35
+        const step = current < 70 ? 3 : current < 86 ? 1.5 : 0.6
+        setFileProgress(file, Math.min(92, current + step))
+      }
+    })
+    stopProgressTickerIfIdle()
+  }, 650)
+}
+
+onUnmounted(() => {
+  if (progressTimer) clearInterval(progressTimer)
+})
+
 // ============ File handling ============
 function filesDropped(e) { addFiles(Array.from(e.dataTransfer.files)) }
 function zipDropped(e) {
@@ -588,13 +838,14 @@ async function addFiles(files) {
   let added = 0
   for (const f of files) {
     if (fileList.value.some(x=>x.filename===f.name && x.size!=='...')) continue
-    fileList.value.push({ job_id: '...', filename: f.name, size: '...', status: 'uploading' })
+    fileList.value.push({ job_id: '...', filename: f.name, size: '...', status: 'uploading', progress: 8 })
+    startProgressTicker()
     try {
       const {data} = await api.upload(f)
       const idx = fileList.value.findIndex(x=>x.filename===f.name && x.status==='uploading')
       if (idx>=0) Object.assign(fileList.value[idx], {
         job_id: data.job_id, filename: f.name,
-        size: formatSize(f.size), status: 'ready'
+        size: formatSize(f.size), status: 'ready', progress: 30
       })
       added++
     } catch(e) {
@@ -607,12 +858,13 @@ async function addFiles(files) {
 }
 
 async function uploadZip(file) {
-  fileList.value.push({ job_id: '...', filename: file.name, size: '...', status: 'uploading' })
+  fileList.value.push({ job_id: '...', filename: file.name, size: '...', status: 'uploading', progress: 8 })
+  startProgressTicker()
   try {
     const {data} = await api.uploadZip(file)
     data.jobs.forEach(j => {
       if (!fileList.value.some(x=>x.filename===j.filename)) {
-        fileList.value.push({ job_id: j.job_id, filename: j.filename, size: '-', status: 'ready' })
+        fileList.value.push({ job_id: j.job_id, filename: j.filename, size: '-', status: 'ready', progress: 30 })
       }
     })
     // Remove the ZIP placeholder
@@ -626,7 +878,10 @@ async function uploadZip(file) {
 }
 
 function removeFile(jobId) { fileList.value = fileList.value.filter(f=>f.job_id!==jobId) }
-function clearAll() { fileList.value=[]; viewingJobId.value=''; phase.value='idle' }
+function clearAll() {
+  fileList.value=[]; viewingJobId.value=''; phase.value='idle'
+  if (progressTimer) { clearInterval(progressTimer); progressTimer = null }
+}
 
 // ============ Recognize ============
 async function viewJob(f) {
@@ -636,16 +891,17 @@ async function viewJob(f) {
     return
   }
   if (f.status==='ready') {
-    f.status='processing'; phase.value='recognizing'
+    f.status='processing'; f.progress = 35; phase.value='recognizing'; startProgressTicker()
     try {
       await api.recognize(f.job_id)
       const {data} = await api.result(f.job_id)
       const m = data.meta || {}
       Object.assign(f, { status: 'done', template: m.template || '?',
-        fields_extracted: m.fields_extracted || 0, fields_total: m.fields_total || 0 })
+        fields_extracted: m.fields_extracted || 0, fields_total: m.fields_total || 0,
+        progress: 100 })
       window.open(`?job=${f.job_id}`, '_blank')
       phase.value='idle'
-    } catch(e) { f.status='error'; phase.value='idle'; ElMessage.error('识别失败') }
+    } catch(e) { f.status='error'; f.progress=100; phase.value='idle'; ElMessage.error('识别失败') }
     return
   }
 }
@@ -663,26 +919,38 @@ onMounted(async () => {
 })
 
 function showResult(data) {
+  viewingData.value = data
   const fields = data.fields || {}
   const table = data.table || {}
-  const corrections = data.corrections || {}
+  const rawCorrections = data.corrections || {}
+  const corrections = rawCorrections.fields || rawCorrections
   Object.assign(meta, data.meta || {})
   fieldRows.value = Object.entries(fields).map(([name, info]) => {
     const display = corrections[name] ?? info.corrected ?? info.cleaned ?? info.value ?? ''
+    const manual = info.status === 'manual_added' || info.source === 'manual'
+    const found = isFieldRowFound(info, display)
     return {
       name,
       label: info.label || name,
+      _originalLabel: info.label || name,
+      labelEditing: false,
+      labelEditVal: info.label || name,
       canonicalKey: info.canonical_key || '',
-      found: info.status!=='not_found',
+      found,
       display,
       confidence: info.confidence ? Math.round(info.confidence*100)+'%' : '',
+      manual,
+      status: info.status || '',
       editing: false, _original: display,
       editVal: display
     }
   })
   tableData.headers = table.headers || []
   tableData.rows = (table.rows||[]).map((row,i) => { const o={}; row.forEach((c,j)=>o[String(j)]=c); return o })
-  jsonText.value = JSON.stringify(data, null, 2)
+  tableData.source = table.source || ''
+  tableDirty.value = false
+  manualDirty.value = false
+  syncJsonPreview()
   imageUrl.value = api.imageUrl(data.job_id || viewingJobId.value)
 
   // Unknown template detection
@@ -691,6 +959,21 @@ function showResult(data) {
   // If unknown, show OCR blocks as preview
   const blocks = data.blocks || []
   ocrPreview.value = tpl === 'unknown' ? blocks : []
+}
+
+function syncJsonPreview() {
+  if (!viewingData.value) return
+  jsonText.value = buildResultPreviewJson(viewingData.value, fieldRows.value, tableData)
+}
+
+function finishFieldEditAndSync(row) {
+  finishFieldEdit(row)
+  syncJsonPreview()
+}
+
+function finishFieldLabelEditAndSync(row) {
+  finishFieldLabelEdit(row)
+  syncJsonPreview()
 }
 
 // Few-shot dialog
@@ -826,21 +1109,26 @@ async function recognizeAll() {
   if (!ready.length) return ElMessage.info('没有待识别的文件')
   phase.value='recognizing'
   const jids = ready.map(f=>f.job_id)
-  ready.forEach(f=>f.status='processing')
+  ready.forEach(f=>{ f.status='processing'; f.progress=35 })
+  startProgressTicker()
   try {
     const {data} = await api.recognizeBatch(jids)
     data.results.forEach(r => {
       const f = fileList.value.find(x=>x.job_id===r.job_id)
       if (f) Object.assign(f, {
         status: r.status, template: r.template || '?',
-        fields_extracted: r.fields_extracted || 0, fields_total: r.fields_total || 0
+        fields_extracted: r.fields_extracted || 0, fields_total: r.fields_total || 0,
+        progress: 100
       })
     })
     phase.value='idle'
     const done = data.results.filter(r=>r.status==='done').length
     const err = data.results.filter(r=>r.status==='error').length
     ElMessage.success(`完成 ${done} 份` + (err ? `，${err} 失败` : ''))
-  } catch(e) { ElMessage.error('批量识别失败'); phase.value='idle' }
+  } catch(e) {
+    ready.forEach(f=>{ f.status='error'; f.progress=100 })
+    ElMessage.error('批量识别失败'); phase.value='idle'
+  }
 }
 
 function backToList() {
@@ -853,6 +1141,7 @@ function backToList() {
 }
 
 // ============ Actions ============
+/* legacy doCorrect disabled; the manual-field/table-aware implementation is below.
 async function doCorrect() {
   const edits={}
   fieldRows.value.forEach(r=>{ if(r.display!==r._original) edits[r.name]=r.display })
@@ -861,7 +1150,263 @@ async function doCorrect() {
     const {data}=await api.result(viewingJobId.value); showResult(data)
   } catch(e) { ElMessage.error('失败') }
 }
-function doExport(fmt) { const a=document.createElement('a'); a.href=api.exportUrl(viewingJobId.value,fmt); a.click() }
+*/
+function makeUniqueFieldKey(label) {
+  const base = String(label || 'field').trim() || 'field'
+  const used = new Set(fieldRows.value.map(row => row.name))
+  if (!used.has(base)) return base
+  let index = 2
+  while (used.has(`${base}__${index}`)) index += 1
+  return `${base}__${index}`
+}
+
+function openAddFieldDialog() {
+  newField.label = ''
+  newField.value = ''
+  showAddField.value = true
+}
+
+function addManualField() {
+  const label = newField.label.trim()
+  if (!label) return ElMessage.error('请填写字段名')
+  const value = newField.value.trim()
+  const key = makeUniqueFieldKey(label)
+  fieldRows.value.push({
+    name: key,
+    label,
+    _originalLabel: label,
+    labelEditing: false,
+    labelEditVal: label,
+    canonicalKey: '',
+    found: true,
+    display: value,
+    confidence: '100%',
+    manual: true,
+    status: 'manual_added',
+    editing: false,
+    _original: '',
+    editVal: value
+  })
+  manualDirty.value = true
+  syncJsonPreview()
+  showAddField.value = false
+}
+
+function removeManualField(name) {
+  fieldRows.value = fieldRows.value.filter(row => row.name !== name)
+  manualDirty.value = true
+  syncJsonPreview()
+}
+
+function tableRowsToArrays() {
+  return (tableData.rows || []).map(row =>
+    tableData.headers.map((_, index) => String(row[String(index)] ?? ''))
+  )
+}
+
+function tableArraysToObjects(headers, rows) {
+  return (rows || []).map(row => {
+    const objectRow = {}
+    ;(headers || []).forEach((_, index) => {
+      objectRow[String(index)] = String(row?.[index] ?? '')
+    })
+    return objectRow
+  })
+}
+
+function normalizeTableEditorRows() {
+  tableEditor.rows = tableEditor.rows.map(row => {
+    const next = [...row]
+    while (next.length < tableEditor.headers.length) next.push('')
+    return next.slice(0, tableEditor.headers.length)
+  })
+}
+
+function openTableEditor() {
+  tableEditor.headers = [...(tableData.headers || [])]
+  tableEditor.rows = tableRowsToArrays()
+  if (!tableEditor.headers.length) {
+    tableEditor.headers = ['列A']
+    tableEditor.rows = [['']]
+  }
+  normalizeTableEditorRows()
+  showTableEditor.value = true
+}
+
+function addTableColumn() {
+  tableEditor.headers.push(`列${tableEditor.headers.length + 1}`)
+  tableEditor.rows.forEach(row => row.push(''))
+  if (!tableEditor.rows.length) tableEditor.rows.push(tableEditor.headers.map(() => ''))
+}
+
+function removeTableColumn(index) {
+  tableEditor.headers.splice(index, 1)
+  tableEditor.rows.forEach(row => row.splice(index, 1))
+}
+
+function addTableRow() {
+  if (!tableEditor.headers.length) tableEditor.headers.push('列A')
+  tableEditor.rows.push(tableEditor.headers.map(() => ''))
+}
+
+function removeTableRow(index) {
+  tableEditor.rows.splice(index, 1)
+}
+
+function saveTableEditor() {
+  const headers = tableEditor.headers.map(h => String(h || '').trim()).filter(Boolean)
+  if (!headers.length) {
+    tableData.headers = []
+    tableData.rows = []
+    tableData.source = 'manual_patch'
+  } else {
+    tableEditor.headers = headers
+    normalizeTableEditorRows()
+    tableData.headers = [...headers]
+    tableData.rows = tableArraysToObjects(headers, tableEditor.rows)
+    tableData.source = tableData.source || 'manual_patch'
+  }
+  tableDirty.value = true
+  syncJsonPreview()
+  showTableEditor.value = false
+}
+
+function suggestTemplateName() {
+  const raw = viewingData.value?.filename || viewingJobId.value || 'new_template'
+  const base = String(raw)
+    .replace(/\.[^.]+$/, '')
+    .replace(/[^\w\u4e00-\u9fa5]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+  return `${base || 'new_template'}_template`
+}
+
+async function openFeedbackDialog() {
+  if (!configTemplates.value.length) await loadConfig()
+  const currentTemplate = meta.template && meta.template !== 'unknown' ? meta.template : ''
+  const canMergeCurrent = configTemplates.value.some(t => t.name === currentTemplate)
+  feedback.mode = canMergeCurrent ? 'merge' : 'create'
+  feedback.template_name = canMergeCurrent ? currentTemplate : suggestTemplateName()
+  feedback.field_names = feedbackFieldOptions.value.map(row => row.name)
+  feedback.include_table = !!tableData.headers.length
+  feedback.ai_enhance = false
+  showFeedback.value = true
+}
+
+async function submitFeedback() {
+  if (!feedback.template_name) return ElMessage.error('请填写或选择目标版式')
+  if (!feedback.field_names.length && !feedback.include_table) {
+    return ElMessage.error('至少选择一个字段或表格')
+  }
+  feedback.loading = true
+  try {
+    await doCorrect({ silent: true })
+    const { data } = await api.fewshotFromResult({
+      job_id: viewingJobId.value,
+      template_name: feedback.template_name,
+      field_names: feedback.field_names,
+      include_table: feedback.include_table,
+      ai_enhance: feedback.ai_enhance,
+      mode: feedback.mode
+    })
+    const warn = data.warnings?.length ? `，${data.warnings.length} 条提醒` : ''
+    const ai = data.ai_enhanced ? '，AI 已增强' : ''
+    const action = data.created ? '已创建并反哺到' : '已反哺到'
+    ElMessage.success(`${action} ${data.template}${ai}${warn}`)
+    showFeedback.value = false
+    await loadConfig()
+  } catch (e) {
+    ElMessage.error('反哺失败: ' + (e.response?.data?.error || e.message))
+  } finally {
+    feedback.loading = false
+  }
+}
+
+/* doCorrect implementation with corrupted localized strings disabled.
+async function doCorrect(options = {}) {
+  const edits={}
+  const manualFields=[]
+  fieldRows.value.forEach(r=>{
+    if(r.manual || r.status === 'manual_added') {
+      manualFields.push({ key: r.name, label: r.label, value: r.display })
+    } else if(r.display!==r._original) {
+      edits[r.name]=r.display
+    }
+  })
+  const payload = { fields: edits, manual_fields: manualFields }
+  if (tableDirty.value) {
+    payload.table_patch = {
+      mode: 'replace',
+      headers: [...tableData.headers],
+      rows: tableRowsToArrays()
+    }
+  }
+  const hasChanges = Object.keys(edits).length || manualFields.length || manualDirty.value || tableDirty.value
+  if(!hasChanges) {
+    if (!options.silent) ElMessage.info('娌℃湁淇敼')
+    return
+  }
+  try { await api.correct(viewingJobId.value,payload); if (!options.silent) ElMessage.success('宸蹭繚瀛?)
+    const {data}=await api.result(viewingJobId.value); showResult(data)
+  } catch(e) { if (!options.silent) ElMessage.error('澶辫触'); else throw e }
+}
+
+*/
+async function doCorrect(options = {}) {
+  const edits = {}
+  const fieldLabels = {}
+  const manualFields = []
+  fieldRows.value.forEach(row => {
+    if (row.manual || row.status === 'manual_added') {
+      manualFields.push({ key: row.name, label: row.label, value: row.display })
+    } else if (row.display !== row._original) {
+      edits[row.name] = row.display
+    }
+    if (!row.manual && row.label !== row._originalLabel) {
+      fieldLabels[row.name] = row.label
+    }
+  })
+
+  const payload = { fields: edits, field_labels: fieldLabels, manual_fields: manualFields }
+  if (tableDirty.value) {
+    payload.table_patch = {
+      mode: 'replace',
+      headers: [...tableData.headers],
+      rows: tableRowsToArrays()
+    }
+  }
+
+  const hasChanges = Object.keys(edits).length || Object.keys(fieldLabels).length || manualFields.length || manualDirty.value || tableDirty.value
+  if (!hasChanges) {
+    if (!options.silent) ElMessage.info('\u6ca1\u6709\u4fee\u6539')
+    return
+  }
+
+  try {
+    await api.correct(viewingJobId.value, payload)
+    if (!options.silent) ElMessage.success('\u5df2\u4fdd\u5b58')
+    const { data } = await api.result(viewingJobId.value)
+    showResult(data)
+  } catch (e) {
+    if (!options.silent) ElMessage.error('\u4fdd\u5b58\u5931\u8d25')
+    else throw e
+  }
+}
+
+function openExportDialog(fmt) {
+  exportFormat.value = fmt
+  showExportDialog.value = true
+}
+
+function confirmExport() {
+  if (!exportOptions.field_values && !exportOptions.field_details && !exportOptions.table && !exportOptions.meta) {
+    ElMessage.error('至少选择一项导出内容')
+    return
+  }
+  const a = document.createElement('a')
+  a.href = api.exportUrl(viewingJobId.value, exportFormat.value, exportOptions)
+  a.click()
+  showExportDialog.value = false
+}
 </script>
 
 <style scoped>
@@ -938,20 +1483,35 @@ function doExport(fmt) { const a=document.createElement('a'); a.href=api.exportU
 .pool-head{display:flex;align-items:center;gap:10px;padding:8px 14px;background:#fff;border-radius:10px 10px 0 0;border:1px solid #e5e7eb;border-bottom:none;font-size:13px}
 .pool-head b{color:#1e293b}
 .pool-grid{background:#fff;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 10px 10px;max-height:360px;overflow-y:auto}
-.pool-card{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid #f1f5f9;font-size:13px;cursor:pointer;transition:.1s}
+.pool-card{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid #f1f5f9;font-size:13px;cursor:pointer;transition:.1s}
 .pool-card:hover{background:#f8fafc}.pool-card:last-child{border-bottom:none}
 .pool-card.active{background:#eff6ff;border-left:3px solid #3b82f6;padding-left:11px}
 .pool-card.done .pc-name{color:#374151}
+.pool-card.error{background:#fff7f7}
 .pc-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:#e5e7eb}
 .pc-dot.ok{background:#10b981}.pc-dot.busy{background:#f59e0b;animation:pulse .8s infinite}.pc-dot.err{background:#ef4444}
+.pc-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.pc-row{display:flex;align-items:center;gap:10px;min-width:0}
 .pc-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
 .pc-size{font-size:11px;color:#94a3b8;flex-shrink:0;width:50px;text-align:right}
 .pc-tpl{font-size:10px;background:#f1f5f9;color:#64748b;padding:1px 6px;border-radius:3px;flex-shrink:0}
+.pc-state{font-size:11px;color:#64748b;flex-shrink:0;width:76px;text-align:right}
+.pc-state.processing,.pc-state.uploading{color:#2563eb}
+.pc-state.done{color:#059669}
+.pc-state.error{color:#dc2626}
+.pc-progress{height:4px;background:#edf2f7;border-radius:999px;overflow:hidden}
+.pc-progress-fill{display:block;height:100%;width:0;border-radius:inherit;background:#60a5fa;transition:width .45s ease,background-color .2s ease}
+.pc-progress-fill.uploading{background:#93c5fd}
+.pc-progress-fill.processing{background:linear-gradient(90deg,#3b82f6,#06b6d4)}
+.pc-progress-fill.done{background:#10b981}
+.pc-progress-fill.error{background:#ef4444}
 
 /* Result */
 .result-stage{flex:1;display:flex;flex-direction:column;overflow:hidden}
 .result-toolbar{display:flex;justify-content:space-between;align-items:center;padding:10px 20px;background:#fff;border-bottom:1px solid #e5e7eb;flex-shrink:0;gap:12px;box-shadow:0 1px 3px rgba(0,0,0,.03)}
 .toolbar-left,.toolbar-right{display:flex;align-items:center;gap:10px}
+.result-warning-bar{display:flex;flex-direction:column;gap:6px;padding:8px 18px;background:#fffbeb;border-bottom:1px solid #fde68a;flex-shrink:0}
+.result-warning-bar :deep(.el-alert){padding:6px 10px}
 .meta-item{font-size:12px;color:#64748b;padding:2px 8px;background:#f8fafc;border-radius:4px}
 .source-badge{font-weight:700}
 .source-badge.local_rules{color:#2563eb;background:#eff6ff}
@@ -967,14 +1527,37 @@ function doExport(fmt) { const a=document.createElement('a'); a.href=api.exportU
 .field-card{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:#fff;border:1px solid #f1f5f9;font-size:13px;transition:all .2s}
 .field-card:hover{border-color:#e2e8f0;box-shadow:0 1px 4px rgba(0,0,0,.04)}
 .field-card.miss{opacity:.45;background:#fafafa}
+.field-card.manual{border-color:#bbf7d0;background:linear-gradient(90deg,#f0fdf4,#fff)}
 .fc-label{min-width:110px;font-weight:600;flex-shrink:0;font-size:11px;white-space:nowrap;color:#64748b;letter-spacing:.4px}
+.fc-label:hover{color:#2563eb}
+.fc-label-input{width:130px;flex-shrink:0}
 .fc-value{flex:1;cursor:pointer;word-break:break-all;border-radius:4px;padding:3px 6px;transition:.15s;color:#1e293b;font-weight:500}
 .fc-value:hover{background:#f0f9ff}
 .fc-value.empty{color:#cbd5e1;font-style:italic;font-weight:400}
 .fc-conf{font-size:10px;color:#94a3b8;flex-shrink:0;font-family:Consolas,monospace;background:#f8fafc;padding:1px 5px;border-radius:3px}
 .cargo-box{margin-top:12px}
+.section-title-row,.table-tools{display:flex;align-items:center;gap:8px}
+.section-title-row span:first-child{flex:1}
+.table-tools{justify-content:flex-end;margin:-4px 0 8px}
 .json-collapse{margin-top:8px}
 .json-block{background:#1e293b;color:#a5b4c2;padding:14px;font-size:11px;font-family:Consolas,monospace;max-height:300px;overflow:auto;white-space:pre-wrap;border-radius:8px;margin:0;line-height:1.5}
+
+.table-editor{display:flex;flex-direction:column;gap:12px}
+.table-editor-head{display:flex;align-items:center;gap:8px}
+.te-title{font-size:13px;font-weight:800;color:#1e293b;flex:1}
+.table-empty-tip{padding:18px;border:1px dashed #cbd5e1;border-radius:10px;color:#64748b;background:#f8fafc;text-align:center}
+.table-edit-grid{overflow:auto;border:1px solid #e5e7eb;border-radius:10px}
+.table-edit-header,.table-edit-row{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(140px,1fr);align-items:stretch;min-width:max-content}
+.table-edit-header{background:#f8fafc;border-bottom:1px solid #e5e7eb}
+.table-edit-row{border-bottom:1px solid #f1f5f9}
+.table-edit-row:last-child{border-bottom:none}
+.table-edit-cell{padding:8px;border-right:1px solid #f1f5f9;display:flex;align-items:center;gap:6px}
+.table-edit-head-cell{font-weight:700}
+.table-row-actions{width:86px;padding:8px;display:flex;align-items:center;justify-content:center;background:#fafafa}
+.feedback-field-list{max-height:260px;overflow:auto;display:flex;flex-direction:column;gap:6px;padding:8px;border:1px solid #e5e7eb;border-radius:10px;background:#fafafa}
+.feedback-value{margin-left:8px;color:#94a3b8;font-size:12px}
+.export-option{display:flex;margin:10px 0;padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px;background:#fafafa}
+.export-option span{margin-left:8px;color:#94a3b8;font-size:12px}
 
 /* Unknown template */
 .unknown-banner{display:flex;align-items:flex-start;gap:12px;padding:16px;background:linear-gradient(135deg,#fef3c7,#fef9c3);border:1px solid #fbbf24;border-radius:10px;margin-bottom:12px}

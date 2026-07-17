@@ -20,11 +20,18 @@ export default {
   result(jobId) {
     return API.get(`/result/${jobId}`)
   },
-  correct(jobId, fields) {
-    return API.post(`/correct/${jobId}`, { fields })
+  correct(jobId, payload) {
+    if (payload && (payload.fields || payload.field_labels || payload.manual_fields || payload.table_patch)) {
+      return API.post(`/correct/${jobId}`, payload)
+    }
+    return API.post(`/correct/${jobId}`, { fields: payload || {} })
   },
-  exportUrl(jobId, format) {
-    return `${API_BASE}/export/${jobId}?format=${format}`
+  exportUrl(jobId, format, options = {}) {
+    const params = new URLSearchParams({ format })
+    for (const [key, value] of Object.entries(options || {})) {
+      params.set(key, value ? '1' : '0')
+    }
+    return `${API_BASE}/export/${jobId}?${params.toString()}`
   },
   imageUrl(jobId) {
     return `${API_BASE}/image/${jobId}`
@@ -48,6 +55,9 @@ export default {
   },
   applyConfig(data) {
     return API.post('/config/apply', data)
+  },
+  fewshotFromResult(data) {
+    return API.post('/fewshot/from-result', data)
   },
   getVisionSettings() {
     return API.get('/vision-settings')

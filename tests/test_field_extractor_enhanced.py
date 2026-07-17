@@ -111,6 +111,37 @@ class EnhancedFieldExtractorTest(unittest.TestCase):
         result = extractor.extract({"header": blocks, "body": [], "table": []}, [100, 40], blocks=blocks)
         self.assertEqual(result["template"], "unknown")
 
+    def test_disabled_template_does_not_match(self):
+        extractor = FieldExtractor()
+        extractor.config = {
+            "validators": {},
+            "field_defaults": {
+                "value": "",
+                "cleaned": "",
+                "confidence": 0.0,
+                "status": "not_found",
+                "anchor_text": "",
+                "rect": [0, 0, 0, 0],
+            },
+            "templates": {
+                "disabled_demo": {
+                    "enabled": False,
+                    "hidden": True,
+                    "keywords": ["FROM:"],
+                    "fields": {
+                        "FROM": {"label": "FROM", "anchors": ["FROM:"], "position": "right"},
+                    },
+                    "output": ["FROM"],
+                }
+            },
+        }
+        blocks = [block("FROM:", 0, 0, 60, 20), block("Alice", 100, 0, 160, 20)]
+
+        result = extractor.extract({"header": blocks, "body": [], "table": []}, [200, 60], blocks=blocks)
+
+        self.assertEqual(result["template"], "unknown")
+        self.assertEqual(result["fields"], {})
+
     def test_template_schema_is_independent(self):
         extractor = FieldExtractor()
         extractor.config = {

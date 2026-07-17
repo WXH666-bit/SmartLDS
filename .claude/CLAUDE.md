@@ -87,7 +87,8 @@ PDF/图片 → preprocess.py → ocr_engine.py → layout_parser.py → field_ex
 | 版面分析 | `layout_parser.py` | Y投影分行 + 列对齐检测表格，分割为 header/body/table |
 | 字段提取 | `field_extractor.py` | 锚点法：三级值定位(内联+右侧+下方)，模糊匹配，正则清洗，版式识别，97.9% 准确率 |
 | Few-shot | `fewshot.py` | 从 1~5 份标注样本自动发现锚点+位置+校验规则，生成 YAML 配置 |
-| 配置 | `config.yaml` | 每版式自包含（keywords + fields + output），仅 validators 全局共享；新增版式只改 YAML |
+| 视觉兜底 | `vision_fallback.py` | 本地规则置信度不足时调用视觉大模型兜底（通义/Claude/OpenAI），可配置开关 |
+| 配置 | `config.yaml` | 每版式自包含（keywords + fields + output），source-label schema（字段 key 为显示名+canonical_key），仅 validators 全局共享 |
 
 ### Backend API Notes
 
@@ -192,7 +193,10 @@ KIE 模块根据 `template` 字段自动选择对应的 anchor 配置。
 - **版式配置可视化**：前端「版式管理」抽屉展示所有模板的字段、锚点、位置、校验规则，非技术人员可读。API: `GET /api/config`
 - **未识别版式处理**：上传未知版式时前端显示 OCR 文本块预览 + Few-shot 学习引导，不再静默失败
 - **识别历史**：顶栏「历史」按钮，列出所有已完成任务，点击新标签页查看。支持逐条删除 + 一键清空全部。API: `GET /api/history` + `DELETE /api/history/<id>` + `DELETE /api/history`
-- **自包含版式配置**：config.yaml 重构为每个模板自包含结构（keywords + fields + output 全在模板内部），不再使用全局 `fields`/`field_labels`/`output_schema`/`template_overrides` 四个分离 section。仅 `validators` 全局共享。旧格式文件首次加载时自动内存迁移。
+- **自包含版式配置**：config.yaml 重构为每个模板自包含结构（keywords + fields + output 全在模板内部），仅 `validators` 全局共享。旧格式文件首次加载时自动内存迁移。
+- **Source-Label Schema**：字段 key 使用文档原始显示名（如 `"Shipper"`、`"B/L No."`），通过 `canonical_key` 保留内部标识（`shipper`、`bl_no`）。每个版式用自己的字段名体系。
+- **视觉大模型兜底**：本地规则低置信度时自动调用视觉模型兜底。开关可控，兜底失败保留本地结果。前端「模型设置」面板可配置 provider/API Key/阈值。API: `GET/POST /api/vision/settings`。
+- **测试目录**：测试文件已迁至 `tests/` 目录。
 - **FUNSD 不是物流模板**：当前 `funsd_public` 只是用少量固定字段做跨域验证。FUNSD 本质是通用表单 question-answer linking，不适合继续强行套物流锚点抽取法。若要提升 FUNSD，应单独实现 FUNSD 模式，输出动态 question-answer pairs。
 - **手写识别不是当前强项**：PaddleOCR 默认通用印刷体模型适合清晰打印件。手写、连笔、低清扫描、表格线干扰属于不同 OCR/HTR 任务，不能只靠锚点规则修好。
 - Playwright Chromium 已安装在 `C:\Users\18246\AppData\Local\ms-playwright\`
@@ -219,10 +223,12 @@ KIE 模块根据 `template` 字段自动选择对应的 anchor 配置。
 - ✅ Day 10-11: 动态 Schema 配置，config.yaml 驱动，配置与逻辑分离。**已重构为自包含版式结构**，每模板独立管理字段+锚点+输出列表
 - ✅ Day 12: 表格结构恢复，列检测+行分类+多行合并，输出 {headers, rows} 结构化 JSON
 - ✅ Day 13-14: Flask 后端 API，14+ REST 端点（含 ZIP/批量/Few-shot/版式管理/历史/历史删除）
-- ✅ Day 15-18: Vue3 前端（Element Plus + 拖拽上传 + 批量处理 + Few-shot 批量文件配对 + 版式命名 + 历史删除 + 版式管理）
+- ✅ Day 15-18: Vue3 前端（Element Plus + Hero 首页 + 拖拽上传 + 批量处理 + Few-shot 批量文件配对 + 版式命名 + 历史删除 + 版式管理 + 模型设置面板）
 - ✅ 联调测试：16/16 API 端点通过，3 版式准确率 97.9%
-- ✅ Few-shot 版式自适应 + 内联标签提取 + GT值惩罚 + 一键应用到 config.yaml
+- ✅ Few-shot 版式自适应 + 内联标签提取 + GT值惩罚 + top 3 锚点 + 多行检测 + 一键应用到 config.yaml
 - ✅ GPU 加速：PaddleOCR RTX 4060，0.28s/份，9x 提速
+- ✅ Source-Label Schema：字段 key 使用文档显示名 + canonical_key 映射
+- ✅ 视觉大模型兜底：低置信度时自动调用视觉模型，前端可配置
 - ✅ 未识别版式处理：OCR 文本块预览 + Few-shot 引导
 - ✅ 工程硬化：安全 ZIP、job_id/path 校验、磁盘恢复、校正回显/导出一致、单张/批量 pipeline 统一
 - ⏳ Day 21: 收尾（README、课程设计报告），详见 `TASKS.md`

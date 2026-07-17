@@ -297,6 +297,63 @@ def _field_schema() -> dict[str, Any]:
     }
 
 
+def _template_enhancement_schema() -> dict[str, Any]:
+    return {
+        "type": "object",
+        "additionalProperties": False,
+        "properties": {
+            "template_keywords": {
+                "type": "array",
+                "items": {"type": "string"},
+            },
+            "fields": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "properties": {
+                        "field": {"type": "string"},
+                        "label": {"type": "string"},
+                        "anchors": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                        },
+                        "position": {
+                            "type": "string",
+                            "enum": ["right", "below", "inline"],
+                        },
+                        "value_pattern": {"type": "string"},
+                        "multi_line": {"type": "boolean"},
+                        "allow_shared": {"type": "boolean"},
+                        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+                        "notes": {"type": "string"},
+                    },
+                    "required": [
+                        "field",
+                        "label",
+                        "anchors",
+                        "position",
+                        "value_pattern",
+                        "multi_line",
+                        "allow_shared",
+                        "confidence",
+                        "notes",
+                    ],
+                },
+            },
+            "table_headers": {
+                "type": "array",
+                "items": {"type": "string"},
+            },
+            "warnings": {
+                "type": "array",
+                "items": {"type": "string"},
+            },
+        },
+        "required": ["template_keywords", "fields", "table_headers", "warnings"],
+    }
+
+
 def _data_url(image_path: str) -> str:
     mime = mimetypes.guess_type(image_path)[0] or "image/png"
     with open(image_path, "rb") as f:
@@ -447,7 +504,7 @@ class VisionFallbackClient:
         self.enabled = _env_bool("VISION_FALLBACK_ENABLED", bool(merged.get("enabled"))) if enabled is None else enabled
         self.model = model or os.getenv("VISION_FALLBACK_MODEL") or merged.get("model") or defaults["default_model"]
         self.base_url = str(merged.get("base_url") or defaults["default_base_url"]).rstrip("/")
-        self.timeout = timeout or _env_float("VISION_FALLBACK_TIMEOUT", 30.0)
+        self.timeout = timeout or _env_float("VISION_FALLBACK_TIMEOUT", 90.0)
         self.endpoint = endpoint or os.getenv("VISION_FALLBACK_ENDPOINT", "")
         if not self.endpoint:
             if self.provider == "openai":
@@ -494,6 +551,50 @@ class VisionFallbackClient:
         return {
             "success": False,
             "warning": f"视觉兜底失败，已回退本地规则结果：{last_error}",
+            "retryable": True,
+        }
+
+    def enhance_template_config(
+        self,
+        image_path: str,
+        blocks: list[dict[str, Any]] | None,
+        final_result: dict[str, Any],
+        template_name: str,
+        target_template: dict[str, Any],
+        selected_fields: list[str],
+        include_table: bool,
+    ) -> dict[str, Any]:
+        """让视觉模型基于当前结果给出 Few-shot 版式配置增强建议。"""
+        unavailable = self.unavailable_reason()
+        if unavailable:
+            return {"success": False, "warning": unavailable, "retryable": False}
+
+        prompt = self._build_template_enhancement_prompt(
+            blocks=blocks,
+            final_result=final_result,
+            template_name=template_name,
+            target_template=target_template,
+            selected_fields=selected_fields,
+            include_table=include_table,
+        )
+        payload = self._build_template_enhancement_payload(prompt, image_path)
+
+        last_error = ""
+        for attempt in range(2):
+            try:
+                response_json = self._post_json(payload)
+                text = _extract_output_text(response_json)
+                parsed = json.loads(text)
+                if isinstance(parsed, dict):
+                    return {"success": True, "result": parsed, "attempts": attempt + 1}
+                last_error = "模型未返回 JSON 对象"
+            except (json.JSONDecodeError, ValueError, urllib.error.URLError, TimeoutError, OSError) as e:
+                last_error = str(e)
+                time.sleep(0.2)
+
+        return {
+            "success": False,
+            "warning": f"AI 增强失败，已保留普通反哺结果：{last_error}",
             "retryable": True,
         }
 
@@ -554,6 +655,49 @@ class VisionFallbackClient:
             "response_format": {"type": "json_object"},
         }
 
+    def _build_template_enhancement_payload(self, prompt: str, image_path: str) -> dict[str, Any]:
+        image_url = _data_url(image_path)
+        schema = _template_enhancement_schema()
+        if self.provider == "openai":
+            return {
+                "model": self.model,
+                "input": [{
+                    "role": "user",
+                    "content": [
+                        {"type": "input_text", "text": prompt},
+                        {"type": "input_image", "image_url": image_url},
+                    ],
+                }],
+                "text": {
+                    "format": {
+                        "type": "json_schema",
+                        "name": "smartlds_template_enhancement",
+                        "schema": schema,
+                        "strict": True,
+                    }
+                },
+            }
+
+        schema_hint = json.dumps(schema, ensure_ascii=False)
+        return {
+            "model": self.model,
+            "messages": [{
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": (
+                            prompt
+                            + "\n\n请只返回合法 JSON，不要输出解释文字。JSON 必须满足这个结构："
+                            + schema_hint
+                        ),
+                    },
+                    {"type": "image_url", "image_url": {"url": image_url}},
+                ],
+            }],
+            "response_format": {"type": "json_object"},
+        }
+
     @staticmethod
     def _build_prompt(
         blocks: list[dict[str, Any]] | None,
@@ -579,5 +723,59 @@ class VisionFallbackClient:
             f"Local extractor template: {local_result.get('template')}\n"
             f"Local quality: {json.dumps(quality, ensure_ascii=False)}\n"
             f"Local extracted fields: {json.dumps(local_fields[:30], ensure_ascii=False)}\n"
+            f"OCR text hints:\n" + "\n".join(ocr_lines)
+        )
+
+    @staticmethod
+    def _build_template_enhancement_prompt(
+        blocks: list[dict[str, Any]] | None,
+        final_result: dict[str, Any],
+        template_name: str,
+        target_template: dict[str, Any],
+        selected_fields: list[str],
+        include_table: bool,
+    ) -> str:
+        ocr_lines = []
+        for b in (blocks or [])[:120]:
+            text = str(b.get("text", "")).strip()
+            if text:
+                ocr_lines.append(text)
+
+        field_hints = []
+        fields = final_result.get("fields", {}) if isinstance(final_result, dict) else {}
+        for key in selected_fields:
+            info = fields.get(key, {}) if isinstance(fields, dict) else {}
+            if isinstance(info, dict):
+                field_hints.append({
+                    "field": key,
+                    "label": info.get("label") or key,
+                    "value": info.get("corrected") or info.get("cleaned") or info.get("value") or "",
+                    "status": info.get("status", ""),
+                    "anchors": info.get("anchors") or info.get("anchor") or info.get("anchor_text") or "",
+                })
+
+        table = final_result.get("table", {}) if isinstance(final_result, dict) else {}
+        target_view = {
+            "keywords": target_template.get("keywords", []),
+            "has_table": target_template.get("has_table", False),
+            "table_headers": target_template.get("table_headers", []),
+            "fields": target_template.get("fields", {}),
+            "output": target_template.get("output", []),
+        }
+
+        return (
+            "You are helping improve a SmartLDS few-shot template configuration. "
+            "Do not extract arbitrary new fields. Only suggest improvements for selected fields. "
+            "Use visible text and OCR hints as evidence. Prefer original printed labels as anchors. "
+            "Return multiple useful anchors per field when possible. "
+            "Use position right/below/inline, set multi_line only for company/address-like long fields, "
+            "and include value_pattern only when the value format is obvious. "
+            "If a suggestion is uncertain, put it in warnings instead of inventing anchors.\n\n"
+            f"Template name: {template_name}\n"
+            f"Selected fields: {json.dumps(selected_fields, ensure_ascii=False)}\n"
+            f"Include table headers: {include_table}\n"
+            f"Current target template: {json.dumps(target_view, ensure_ascii=False)[:6000]}\n"
+            f"Final result field hints: {json.dumps(field_hints, ensure_ascii=False)}\n"
+            f"Current table headers: {json.dumps(table.get('headers', []), ensure_ascii=False)}\n"
             f"OCR text hints:\n" + "\n".join(ocr_lines)
         )

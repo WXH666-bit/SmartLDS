@@ -136,6 +136,11 @@ class VisionFallbackRoutingTest(unittest.TestCase):
         self.assertFalse(result["success"])
         self.assertIn("VISION_FALLBACK_ENABLED", result["warning"])
 
+    def test_default_timeout_gives_document_vision_enough_time(self):
+        client = VisionFallbackClient(api_key="dummy", enabled=True)
+
+        self.assertEqual(client.timeout, 90.0)
+
     def test_attach_quality_meta_preserves_local_rules_source(self):
         result = {"meta": {"template": "maersk_style"}, "fields": {}}
         quality = {

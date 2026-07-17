@@ -220,6 +220,268 @@ def write_json_file(path: str, data):
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 
+def config_yaml_path() -> str:
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.yaml")
+
+
+def _unique_key(base: str, used: set[str]) -> str:
+    key = (base or "field").strip() or "field"
+    if key not in used:
+        used.add(key)
+        return key
+    idx = 2
+    while f"{key}__{idx}" in used:
+        idx += 1
+    unique = f"{key}__{idx}"
+    used.add(unique)
+    return unique
+
+
+def normalize_corrections_payload(raw) -> dict:
+    """兼容旧 flat corrections，并归一化人工字段/表格补丁。"""
+    if not isinstance(raw, dict):
+        return {"fields": {}, "field_labels": {}, "manual_fields": [], "table_patch": None}
+
+    is_new_shape = any(k in raw for k in ("fields", "field_labels", "manual_fields", "table_patch"))
+    field_corrections = dict(raw.get("fields") or {}) if is_new_shape else dict(raw)
+    field_labels = {}
+    if is_new_shape and isinstance(raw.get("field_labels"), dict):
+        field_labels = {
+            str(key).strip(): str(value).strip()
+            for key, value in raw.get("field_labels", {}).items()
+            if str(key).strip() and str(value).strip()
+        }
+
+    manual_fields = []
+    used_manual_keys = set()
+    for item in (raw.get("manual_fields") or []):
+        if not isinstance(item, dict):
+            continue
+        label = str(item.get("label") or item.get("key") or "").strip()
+        value = str(item.get("value") or "").strip()
+        if not label:
+            continue
+        key = str(item.get("key") or label).strip()
+        key = _unique_key(key, used_manual_keys)
+        manual_fields.append({"key": key, "label": label, "value": value})
+
+    table_patch = raw.get("table_patch") if is_new_shape else None
+    normalized_table = None
+    if isinstance(table_patch, dict):
+        headers = [str(h).strip() for h in (table_patch.get("headers") or []) if str(h).strip()]
+        rows = []
+        for row in (table_patch.get("rows") or []):
+            if not isinstance(row, list):
+                continue
+            normalized = [str(cell) for cell in row]
+            if len(normalized) < len(headers):
+                normalized.extend([""] * (len(headers) - len(normalized)))
+            rows.append(normalized[:len(headers)] if headers else normalized)
+        if headers or rows:
+            normalized_table = {
+                "mode": "replace",
+                "headers": headers,
+                "rows": rows,
+            }
+
+    return {
+        "fields": field_corrections,
+        "field_labels": field_labels,
+        "manual_fields": manual_fields,
+        "table_patch": normalized_table,
+    }
+
+
+def _merge_unique_strings(existing, incoming, limit: int | None = None) -> list[str]:
+    merged = []
+    seen = set()
+    for value in list(existing or []) + list(incoming or []):
+        text = str(value or "").strip()
+        if not text or text in seen:
+            continue
+        merged.append(text)
+        seen.add(text)
+        if limit and len(merged) >= limit:
+            break
+    return merged
+
+
+def _field_feedback_anchors(field_name: str, info: dict) -> list[str]:
+    anchors = []
+    for key in ("anchor", "anchor_text"):
+        value = str((info or {}).get(key) or "").strip()
+        if value:
+            anchors.append(value)
+    label = str((info or {}).get("label") or field_name).strip()
+    anchors.extend([label, field_name])
+    return _merge_unique_strings([], anchors, limit=5)
+
+
+def _field_has_reliable_anchor(field_name: str, info: dict) -> bool:
+    anchors = _field_feedback_anchors(field_name, info)
+    label_like = {str(field_name or "").strip(), str((info or {}).get("label") or "").strip()}
+    explicit = [a for a in anchors if a and a not in label_like]
+    return bool(explicit) and (info or {}).get("source") != "manual"
+
+
+def _feedback_template_keywords(blocks: list[dict] | None, field_names: list[str]) -> list[str]:
+    keywords = []
+    for block in (blocks or [])[:12]:
+        text = str(block.get("text") or "").strip()
+        if 2 <= len(text) <= 60:
+            keywords.append(text)
+    keywords.extend(field_names[:6])
+    return _merge_unique_strings([], keywords, limit=8)
+
+
+def _valid_ai_position(position: str | None) -> str | None:
+    position = str(position or "").strip().lower()
+    return position if position in {"right", "below", "inline"} else None
+
+
+def apply_ai_template_enhancement(
+    target_template: dict,
+    enhancement: dict,
+    selected_fields: list[str],
+    include_table: bool,
+    warnings: list[str],
+) -> dict:
+    """把 AI 返回的版式增强建议安全合并到目标模板。"""
+    selected = {str(name).strip() for name in selected_fields if str(name).strip()}
+    changes = {
+        "applied": False,
+        "keywords": [],
+        "fields": [],
+        "table_headers": [],
+    }
+    if not isinstance(enhancement, dict):
+        warnings.append("AI 增强未返回有效配置对象")
+        return changes
+
+    keywords = [
+        str(item).strip()
+        for item in (enhancement.get("template_keywords") or [])
+        if str(item).strip()
+    ]
+    if keywords:
+        before = list(target_template.get("keywords", []) or [])
+        target_template["keywords"] = _merge_unique_strings(before, keywords, limit=12)
+        changes["keywords"] = [item for item in target_template["keywords"] if item not in before]
+
+    target_fields = target_template.setdefault("fields", {})
+    for item in (enhancement.get("fields") or []):
+        if not isinstance(item, dict):
+            continue
+        field_name = str(item.get("field") or item.get("label") or "").strip()
+        if not field_name:
+            continue
+        if selected and field_name not in selected:
+            warnings.append(f"AI 增强跳过未选字段 '{field_name}'")
+            continue
+
+        entry = target_fields.setdefault(field_name, {"label": item.get("label") or field_name})
+        if not isinstance(entry, dict):
+            entry = {"label": item.get("label") or field_name}
+            target_fields[field_name] = entry
+        entry["label"] = entry.get("label") or item.get("label") or field_name
+
+        anchors = [
+            str(anchor).strip()
+            for anchor in (item.get("anchors") or [])
+            if str(anchor).strip()
+        ]
+        if anchors:
+            entry["anchors"] = _merge_unique_strings(entry.get("anchors", []), anchors, limit=10)
+
+        position = _valid_ai_position(item.get("position"))
+        if position:
+            entry["position"] = position
+
+        value_pattern = str(item.get("value_pattern") or "").strip()
+        if value_pattern:
+            entry["value_pattern"] = value_pattern
+
+        for flag_name in ("multi_line", "allow_shared"):
+            if flag_name in item:
+                entry[flag_name] = bool(item.get(flag_name))
+
+        confidence = item.get("confidence")
+        if isinstance(confidence, (int, float)):
+            entry["ai_enhance_confidence"] = max(0.0, min(1.0, float(confidence)))
+
+        if field_name not in changes["fields"]:
+            changes["fields"].append(field_name)
+
+    if include_table:
+        headers = [
+            str(header).strip()
+            for header in (enhancement.get("table_headers") or [])
+            if str(header).strip()
+        ]
+        if headers:
+            before = list(target_template.get("table_headers", []) or [])
+            target_template["has_table"] = True
+            target_template["table_headers"] = _merge_unique_strings(before, headers)
+            changes["table_headers"] = [
+                item for item in target_template["table_headers"] if item not in before
+            ]
+
+    for warning in enhancement.get("warnings") or []:
+        text = str(warning).strip()
+        if text:
+            warnings.append(f"AI 增强：{text}")
+
+    changes["applied"] = bool(changes["keywords"] or changes["fields"] or changes["table_headers"])
+    return changes
+
+
+def ai_enhance_feedback_template(
+    *,
+    job_id: str,
+    template_name: str,
+    target_template: dict,
+    final_result: dict,
+    selected_fields: list[str],
+    include_table: bool,
+    warnings: list[str],
+) -> dict:
+    """调用视觉大模型增强反哺配置；失败时只写 warning，不中断普通反哺。"""
+    client = get_vision_fallback()
+    unavailable = client.unavailable_reason()
+    if unavailable:
+        warnings.append(f"AI 增强未执行：{unavailable}")
+        return {"applied": False, "keywords": [], "fields": [], "table_headers": []}
+
+    try:
+        file_path, file_type = find_original_file(job_id)
+        with tempfile.TemporaryDirectory(prefix="smartlds_ai_feedback_") as tmp_dir:
+            image_path = render_first_page_for_vision(file_path, file_type, tmp_dir)
+            result = client.enhance_template_config(
+                image_path=image_path,
+                blocks=load_blocks(job_id),
+                final_result=final_result,
+                template_name=template_name,
+                target_template=target_template,
+                selected_fields=selected_fields,
+                include_table=include_table,
+            )
+    except Exception as exc:
+        warnings.append(f"AI 增强失败，已保留普通反哺结果：{exc}")
+        return {"applied": False, "keywords": [], "fields": [], "table_headers": []}
+
+    if not result.get("success"):
+        warnings.append(f"AI 增强未执行：{result.get('warning') or '模型未返回有效建议'}")
+        return {"applied": False, "keywords": [], "fields": [], "table_headers": []}
+
+    return apply_ai_template_enhancement(
+        target_template,
+        result.get("result", {}),
+        selected_fields=selected_fields,
+        include_table=include_table,
+        warnings=warnings,
+    )
+
+
 def find_original_file(job_id: str):
     d = job_dir(job_id, create=False)
     if not os.path.isdir(d):
@@ -233,14 +495,138 @@ def find_original_file(job_id: str):
 
 def apply_corrections(result: dict | None, corrections: dict | None) -> dict:
     result_copy = copy.deepcopy(result or {})
-    clean_corrections = corrections or {}
+    normalized = normalize_corrections_payload(corrections or {})
+    clean_corrections = normalized["fields"]
     result_copy["corrections"] = clean_corrections
+    result_copy["field_labels"] = normalized["field_labels"]
+    result_copy["manual_fields"] = normalized["manual_fields"]
+    result_copy["table_patch"] = normalized["table_patch"]
+
     fields = result_copy.get("fields", {})
     if isinstance(fields, dict):
+        for fname, label in normalized["field_labels"].items():
+            if fname in fields and isinstance(fields[fname], dict):
+                fields[fname]["label"] = label
+                fields[fname]["label_corrected"] = True
+
         for fname, corrected_val in clean_corrections.items():
             if fname in fields and isinstance(fields[fname], dict):
                 fields[fname]["corrected"] = corrected_val
+                fields[fname]["status"] = "corrected"
+
+        used = set(fields.keys())
+        for item in normalized["manual_fields"]:
+            key = item["key"]
+            if key in used:
+                key = _unique_key(key, used)
+            else:
+                used.add(key)
+            value = item.get("value", "")
+            fields[key] = {
+                "label": item.get("label") or key,
+                "value": value,
+                "cleaned": value,
+                "corrected": value,
+                "confidence": 1.0,
+                "status": "manual_added",
+                "source": "manual",
+                "anchor": "",
+                "rect": [0, 0, 0, 0],
+                "canonical_key": None,
+            }
+
+    table_patch = normalized.get("table_patch")
+    if table_patch:
+        source = "manual_patch"
+        if result_copy.get("table", {}).get("headers") or result_copy.get("table", {}).get("rows"):
+            source = "ocr_with_manual_patch"
+        result_copy["table"] = {
+            "headers": table_patch.get("headers", []),
+            "rows": table_patch.get("rows", []),
+            "source": source,
+        }
+        result_copy.setdefault("meta", {})["manual_table"] = True
+
+    result_copy.setdefault("meta", {})["manual_fields_count"] = len(normalized["manual_fields"])
     return result_copy
+
+
+def _final_field_value(info: dict) -> str:
+    if not isinstance(info, dict):
+        return ""
+    for key in ("corrected", "cleaned", "value"):
+        value = info.get(key)
+        if value is not None and str(value).strip():
+            return str(value)
+    return ""
+
+
+def build_field_values(fields: dict | None) -> dict:
+    """生成面向人工查看/下游导入的字段→值简洁映射。"""
+    values = {}
+    for field_key, info in (fields or {}).items():
+        if not isinstance(info, dict):
+            continue
+        value = _final_field_value(info)
+        if not value and info.get("status") == "not_found":
+            continue
+        label = str(info.get("label") or field_key).strip()
+        if label:
+            values[label] = value
+    return values
+
+
+def export_options_from_args(args) -> dict:
+    """解析导出选项；默认完整明细 + 简洁键值 + 表格 + 元信息。"""
+    def as_bool(name: str, default: bool) -> bool:
+        value = args.get(name)
+        if value is None:
+            return default
+        return str(value).strip().lower() in {"1", "true", "yes", "on"}
+
+    preset = str(args.get("preset") or "combined").strip().lower()
+    if preset == "values":
+        defaults = {"field_values": True, "field_details": False, "table": False, "meta": False}
+    elif preset == "details":
+        defaults = {"field_values": False, "field_details": True, "table": False, "meta": True}
+    else:
+        defaults = {"field_values": True, "field_details": True, "table": True, "meta": True}
+
+    options = {
+        "field_values": as_bool("field_values", defaults["field_values"]),
+        "field_details": as_bool("field_details", defaults["field_details"]),
+        "table": as_bool("table", defaults["table"]),
+        "meta": as_bool("meta", defaults["meta"]),
+    }
+    if not any(options.values()):
+        options["field_values"] = True
+    return options
+
+
+def build_export_json_payload(result: dict, options: dict) -> dict:
+    """按导出选项组装 JSON，保留详细版并可附加 field_values 简洁版。"""
+    fields = result.get("fields", {}) if isinstance(result, dict) else {}
+    payload = {}
+
+    if options.get("field_details"):
+        payload.update(copy.deepcopy(result))
+
+    if options.get("field_values"):
+        payload["field_values"] = build_field_values(fields)
+
+    if options.get("table"):
+        payload["table"] = copy.deepcopy(result.get("table", {}))
+    elif not options.get("field_details"):
+        payload.pop("table", None)
+
+    if options.get("meta"):
+        payload["meta"] = copy.deepcopy(result.get("meta", {}))
+    elif not options.get("field_details"):
+        payload.pop("meta", None)
+
+    if not options.get("field_details"):
+        payload.pop("fields", None)
+    return payload
 
 
 def strip_debug(result: dict | None) -> dict:
@@ -566,7 +952,7 @@ def api_result(job_id):
     if request.args.get("debug") not in ("1", "true", "yes"):
         result = strip_debug(result)
     result["status"] = job["status"]
-    result["corrections"] = job.get("corrections", {})
+    result["corrections_payload"] = job.get("corrections", {})
     result["blocks"] = load_blocks(job_id)
 
     return jsonify(result)
@@ -584,15 +970,23 @@ def api_correct(job_id):
         return jsonify({"error": "任务不存在"}), 404
 
     data = request.get_json(silent=True)
-    if not data or "fields" not in data:
-        return jsonify({"error": "请求体需包含 fields 对象"}), 400
+    if not data:
+        return jsonify({"error": "请求体不能为空"}), 400
 
     if job.get("result") is None:
         return jsonify({"error": "尚未识别"}), 400
 
-    # 保存校正
-    corrections = dict(job.get("corrections") or {})
-    corrections.update(data["fields"])  # {field_name: corrected_value, ...}
+    # 保存校正：兼容旧 fields 格式，同时支持人工新增字段和表格补丁
+    existing = normalize_corrections_payload(job.get("corrections") or {})
+    incoming = normalize_corrections_payload(data)
+    corrections = {
+        "fields": dict(existing["fields"]),
+        "field_labels": dict(existing["field_labels"]),
+        "manual_fields": incoming["manual_fields"],
+        "table_patch": incoming["table_patch"],
+    }
+    corrections["fields"].update(incoming["fields"])
+    corrections["field_labels"].update(incoming["field_labels"])
     job["corrections"] = corrections
     job["status"] = "corrected"
 
@@ -603,7 +997,9 @@ def api_correct(job_id):
     return jsonify({
         "job_id": job_id,
         "status": "corrected",
-        "corrected_fields": list(corrections.keys()),
+        "corrected_fields": list(corrections["fields"].keys()),
+        "manual_fields_count": len(corrections["manual_fields"]),
+        "has_table_patch": bool(corrections["table_patch"]),
     })
 
 
@@ -622,79 +1018,88 @@ def api_export(job_id):
         return jsonify({"error": "尚未识别"}), 400
 
     export_format = request.args.get("format", "json").lower()
+    options = export_options_from_args(request.args)
 
     # 合并原始结果 + 校正
     result = strip_debug(apply_corrections(job["result"], job.get("corrections", {})))
     fields = result.get("fields", {})
 
     if export_format == "xlsx":
-        return _export_excel(job_id, result, fields)
+        return _export_excel(job_id, result, fields, options)
     else:
-        return _export_json(job_id, result)
+        return _export_json(job_id, result, options)
 
 
-def _export_json(job_id, result):
+def _export_json(job_id, result, options):
     """导出为 JSON 文件"""
+    payload = build_export_json_payload(result, options)
     export_path = os.path.join(job_dir(job_id), "export.json")
     with open(export_path, "w", encoding="utf-8") as f:
-        json.dump(result, f, ensure_ascii=False, indent=2)
+        json.dump(payload, f, ensure_ascii=False, indent=2)
     return send_file(export_path, as_attachment=True,
                      download_name=f"{job_id}_result.json",
                      mimetype="application/json")
 
 
-def _export_excel(job_id, result, fields):
+def _export_excel(job_id, result, fields, options):
     """导出为 Excel 文件"""
     from openpyxl import Workbook
     from openpyxl.styles import Font, PatternFill, Alignment
 
     wb = Workbook()
+    default_sheet = wb.active
+    wb.remove(default_sheet)
 
-    # ---- Sheet 1: 字段提取结果 ----
-    ws1 = wb.active
-    ws1.title = "字段提取"
-
-    # 表头样式
     header_font = Font(bold=True, size=11)
     header_fill = PatternFill(start_color="003882", end_color="003882", fill_type="solid")
     header_font_white = Font(bold=True, size=11, color="FFFFFF")
 
-    ws1.append(["字段名", "原始值", "清洗值", "置信度", "锚点文本", "校正值"])
-    for cell in ws1[1]:
-        cell.font = header_font_white
-        cell.fill = header_fill
-        cell.alignment = Alignment(horizontal="center")
-
-    corrections = result.get("corrections", {})
-    for fname, info in fields.items():
-        conf = info.get("confidence", 0)
-        display_name = info.get("label") or fname
-        ws1.append([
-            display_name,
-            info.get("value", ""),
-            info.get("cleaned", ""),
-            f"{conf:.0%}" if isinstance(conf, (int, float)) else str(conf),
-            info.get("anchor") or info.get("anchor_text", ""),
-            corrections.get(fname, ""),
-        ])
-
-    # 调整列宽
-    ws1.column_dimensions["A"].width = 20
-    ws1.column_dimensions["B"].width = 30
-    ws1.column_dimensions["C"].width = 30
-    ws1.column_dimensions["D"].width = 10
-    ws1.column_dimensions["E"].width = 20
-    ws1.column_dimensions["F"].width = 20
-
-    # ---- Sheet 2: 货物明细表格 ----
-    table = result.get("table", {})
-    if table and table.get("headers"):
-        ws2 = wb.create_sheet("货物明细")
-        ws2.append(table["headers"])
-        for cell in ws2[1]:
+    def style_header(row):
+        for cell in row:
             cell.font = header_font_white
             cell.fill = header_fill
             cell.alignment = Alignment(horizontal="center")
+
+    if options.get("field_values"):
+        ws_values = wb.create_sheet("字段键值")
+        ws_values.append(["字段", "值"])
+        style_header(ws_values[1])
+        for label, value in build_field_values(fields).items():
+            ws_values.append([label, value])
+        ws_values.column_dimensions["A"].width = 24
+        ws_values.column_dimensions["B"].width = 40
+
+    if options.get("field_details"):
+        ws1 = wb.create_sheet("字段明细")
+        ws1.append(["字段名", "原始值", "清洗值", "最终值", "状态", "置信度", "锚点文本"])
+        style_header(ws1[1])
+
+        for fname, info in fields.items():
+            conf = info.get("confidence", 0)
+            display_name = info.get("label") or fname
+            ws1.append([
+                display_name,
+                info.get("value", ""),
+                info.get("cleaned", ""),
+                _final_field_value(info),
+                info.get("status", ""),
+                f"{conf:.0%}" if isinstance(conf, (int, float)) else str(conf),
+                info.get("anchor") or info.get("anchor_text", ""),
+            ])
+
+        ws1.column_dimensions["A"].width = 22
+        ws1.column_dimensions["B"].width = 30
+        ws1.column_dimensions["C"].width = 30
+        ws1.column_dimensions["D"].width = 30
+        ws1.column_dimensions["E"].width = 14
+        ws1.column_dimensions["F"].width = 10
+        ws1.column_dimensions["G"].width = 22
+
+    table = result.get("table", {})
+    if options.get("table") and table and table.get("headers"):
+        ws2 = wb.create_sheet("表格数据")
+        ws2.append(table["headers"])
+        style_header(ws2[1])
 
         for row in table.get("rows", []):
             ws2.append(row)
@@ -702,23 +1107,30 @@ def _export_excel(job_id, result, fields):
         for col_letter in ["A", "B", "C", "D", "E", "F", "G", "H"]:
             ws2.column_dimensions[col_letter].width = 18
 
-    # ---- Sheet 3: 元信息 ----
-    ws3 = wb.create_sheet("元信息")
-    ws3.append(["键", "值"])
-    for cell in ws3[1]:
-        cell.font = header_font
-    meta = {
-        "任务 ID": job_id,
-        "文件名": result.get("filename", ""),
-        "识别版式": result.get("template", ""),
-        "图片尺寸": str(result.get("image_size", "")),
-        "文本块数": result.get("blocks_count", 0),
-        "识别时间": result.get("recognized_at", ""),
-    }
-    for k, v in meta.items():
-        ws3.append([k, str(v)])
-    ws3.column_dimensions["A"].width = 15
-    ws3.column_dimensions["B"].width = 40
+    if options.get("meta"):
+        ws3 = wb.create_sheet("元信息")
+        ws3.append(["键", "值"])
+        for cell in ws3[1]:
+            cell.font = header_font
+        meta = {
+            "任务 ID": job_id,
+            "文件名": result.get("filename", ""),
+            "识别版式": result.get("template", ""),
+            "图片尺寸": str(result.get("image_size", "")),
+            "文本块数": result.get("blocks_count", 0),
+            "识别时间": result.get("recognized_at", ""),
+            "包含人工字段": result.get("meta", {}).get("manual_fields_count", 0),
+            "包含人工表格": "是" if result.get("meta", {}).get("manual_table") else "否",
+        }
+        for k, v in meta.items():
+            ws3.append([k, str(v)])
+        ws3.column_dimensions["A"].width = 15
+        ws3.column_dimensions["B"].width = 40
+
+    if not wb.worksheets:
+        ws = wb.create_sheet("字段键值")
+        ws.append(["字段", "值"])
+        style_header(ws[1])
 
     export_path = os.path.join(job_dir(job_id), "export.xlsx")
     wb.save(export_path)
@@ -900,6 +1312,8 @@ def api_config():
 
     templates = []
     for tname, tcfg in config_templates.items():
+        if tcfg.get("hidden", False):
+            continue
         tpl_fields = tcfg.get("fields", {})
         output_list = tcfg.get("output", list(tpl_fields.keys()))
 
@@ -1038,6 +1452,178 @@ def api_config_apply():
 # ================================================================
 # API: 历史记录
 # ================================================================
+
+# ================================================================
+# API: 从识别结果反哺指定版式
+# ================================================================
+
+@app.route("/api/fewshot/from-result", methods=["POST"])
+def api_fewshot_from_result():
+    """
+    将当前结果页的最终字段/表格结构合并到指定版式。
+
+    Body:
+      {
+        "job_id": "...",
+        "template_name": "目标版式",
+        "field_names": ["字段A", "字段B"],
+        "include_table": true,
+        "ai_enhance": false,
+        "mode": "merge | create"
+      }
+    """
+    import yaml
+
+    data = request.get_json(silent=True) or {}
+    job_id = str(data.get("job_id") or "").strip()
+    template_name = str(data.get("template_name") or "").strip()
+    field_names = data.get("field_names") or []
+    include_table = bool(data.get("include_table", False))
+    ai_enhance = bool(data.get("ai_enhance", False))
+    mode = str(data.get("mode") or "merge").strip().lower()
+
+    if not is_valid_job_id(job_id):
+        return jsonify({"error": "invalid job_id"}), 400
+    if not template_name:
+        return jsonify({"error": "缺少 template_name"}), 400
+    if mode not in ("merge", "create"):
+        return jsonify({"error": "当前仅支持 merge 或 create 模式"}), 400
+    if not field_names and not include_table:
+        return jsonify({"error": "至少选择一个字段或勾选表格"}), 400
+
+    job = load_job(job_id)
+    if job is None:
+        return jsonify({"error": "任务不存在"}), 404
+    if job.get("result") is None:
+        return jsonify({"error": "尚未识别"}), 400
+
+    config_path = config_yaml_path()
+    if not os.path.exists(config_path):
+        return jsonify({"error": "config.yaml 不存在"}), 404
+
+    with open(config_path, "r", encoding="utf-8") as f:
+        cfg = yaml.safe_load(f) or {}
+
+    templates = cfg.setdefault("templates", {})
+    created = False
+    if mode == "create":
+        if template_name in templates:
+            return jsonify({"error": f"template '{template_name}' already exists"}), 409
+        selected_for_keywords = [str(name).strip() for name in field_names if str(name).strip()]
+        templates[template_name] = {
+            "keywords": _feedback_template_keywords(load_blocks(job_id), selected_for_keywords),
+            "has_table": False,
+            "enabled": True,
+            "hidden": False,
+            "fields": {},
+            "output": [],
+        }
+        created = True
+    if template_name not in templates:
+        return jsonify({"error": f"版式 '{template_name}' 不存在"}), 404
+
+    final_result = apply_corrections(job.get("result", {}), job.get("corrections", {}))
+    final_fields = final_result.get("fields", {}) or {}
+    target_template = templates[template_name]
+    target_fields = target_template.setdefault("fields", {})
+    output = target_template.setdefault("output", list(target_fields.keys()))
+
+    selected_fields = [str(name).strip() for name in field_names if str(name).strip()]
+    merged = []
+    added = []
+    updated = []
+    warnings = []
+
+    for field_name in selected_fields:
+        info = final_fields.get(field_name)
+        if not isinstance(info, dict):
+            warnings.append(f"字段 '{field_name}' 不在当前结果中，已跳过")
+            continue
+
+        value = str(info.get("corrected") or info.get("cleaned") or info.get("value") or "").strip()
+        status = info.get("status")
+        if status == "not_found" and not value:
+            warnings.append(f"字段 '{field_name}' 当前为空，已跳过")
+            continue
+
+        anchors = _field_feedback_anchors(field_name, info)
+        if not _field_has_reliable_anchor(field_name, info):
+            warnings.append(f"字段 '{field_name}' 缺少可靠 OCR 锚点，已保存字段结构但后续可能需要手动调锚点")
+
+        if field_name in target_fields and isinstance(target_fields[field_name], dict):
+            entry = target_fields[field_name]
+            entry["label"] = entry.get("label") or info.get("label") or field_name
+            entry["anchors"] = _merge_unique_strings(entry.get("anchors", []), anchors, limit=8)
+            entry.setdefault("position", info.get("position") or "right")
+            if info.get("canonical_key") and not entry.get("canonical_key"):
+                entry["canonical_key"] = info.get("canonical_key")
+            updated.append(field_name)
+        else:
+            entry = {
+                "label": info.get("label") or field_name,
+                "anchors": anchors,
+                "position": info.get("position") or "right",
+            }
+            if info.get("canonical_key"):
+                entry["canonical_key"] = info.get("canonical_key")
+            target_fields[field_name] = entry
+            added.append(field_name)
+
+        if field_name not in output:
+            output.append(field_name)
+        merged.append(field_name)
+
+    table_updated = False
+    if include_table:
+        table = final_result.get("table", {}) or {}
+        headers = [str(h).strip() for h in table.get("headers", []) if str(h).strip()]
+        if headers:
+            target_template["has_table"] = True
+            target_template["table_headers"] = _merge_unique_strings(
+                target_template.get("table_headers", []),
+                headers,
+            )
+            table_updated = True
+        else:
+            warnings.append("当前结果没有可保存的表头，未更新表格结构")
+
+    ai_changes = {"applied": False, "keywords": [], "fields": [], "table_headers": []}
+    if ai_enhance:
+        ai_changes = ai_enhance_feedback_template(
+            job_id=job_id,
+            template_name=template_name,
+            target_template=target_template,
+            final_result=final_result,
+            selected_fields=selected_fields,
+            include_table=include_table,
+            warnings=warnings,
+        )
+
+    if not merged and not table_updated:
+        return jsonify({"error": "没有可反哺的字段或表格", "warnings": warnings}), 400
+
+    target_template["output"] = output
+
+    with open(config_path, "w", encoding="utf-8") as f:
+        yaml.dump(cfg, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
+
+    get_extractor().reload_config()
+
+    return jsonify({
+        "success": True,
+        "mode": mode,
+        "created": created,
+        "template": template_name,
+        "fields_merged": merged,
+        "fields_added": added,
+        "fields_updated": updated,
+        "include_table": include_table,
+        "table_updated": table_updated,
+        "ai_enhanced": bool(ai_changes.get("applied")),
+        "ai_changes": ai_changes,
+        "warnings": warnings,
+    })
+
 
 @app.route("/api/history", methods=["GET"])
 def api_history():

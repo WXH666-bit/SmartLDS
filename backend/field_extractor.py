@@ -559,7 +559,11 @@ class FieldExtractor:
     def template_keywords(self):
         """版式关键词 {template_name: [keyword, ...]}"""
         templates = self.config.get("templates", {})
-        return {name: t.get("keywords", []) for name, t in templates.items()}
+        return {
+            name: t.get("keywords", [])
+            for name, t in templates.items()
+            if t.get("enabled", True) is not False
+        }
 
     @property
     def validators_cfg(self):
