@@ -156,15 +156,17 @@ def load_vision_settings(include_secret: bool = False) -> dict:
 
 def save_vision_settings(data: dict) -> dict:
     current = load_vision_settings(include_secret=True)
-    provider = str(data.get("provider") or current.get("provider") or "qwen")
+    current_provider = str(current.get("provider") or "qwen")
+    provider = str(data.get("provider") or current_provider)
     provider_cfg = provider_defaults(provider)
+    preserved_api_key = current.get("api_key", "") if provider == current_provider else ""
 
     updated = {
         "enabled": bool(data.get("enabled", current.get("enabled", False))),
         "provider": provider,
         "model": normalize_vision_model(provider, data.get("model") or provider_cfg["default_model"]),
         "base_url": str(data.get("base_url") or provider_cfg["default_base_url"]).strip(),
-        "api_key": current.get("api_key", ""),
+        "api_key": preserved_api_key,
         "threshold": data.get("threshold", current.get("threshold", 0.55)),
     }
 
@@ -616,6 +618,133 @@ def ai_enhance_feedback_template(
     )
 
 
+def _fewshot_final_result_from_sample(sample_gt: dict, learned_result: dict) -> dict:
+    fields = {}
+    for field_name, cfg in (learned_result.get("fields") or {}).items():
+        if not isinstance(cfg, dict):
+            continue
+        canonical_key = cfg.get("canonical_key") or field_name
+        value = sample_gt.get(canonical_key, sample_gt.get(field_name, ""))
+        if isinstance(value, (list, dict)):
+            value = ""
+        value = str(value or "").strip()
+        fields[field_name] = {
+            "label": cfg.get("label") or field_name,
+            "value": value,
+            "cleaned": value,
+            "confidence": 1.0 if value else 0.0,
+            "status": "extracted" if value else "not_found",
+            "anchors": cfg.get("anchors", []),
+            "canonical_key": canonical_key,
+        }
+    return {
+        "template": learned_result.get("template_name") or "fewshot_learned",
+        "fields": fields,
+        "table": {},
+        "meta": {},
+    }
+
+
+def _regenerate_fewshot_yaml(learned_result: dict) -> str:
+    from fewshot import FewShotLearner
+
+    learner = object.__new__(FewShotLearner)
+    return learner._generate_yaml(
+        learned_result.get("template_name") or "new_template",
+        learned_result.get("keywords") or [],
+        learned_result.get("fields") or {},
+        has_table=bool(learned_result.get("has_table")),
+        table_headers=learned_result.get("table_headers") or [],
+    )
+
+
+def apply_ai_fewshot_enhancement(
+    learned_result: dict,
+    enhancement: dict,
+    warnings: list[str],
+) -> dict:
+    """把 AI 版式建议合并回 /api/fewshot/learn 的结果，并重生成 YAML。"""
+    target_template = {
+        "keywords": list(learned_result.get("keywords") or []),
+        "has_table": bool(learned_result.get("has_table", False)),
+        "table_headers": list(learned_result.get("table_headers") or []),
+        "fields": learned_result.get("fields") or {},
+        "output": list((learned_result.get("fields") or {}).keys()),
+    }
+    selected_fields = list(target_template["fields"].keys())
+    changes = apply_ai_template_enhancement(
+        target_template,
+        enhancement,
+        selected_fields=selected_fields,
+        include_table=True,
+        warnings=warnings,
+    )
+
+    learned_result["keywords"] = target_template.get("keywords", [])
+    learned_result["fields"] = target_template.get("fields", {})
+    learned_result["has_table"] = bool(target_template.get("has_table", False))
+    learned_result["table_headers"] = target_template.get("table_headers", [])
+    learned_result["yaml_text"] = _regenerate_fewshot_yaml(learned_result)
+    learned_result["ai_enhanced"] = bool(changes.get("applied"))
+    learned_result["ai_changes"] = changes
+    return changes
+
+
+def ai_enhance_fewshot_learning(samples: list[tuple[str, dict]], learned_result: dict, warnings: list[str]) -> dict:
+    """Few-shot 学习后可选调用视觉模型增强配置；失败不影响本地学习结果。"""
+    client = get_vision_fallback()
+    unavailable = client.unavailable_reason()
+    if unavailable:
+        warnings.append(f"AI 增强未执行：{unavailable}")
+        return {"applied": False, "keywords": [], "fields": [], "table_headers": []}
+
+    if not samples:
+        warnings.append("AI 增强未执行：缺少 Few-shot 样本")
+        return {"applied": False, "keywords": [], "fields": [], "table_headers": []}
+
+    try:
+        sample_path, sample_gt = samples[0]
+        file_type = os.path.splitext(sample_path)[1].lstrip(".").lower() or "pdf"
+        with tempfile.TemporaryDirectory(prefix="smartlds_fewshot_ai_") as tmp_dir:
+            image_path = render_first_page_for_vision(sample_path, file_type, tmp_dir)
+            blocks = []
+            try:
+                if file_type == "pdf":
+                    ocr_pages = get_engine().recognize_pdf(sample_path)
+                    blocks = ocr_pages[0].get("blocks", []) if ocr_pages else []
+                else:
+                    from PIL import Image
+                    with Image.open(sample_path) as img:
+                        blocks = get_engine().recognize_image(img)
+            except Exception as exc:
+                warnings.append(f"AI 增强 OCR 提示生成失败，继续仅用图像增强：{exc}")
+
+            result = client.enhance_template_config(
+                image_path=image_path,
+                blocks=blocks,
+                final_result=_fewshot_final_result_from_sample(sample_gt, learned_result),
+                template_name=learned_result.get("template_name") or "fewshot_learned",
+                target_template={
+                    "keywords": learned_result.get("keywords", []),
+                    "has_table": bool(learned_result.get("has_table", False)),
+                    "table_headers": learned_result.get("table_headers", []),
+                    "fields": learned_result.get("fields", {}),
+                    "output": list((learned_result.get("fields") or {}).keys()),
+                },
+                selected_fields=list((learned_result.get("fields") or {}).keys()),
+                include_table=True,
+            )
+    except Exception as exc:
+        warnings.append(f"AI 增强失败，已保留普通 Few-shot 学习结果：{exc}")
+        return {"applied": False, "keywords": [], "fields": [], "table_headers": []}
+
+    if not result.get("success"):
+        warnings.append(f"AI 增强未执行：{result.get('warning') or '模型未返回有效建议'}")
+        return {"applied": False, "keywords": [], "fields": [], "table_headers": []}
+
+    return apply_ai_fewshot_enhancement(learned_result, result.get("result", {}), warnings)
+
+
 def find_original_file(job_id: str):
     d = job_dir(job_id, create=False)
     if not os.path.isdir(d):
@@ -750,8 +879,11 @@ def build_export_json_payload(result: dict, options: dict) -> dict:
 
     if options.get("table"):
         payload["table"] = copy.deepcopy(result.get("table", {}))
+        if result.get("tables"):
+            payload["tables"] = copy.deepcopy(result.get("tables", []))
     elif not options.get("field_details"):
         payload.pop("table", None)
+        payload.pop("tables", None)
 
     if options.get("meta"):
         payload["meta"] = copy.deepcopy(result.get("meta", {}))
@@ -1229,14 +1361,27 @@ def _export_excel(job_id, result, fields, options):
         ws1.column_dimensions["F"].width = 10
         ws1.column_dimensions["G"].width = 22
 
-    table = result.get("table", {})
-    if options.get("table") and table and table.get("headers"):
-        ws2 = wb.create_sheet("表格数据")
-        ws2.append(table["headers"])
-        style_header(ws2[1])
+    tables = result.get("tables")
+    if not isinstance(tables, list) or not tables:
+        table = result.get("table", {})
+        tables = [table] if table and table.get("headers") else []
+    tables = [table for table in tables if isinstance(table, dict) and table.get("headers")]
 
-        for row in table.get("rows", []):
-            ws2.append(row)
+    if options.get("table") and tables:
+        ws2 = wb.create_sheet("表格数据")
+        for table_index, table in enumerate(tables):
+            if table_index:
+                ws2.append([])
+            title = str(table.get("title") or f"表格 {table_index + 1}").strip()
+            ws2.append([title])
+            title_row = ws2[ws2.max_row]
+            for cell in title_row:
+                cell.font = header_font
+            ws2.append(table["headers"])
+            style_header(ws2[ws2.max_row])
+
+            for row in table.get("rows", []):
+                ws2.append(row)
 
         for col_letter in ["A", "B", "C", "D", "E", "F", "G", "H"]:
             ws2.column_dimensions[col_letter].width = 18
@@ -1537,6 +1682,8 @@ def api_config_apply():
     keywords = data.get("keywords", [])
     fields = data.get("fields", {})
     validators = data.get("validators", {})
+    table_headers = [str(h).strip() for h in (data.get("table_headers") or []) if str(h).strip()]
+    has_table = bool(data.get("has_table")) or bool(table_headers)
 
     # 构建自包含模板条目
     template_fields = {}
@@ -1570,10 +1717,12 @@ def api_config_apply():
         cfg["templates"] = {}
     cfg["templates"][template_name] = {
         "keywords": keywords,
-        "has_table": False,
+        "has_table": has_table,
         "fields": template_fields,
         "output": list(fields.keys()),
     }
+    if table_headers:
+        cfg["templates"][template_name]["table_headers"] = table_headers
 
     with open(config_path, "w", encoding="utf-8") as f:
         yaml.dump(cfg, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
@@ -1887,6 +2036,7 @@ def api_fewshot_learn():
 
     files = request.files.getlist("files")
     gt_strs = request.form.getlist("gts")
+    ai_enhance = str(request.form.get("ai_enhance") or "").strip().lower() in {"1", "true", "yes", "on"}
 
     if len(files) != len(gt_strs):
         return jsonify({"error": "files 和 gts 数量不匹配"}), 400
@@ -1908,6 +2058,15 @@ def api_fewshot_learn():
 
         learner = FewShotLearner()
         result = learner.learn(samples)
+        result.setdefault("ai_enhanced", False)
+        result.setdefault("ai_changes", {"applied": False, "keywords": [], "fields": [], "table_headers": []})
+        warnings = []
+        if ai_enhance:
+            ai_changes = ai_enhance_fewshot_learning(samples, result, warnings)
+            result["ai_enhanced"] = bool(ai_changes.get("applied"))
+            result["ai_changes"] = ai_changes
+        if warnings:
+            result["warnings"] = warnings
 
         return jsonify({
             "success": True,

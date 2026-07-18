@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import {
+  buildDisplayTables,
   buildResultPreviewJson,
   finishFieldEdit,
   finishFieldLabelEdit,
@@ -77,9 +78,56 @@ assert.equal(preview.fields.origin.status, 'corrected')
 assert.equal(preview.meta.preview_unsaved, true)
 assert.equal(baseResult.fields.origin.value, '', 'JSON 预览不应直接污染原始 result 对象')
 
+const multiTableResult = {
+  fields: {
+    'TO:': {
+      label: 'TO:',
+      value: 'K. A. Sparrow',
+      cleaned: 'K. A. Sparrow',
+      status: 'extracted',
+    },
+  },
+  table: {
+    title: 'WITHIN THE REGION',
+    headers: ['NAME OF ACCOUNT', 'NO. OF STORES'],
+    rows: [['Sico Serve', '18']],
+  },
+  tables: [
+    {
+      title: 'WITHIN THE REGION',
+      headers: ['NAME OF ACCOUNT', 'NO. OF STORES'],
+      rows: [['Sico Serve', '18']],
+      confidence: 0.91,
+    },
+    {
+      title: 'OUTSIDE THE REGION',
+      headers: ['NAME OF ACCOUNT', 'NO. OF STORES'],
+      rows: [['Kroger', '21']],
+      confidence: 0.89,
+    },
+  ],
+  meta: {},
+}
+const multiTablePreview = JSON.parse(buildResultPreviewJson(multiTableResult, [], {
+  title: 'WITHIN THE REGION',
+  headers: ['NAME OF ACCOUNT', 'NO. OF STORES'],
+  rows: [{ 0: 'Sico Serve', 1: '18' }],
+  source: 'vision_fallback',
+}))
+assert.equal(multiTablePreview.tables.length, 2, '多表格预览应保留完整 tables 数组')
+assert.equal(multiTablePreview.tables[1].title, 'OUTSIDE THE REGION')
+assert.deepEqual(multiTablePreview.table.rows, [['Sico Serve', '18']], '旧 table 兼容字段应继续可用')
+
+const displayTables = buildDisplayTables(multiTableResult)
+assert.equal(displayTables.length, 2, '结果页应展示所有视觉兜底表格，而不是只展示第一个 table')
+assert.equal(displayTables[0].title, 'WITHIN THE REGION')
+assert.deepEqual(displayTables[1].rows, [{ 0: 'Kroger', 1: '21' }])
+
 const appVue = fs.readFileSync(new URL('../frontend/src/App.vue', import.meta.url), 'utf8')
 assert.match(appVue, /class="json-collapse"/, '结果页应保留第一版的普通 JSON 折叠块')
 assert.match(appVue, /title="JSON"/, 'JSON 折叠块标题应回到简单的 JSON')
+assert.match(appVue, /fsAiEnhance/, 'Few-shot 学习弹窗应提供 AI 增强开关状态')
+assert.match(appVue, /fd\.append\('ai_enhance', fsAiEnhance\.value \? '1' : '0'\)/, 'Few-shot 学习请求应把 AI 增强开关传给后端')
 assert.doesNotMatch(appVue, /result-preview-collapse/, '不应再显示导出预览增强面板')
 assert.doesNotMatch(appVue, /resultPreviewTab/, '不应再保留字段键值预览的切换状态')
 assert.doesNotMatch(appVue, /导出预览 \/ JSON/, '不应再显示导出预览标题')

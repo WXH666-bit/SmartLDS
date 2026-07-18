@@ -155,7 +155,7 @@
           <span v-if="meta.confidence !== undefined" class="meta-item">置信度 {{ Math.round((meta.confidence || 0)*100) }}%</span>
           <span class="meta-item">字段 {{ meta.fields_extracted }}/{{ meta.fields_total }}</span>
           <span class="meta-item">OCR {{ meta.ocr_blocks }} 块</span>
-          <span v-if="tableData.headers.length" class="meta-item">表格 {{ tableData.rows.length }} 行</span>
+          <span v-if="tableList.length" class="meta-item">表格 {{ displayTableRowCount }} 行</span>
         </div>
         <div class="toolbar-right">
           <el-button size="small" type="primary" plain @click="openAddFieldDialog">添加字段</el-button>
@@ -231,15 +231,21 @@
               <el-button v-if="row.manual" size="small" text type="danger" @click="removeManualField(row.name)">删除</el-button>
             </div>
           </div>
-          <div v-if="tableData.headers.length || tableData.rows.length" class="cargo-box">
+          <div v-if="tableList.length" class="cargo-box">
             <div class="section-title">货物明细</div>
             <div class="table-tools">
               <el-tag v-if="tableData.source" size="small" effect="plain">{{ tableData.source }}</el-tag>
               <el-button size="small" text type="primary" @click="openTableEditor">编辑</el-button>
             </div>
-            <el-table :data="tableData.rows" size="small" stripe border max-height="240">
-              <el-table-column v-for="(h,i) in tableData.headers" :key="i" :prop="String(i)" :label="h" min-width="90" show-overflow-tooltip />
-            </el-table>
+            <div v-for="(table, tableIndex) in tableList" :key="tableIndex" class="cargo-table-block">
+              <div v-if="table.title || table.confidence !== undefined" class="cargo-table-title">
+                <span>{{ table.title || `表格 ${tableIndex + 1}` }}</span>
+                <el-tag v-if="table.confidence !== undefined" size="small" effect="plain">{{ Math.round((table.confidence || 0)*100) }}%</el-tag>
+              </div>
+              <el-table :data="table.rows" size="small" stripe border max-height="240">
+                <el-table-column v-for="(h,i) in table.headers" :key="i" :prop="String(i)" :label="h" min-width="90" show-overflow-tooltip />
+              </el-table>
+            </div>
           </div>
           <el-collapse class="json-collapse">
             <el-collapse-item title="JSON"><pre class="json-block">{{ jsonText }}</pre></el-collapse-item>
@@ -430,10 +436,10 @@
         </el-select>
       </el-form-item>
       <el-form-item label="API Key">
-        <el-input v-model="visionSettings.api_key" type="password" show-password clearable placeholder="留空则保留已保存的 key" />
+        <el-input v-model="visionSettings.api_key" type="password" show-password clearable :placeholder="visionApiKeyPlaceholder" />
         <div class="form-hint">
           <span v-if="visionSettings.has_api_key">已保存：{{ visionSettings.masked_api_key }}</span>
-          <span v-else>尚未保存 API Key</span>
+          <span v-else>{{ visionApiKeyHint }}</span>
         </div>
       </el-form-item>
       <el-form-item label="触发阈值">
@@ -441,7 +447,7 @@
       </el-form-item>
       <el-form-item label="接口地址">
         <el-input v-model="visionSettings.base_url" clearable />
-        <div class="form-hint">千问默认使用 DashScope OpenAI 兼容模式；通常不用改。</div>
+        <div class="form-hint">{{ visionBaseUrlHint }}</div>
       </el-form-item>
       <div class="vision-actions">
         <el-button type="danger" plain @click="clearVisionSettings">清除保存</el-button>
@@ -493,15 +499,31 @@
       <span style="font-size:12px;color:#64748b;white-space:nowrap">版式名称：</span>
       <el-input v-model="fsTemplateName" size="small" placeholder="自动生成" style="flex:1;max-width:240px" clearable />
       <div style="flex:1"></div>
+      <el-switch
+        v-model="fsAiEnhance"
+        size="small"
+        active-text="AI 增强"
+      />
       <el-button size="small" type="primary" :loading="fsLearning" @click="doFewshotLearn" :disabled="fsPairs.length<2">开始学习</el-button>
     </div>
+    <p v-if="fsAiEnhance && !visionSettings.enabled" class="fs-ai-hint">需要先在“模型设置”中启用视觉兜底并保存模型设置。</p>
 
     <!-- Result -->
     <div v-if="fsResult" class="fs-result">
       <div class="section-title">学习结果</div>
       <p style="font-size:12px;color:#888;margin:0 0 8px">
         版式: <b>{{ fsResult.template_name }}</b> · {{ fsResult.keywords.length }} 关键词 · {{ Object.keys(fsResult.fields||{}).length }} 字段
+        <el-tag v-if="fsResult.ai_enhanced" size="small" type="success" effect="plain" style="margin-left:8px">AI 已增强</el-tag>
       </p>
+      <el-alert
+        v-for="(warning, index) in (fsResult.warnings || [])"
+        :key="index"
+        type="warning"
+        show-icon
+        :closable="false"
+        :title="warning"
+        style="margin-bottom:8px"
+      />
       <pre class="json-block" style="max-height:280px">{{ fsResult.yaml_text }}</pre>
       <el-button size="small" type="success" @click="fsApplyResult" style="margin-top:8px">应用到系统</el-button>
     </div>
@@ -562,6 +584,7 @@ import { ElMessage } from 'element-plus'
 import { Loading } from '@element-plus/icons-vue'
 import api from './api/index.js'
 import {
+  buildDisplayTables,
   buildResultPreviewJson,
   finishFieldEdit,
   finishFieldLabelEdit,
@@ -581,7 +604,8 @@ const viewingJobId = ref('')
 const viewingData = ref(null)        // cached result for current view
 const meta = reactive({})
 const fieldRows = ref([])
-const tableData = reactive({ headers: [], rows: [], source: '' })
+const tableData = reactive({ title: '', headers: [], rows: [], source: '', confidence: undefined })
+const tableList = ref([])
 const tableDirty = ref(false)
 const jsonText = ref('')
 const imageUrl = ref('')
@@ -640,6 +664,28 @@ const visionSettings = reactive({
 const currentVisionModels = computed(() => {
   const provider = visionOptions.providers.find(p => p.key === visionSettings.provider)
   return provider?.models || []
+})
+const currentVisionProvider = computed(() =>
+  visionOptions.providers.find(p => p.key === visionSettings.provider) || {}
+)
+const visionApiKeyPlaceholder = computed(() => {
+  const hint = currentVisionProvider.value.api_key_hint || 'API Key'
+  return `留空则保留已保存的 ${hint}`
+})
+const visionApiKeyHint = computed(() => {
+  if (currentVisionProvider.value.requires_api_key === false) {
+    return '本地兼容服务可留空；Ollama 会使用 ollama 作为占位 key。'
+  }
+  return `尚未保存 ${currentVisionProvider.value.api_key_hint || 'API Key'}`
+})
+const visionBaseUrlHint = computed(() => {
+  if (visionSettings.provider === 'custom') {
+    return '自定义模型使用 OpenAI-compatible chat/completions；Ollama 通常填 http://localhost:11434/v1。'
+  }
+  if (visionSettings.provider === 'openai') {
+    return 'OpenAI 默认使用 Responses API；通常不用改。'
+  }
+  return '千问默认使用 DashScope OpenAI 兼容模式；通常不用改。'
 })
 
 // History
@@ -759,6 +805,9 @@ const extractionSourceLabel = computed(() => {
   if (meta.extraction_source === 'local_rules_with_vision_patch') return '规则+视觉修补'
   return '规则识别'
 })
+const displayTableRowCount = computed(() =>
+  tableList.value.reduce((total, table) => total + (table.rows?.length || 0), 0)
+)
 
 function formatSize(bytes) {
   if (!bytes || bytes < 0) return '-'
@@ -945,9 +994,13 @@ function showResult(data) {
       editVal: display
     }
   })
-  tableData.headers = table.headers || []
-  tableData.rows = (table.rows||[]).map((row,i) => { const o={}; row.forEach((c,j)=>o[String(j)]=c); return o })
-  tableData.source = table.source || ''
+  tableList.value = buildDisplayTables(data)
+  const firstTable = tableList.value[0] || { title: '', headers: table.headers || [], rows: [], source: table.source || '', confidence: table.confidence }
+  tableData.title = firstTable.title || table.title || ''
+  tableData.headers = firstTable.headers || []
+  tableData.rows = firstTable.rows || []
+  tableData.source = firstTable.source || table.source || ''
+  tableData.confidence = firstTable.confidence
   tableDirty.value = false
   manualDirty.value = false
   syncJsonPreview()
@@ -982,6 +1035,7 @@ const fsPairs = ref([])       // [{baseName, pdf:File, json:File, pdfName, jsonN
 const fsUnpaired = ref([])    // [{name, type}]
 const fsDragOver = ref(false)
 const fsTemplateName = ref('')
+const fsAiEnhance = ref(false)
 const fsLearning = ref(false)
 const fsResult = ref(null)
 
@@ -1063,6 +1117,7 @@ async function doFewshotLearn() {
   try {
     const fd = new FormData()
     valid.forEach(s => { fd.append('files', s.pdf); fd.append('gts', s.jsonContent) })
+    fd.append('ai_enhance', fsAiEnhance.value ? '1' : '0')
     const { data } = await api.fewshotLearn(fd)
     if (data.success) {
       fsResult.value = data.result
@@ -1085,7 +1140,9 @@ async function fsApplyResult() {
       template_name: name,
       keywords: fsResult.value.keywords,
       fields: fsResult.value.fields,
-      validators: fsResult.value.validators || {}
+      validators: fsResult.value.validators || {},
+      has_table: !!fsResult.value.has_table,
+      table_headers: fsResult.value.table_headers || []
     })
     ElMessage.success(`已应用版式 "${data.template}"，添加 ${data.fields_count} 个字段`)
     showFewshot.value = false
@@ -1093,6 +1150,7 @@ async function fsApplyResult() {
     fsPairs.value = []
     fsUnpaired.value = []
     fsTemplateName.value = ''
+    fsAiEnhance.value = false
   } catch (e) { ElMessage.error('应用失败: ' + (e.response?.data?.error || e.message)) }
 }
 
@@ -1100,6 +1158,7 @@ function startFewshot() {
   fsPairs.value = []
   fsUnpaired.value = []
   fsTemplateName.value = ''
+  fsAiEnhance.value = false
   fsResult.value = null
   showFewshot.value = true
 }
@@ -1256,9 +1315,11 @@ function removeTableRow(index) {
 function saveTableEditor() {
   const headers = tableEditor.headers.map(h => String(h || '').trim()).filter(Boolean)
   if (!headers.length) {
+    tableData.title = ''
     tableData.headers = []
     tableData.rows = []
     tableData.source = 'manual_patch'
+    tableData.confidence = undefined
   } else {
     tableEditor.headers = headers
     normalizeTableEditorRows()
@@ -1266,6 +1327,15 @@ function saveTableEditor() {
     tableData.rows = tableArraysToObjects(headers, tableEditor.rows)
     tableData.source = tableData.source || 'manual_patch'
   }
+  const firstTable = {
+    title: tableData.title,
+    headers: [...tableData.headers],
+    rows: [...tableData.rows],
+    source: tableData.source,
+    confidence: tableData.confidence,
+  }
+  if (tableList.value.length) tableList.value[0] = firstTable
+  else if (firstTable.headers.length || firstTable.rows.length) tableList.value = [firstTable]
   tableDirty.value = true
   syncJsonPreview()
   showTableEditor.value = false
@@ -1539,6 +1609,9 @@ function confirmExport() {
 .section-title-row,.table-tools{display:flex;align-items:center;gap:8px}
 .section-title-row span:first-child{flex:1}
 .table-tools{justify-content:flex-end;margin:-4px 0 8px}
+.cargo-table-block{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.cargo-table-block:first-of-type{margin-top:0}
+.cargo-table-title{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;font-weight:800;color:#334155}
 .json-collapse{margin-top:8px}
 .json-block{background:#1e293b;color:#a5b4c2;padding:14px;font-size:11px;font-family:Consolas,monospace;max-height:300px;overflow:auto;white-space:pre-wrap;border-radius:8px;margin:0;line-height:1.5}
 
@@ -1588,6 +1661,7 @@ function confirmExport() {
 .fs-pair-detail{flex:1;font-size:11px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .fs-pair-check{font-size:14px;color:#10b981;flex-shrink:0}
 .fs-result{margin-top:16px}
+.fs-ai-hint{font-size:11px;color:#a16207;margin:8px 0 0;text-align:right}
 
 /* History */
 .history-list{display:flex;flex-direction:column;gap:8px}

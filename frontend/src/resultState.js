@@ -17,6 +17,37 @@ export function finishFieldLabelEdit(row) {
   return row
 }
 
+function normalizeDisplayTable(table = {}) {
+  const headers = Array.isArray(table.headers)
+    ? table.headers.map(header => String(header ?? '').trim()).filter(Boolean)
+    : []
+  const rows = Array.isArray(table.rows)
+    ? table.rows.map(row => {
+      const objectRow = {}
+      headers.forEach((_, index) => {
+        objectRow[String(index)] = String(Array.isArray(row) ? row[index] ?? '' : row?.[String(index)] ?? '')
+      })
+      return objectRow
+    })
+    : []
+  return {
+    title: String(table.title ?? '').trim(),
+    headers,
+    rows,
+    source: table.source || '',
+    confidence: table.confidence,
+  }
+}
+
+export function buildDisplayTables(result = {}) {
+  const rawTables = Array.isArray(result.tables) && result.tables.length
+    ? result.tables
+    : (result.table ? [result.table] : [])
+  return rawTables
+    .map(table => normalizeDisplayTable(table))
+    .filter(table => table.headers.length || table.rows.length)
+}
+
 export function buildResultPreview(result = {}, fieldRows = [], tableData = null) {
   const preview = JSON.parse(JSON.stringify(result || {}))
   const fields = preview.fields && typeof preview.fields === 'object' ? preview.fields : {}
@@ -59,11 +90,17 @@ export function buildResultPreview(result = {}, fieldRows = [], tableData = null
 
   if (tableData?.headers) {
     preview.table = preview.table && typeof preview.table === 'object' ? preview.table : {}
+    preview.table.title = tableData.title || preview.table.title || ''
     preview.table.headers = [...(tableData.headers || [])]
     preview.table.rows = (tableData.rows || []).map(row =>
       preview.table.headers.map((_, index) => String(row?.[String(index)] ?? ''))
     )
     if (tableData.source) preview.table.source = tableData.source
+    if (Array.isArray(preview.tables) && preview.tables.length) {
+      preview.tables[0] = { ...preview.tables[0], ...preview.table }
+    } else if (preview.table.headers.length || preview.table.rows.length) {
+      preview.tables = [{ ...preview.table }]
+    }
   }
 
   preview.meta = preview.meta && typeof preview.meta === 'object' ? preview.meta : {}

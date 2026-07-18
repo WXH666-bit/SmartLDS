@@ -9,6 +9,7 @@ sys.path.insert(0, os.path.join(ROOT_DIR, "backend"))
 
 from vision_fallback import (
     VisionFallbackClient,
+    _field_schema,
     attach_quality_meta,
     default_vision_settings,
     evaluate_recognition_quality,
@@ -16,6 +17,7 @@ from vision_fallback import (
     normalize_vision_model,
     normalize_vision_payload,
     provider_defaults,
+    vision_settings_options,
 )
 
 
@@ -32,6 +34,43 @@ class VisionFallbackRoutingTest(unittest.TestCase):
         self.assertEqual(provider_defaults("qwen")["default_model"], "qwen3.6-plus")
         self.assertEqual(default_vision_settings()["model"], "qwen3.6-plus")
         self.assertEqual(normalize_vision_model("qwen", "qwen-vl-plus"), "qwen3.6-plus")
+
+    def test_custom_provider_defaults_to_local_openai_compatible_model(self):
+        custom = provider_defaults("custom")
+        providers = {item["key"] for item in vision_settings_options()["providers"]}
+
+        self.assertIn("custom", providers)
+        self.assertEqual(custom["default_model"], "llama3.2-vision")
+        self.assertEqual(custom["default_base_url"], "http://localhost:11434/v1")
+        self.assertFalse(custom["requires_api_key"])
+
+    def test_custom_provider_uses_chat_completions_without_required_api_key(self):
+        client = VisionFallbackClient(
+            enabled=True,
+            settings={
+                "provider": "custom",
+                "model": "llama3.2-vision",
+                "base_url": "http://localhost:11434/v1",
+                "api_key": "",
+            },
+        )
+
+        self.assertIsNone(client.unavailable_reason())
+        self.assertEqual(client.api_key, "ollama")
+        self.assertEqual(client.endpoint, "http://localhost:11434/v1/chat/completions")
+
+    def test_custom_provider_accepts_full_chat_completions_endpoint(self):
+        client = VisionFallbackClient(
+            api_key="local-key",
+            enabled=True,
+            settings={
+                "provider": "custom",
+                "model": "my-vision-model",
+                "base_url": "http://localhost:9000/v1/chat/completions",
+            },
+        )
+
+        self.assertEqual(client.endpoint, "http://localhost:9000/v1/chat/completions")
 
     def test_high_confidence_local_rules_do_not_trigger_fallback(self):
         result = {
@@ -109,6 +148,55 @@ class VisionFallbackRoutingTest(unittest.TestCase):
         self.assertEqual(normalized["fields"]["经营单位"]["canonical_key"], None)
         self.assertEqual(normalized["fields"]["经营单位"]["source"], "vision_fallback")
 
+    def test_vision_schema_accepts_structured_tables(self):
+        schema = _field_schema()
+
+        self.assertIn("tables", schema["properties"])
+        table_item = schema["properties"]["tables"]["items"]
+        self.assertIn("title", table_item["properties"])
+        self.assertIn("headers", table_item["properties"])
+        self.assertIn("rows", table_item["properties"])
+        self.assertIn("confidence", table_item["properties"])
+
+    def test_vision_payload_normalizes_multiple_tables_without_duplicate_fields(self):
+        payload = {
+            "document_type": "progress_report",
+            "fields": [
+                {"label": "TO:", "value": "K. A. Sparrow", "confidence": 0.95},
+                {"label": "SUBJECT:", "value": "STYLE LOW PRICE - PROGRESS REPORT", "confidence": 0.94},
+            ],
+            "tables": [
+                {
+                    "title": "DIRECT ACCOUNTS AND CHAINS HEADQUARTERED WITHIN THE REGION",
+                    "headers": ["NAME OF ACCOUNT", "IND/LOR VOLUME", "NO. OF STORES"],
+                    "rows": [
+                        ["Sico Serve", "104/22", "18"],
+                        ["Sheetz", "521/42", "150"],
+                    ],
+                    "confidence": 0.9,
+                },
+                {
+                    "title": "DIRECT ACCOUNTS AND CHAINS HEADQUARTERED OUTSIDE THE REGION",
+                    "headers": ["NAME OF ACCOUNT", "IND/LOR VOLUME", "NO. OF STORES"],
+                    "rows": [
+                        ["Kroger", "", "21"],
+                        ["Rich Oil", "", "82"],
+                    ],
+                    "confidence": 0.88,
+                },
+            ],
+        }
+
+        normalized = normalize_vision_payload(payload)
+
+        self.assertEqual(set(normalized["fields"].keys()), {"TO:", "SUBJECT:"})
+        self.assertNotIn("NO. OF STORES", normalized["fields"])
+        self.assertEqual(len(normalized["tables"]), 2)
+        self.assertEqual(normalized["tables"][0]["title"], "DIRECT ACCOUNTS AND CHAINS HEADQUARTERED WITHIN THE REGION")
+        self.assertEqual(normalized["tables"][0]["headers"], ["NAME OF ACCOUNT", "IND/LOR VOLUME", "NO. OF STORES"])
+        self.assertEqual(normalized["tables"][0]["rows"][1], ["Sheetz", "521/42", "150"])
+        self.assertEqual(normalized["table"], normalized["tables"][0])
+
     def test_merge_vision_result_replaces_low_confidence_local_fields(self):
         local = {
             "template": "unknown",
@@ -128,6 +216,41 @@ class VisionFallbackRoutingTest(unittest.TestCase):
         self.assertEqual(merged["meta"]["extraction_source"], "vision_fallback")
         self.assertEqual(merged["meta"]["fields_total"], 1)
         self.assertIn("海关编号", merged["fields"])
+
+    def test_merge_vision_result_preserves_tables_and_updates_table_meta(self):
+        local = {
+            "template": "unknown",
+            "fields": {},
+            "table": {"headers": [], "rows": []},
+            "meta": {"ocr_blocks": 10},
+        }
+        quality = {"overall_confidence": 0.2, "fallback_reasons": ["template_unknown"]}
+        vision = normalize_vision_payload({
+            "document_type": "progress_report",
+            "fields": [{"label": "TO:", "value": "K. A. Sparrow", "confidence": 0.93}],
+            "tables": [
+                {
+                    "title": "WITHIN THE REGION",
+                    "headers": ["NAME OF ACCOUNT", "NO. OF STORES"],
+                    "rows": [["Sico Serve", "18"], ["Sheetz", "150"]],
+                    "confidence": 0.91,
+                },
+                {
+                    "title": "OUTSIDE THE REGION",
+                    "headers": ["NAME OF ACCOUNT", "NO. OF STORES"],
+                    "rows": [["Kroger", "21"]],
+                    "confidence": 0.89,
+                },
+            ],
+        })
+
+        merged = merge_vision_fallback_result(local, vision, quality)
+
+        self.assertEqual(merged["meta"]["extraction_source"], "vision_fallback")
+        self.assertEqual(merged["meta"]["table_count"], 2)
+        self.assertEqual(merged["meta"]["table_rows"], 3)
+        self.assertEqual(len(merged["tables"]), 2)
+        self.assertEqual(merged["table"], merged["tables"][0])
 
     def test_disabled_client_returns_warning_without_api_call(self):
         client = VisionFallbackClient(api_key=None, enabled=False)

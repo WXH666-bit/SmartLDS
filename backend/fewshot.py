@@ -549,13 +549,16 @@ class FewShotLearner:
                 return f"{hint}_learned"
         return "new_template"
 
-    def _generate_yaml(self, template_name, keywords, fields_config):
+    def _generate_yaml(self, template_name, keywords, fields_config, has_table=False, table_headers=None):
         """生成自包含版式 YAML 配置片段（新格式：字段定义嵌套在模板内）"""
         lines = []
         lines.append(f"    {template_name}:")
         kw_str = ", ".join(f'"{k}"' for k in keywords)
         lines.append(f"      keywords: [{kw_str}]")
-        lines.append(f"      has_table: false")
+        lines.append(f"      has_table: {'true' if has_table else 'false'}")
+        if table_headers:
+            headers_str = ", ".join(self._yaml_scalar(header) for header in table_headers)
+            lines.append(f"      table_headers: [{headers_str}]")
         lines.append(f"      fields:")
 
         # 收集自动生成的 validator 规则

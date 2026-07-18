@@ -10,6 +10,7 @@ import yaml
 import app as app_module
 from app import (
     apply_corrections,
+    apply_ai_fewshot_enhancement,
     apply_ocr_feedback_learning,
     build_export_json_payload,
     build_field_values,
@@ -201,6 +202,51 @@ class ManualResultFeedbackTest(unittest.TestCase):
         self.assertIn("table", payload)
         self.assertEqual(payload["field_values"]["提单号"], "BL999")
         self.assertEqual(payload["table"]["headers"], ["箱号", "重量"])
+
+    def test_build_export_json_payload_includes_multiple_tables(self):
+        result = {
+            "fields": {
+                "TO:": {
+                    "label": "TO:",
+                    "value": "K. A. Sparrow",
+                    "cleaned": "K. A. Sparrow",
+                    "status": "extracted",
+                }
+            },
+            "table": {
+                "title": "WITHIN THE REGION",
+                "headers": ["NAME OF ACCOUNT", "NO. OF STORES"],
+                "rows": [["Sico Serve", "18"]],
+            },
+            "tables": [
+                {
+                    "title": "WITHIN THE REGION",
+                    "headers": ["NAME OF ACCOUNT", "NO. OF STORES"],
+                    "rows": [["Sico Serve", "18"]],
+                },
+                {
+                    "title": "OUTSIDE THE REGION",
+                    "headers": ["NAME OF ACCOUNT", "NO. OF STORES"],
+                    "rows": [["Kroger", "21"]],
+                },
+            ],
+            "meta": {},
+        }
+
+        payload = build_export_json_payload(
+            result,
+            {
+                "field_values": True,
+                "field_details": False,
+                "table": True,
+                "meta": False,
+            },
+        )
+
+        self.assertIn("table", payload)
+        self.assertIn("tables", payload)
+        self.assertEqual(len(payload["tables"]), 2)
+        self.assertEqual(payload["tables"][1]["title"], "OUTSIDE THE REGION")
 
     def test_normalize_new_payload_keeps_fields_manual_fields_and_table(self):
         payload = normalize_corrections_payload(
@@ -465,6 +511,56 @@ class ManualResultFeedbackTest(unittest.TestCase):
                         pass
                 else:
                     app_module.ai_enhance_feedback_template = old_ai_enhance
+
+    def test_apply_ai_fewshot_enhancement_merges_suggestions_and_regenerates_yaml(self):
+        learned = {
+            "template_name": "bol_learned",
+            "keywords": ["BILL OF LADING"],
+            "fields": {
+                "提单号": {
+                    "label": "提单号",
+                    "canonical_key": "bl_no",
+                    "anchors": ["提单号"],
+                    "position": "right",
+                }
+            },
+            "validators": {},
+            "yaml_text": "old yaml",
+        }
+        warnings = []
+
+        changes = apply_ai_fewshot_enhancement(
+            learned,
+            {
+                "template_keywords": ["MAERSK LINE"],
+                "fields": [
+                    {
+                        "field": "提单号",
+                        "label": "提单号",
+                        "anchors": ["B/L No.", "Bill of Lading No."],
+                        "position": "right",
+                        "value_pattern": r"^[A-Z]{2}\d+$",
+                        "multi_line": False,
+                        "allow_shared": False,
+                        "confidence": 0.92,
+                        "notes": "AI enhanced",
+                    }
+                ],
+                "table_headers": ["Container No.", "Gross Weight"],
+                "warnings": ["表头来自 AI 增强"],
+            },
+            warnings,
+        )
+
+        self.assertTrue(changes["applied"])
+        self.assertIn("MAERSK LINE", learned["keywords"])
+        self.assertIn("B/L No.", learned["fields"]["提单号"]["anchors"])
+        self.assertEqual(learned["fields"]["提单号"]["value_pattern"], r"^[A-Z]{2}\d+$")
+        self.assertTrue(learned["has_table"])
+        self.assertEqual(learned["table_headers"], ["Container No.", "Gross Weight"])
+        self.assertIn("MAERSK LINE", learned["yaml_text"])
+        self.assertIn("B/L No.", learned["yaml_text"])
+        self.assertIn("AI 增强：表头来自 AI 增强", warnings)
 
 
 if __name__ == "__main__":

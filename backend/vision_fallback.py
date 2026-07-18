@@ -40,6 +40,8 @@ VISION_PROVIDER_OPTIONS = [
         "default_model": "qwen3.6-plus",
         "default_base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
         "api_key_hint": "DashScope API Key",
+        "requires_api_key": True,
+        "transport": "chat_completions",
         "models": [
             {"value": "qwen3.6-plus", "label": "qwen3.6-plus（默认）"},
             {"value": "qwen-vl-max", "label": "qwen-vl-max"},
@@ -54,10 +56,25 @@ VISION_PROVIDER_OPTIONS = [
         "default_model": "gpt-4.1-mini",
         "default_base_url": "https://api.openai.com/v1",
         "api_key_hint": "OpenAI API Key",
+        "requires_api_key": True,
+        "transport": "responses",
         "models": [
             {"value": "gpt-4.1-mini", "label": "gpt-4.1-mini"},
             {"value": "gpt-4.1", "label": "gpt-4.1"},
             {"value": "gpt-4o-mini", "label": "gpt-4o-mini"},
+        ],
+    },
+    {
+        "key": "custom",
+        "label": "自定义 / Ollama 本地模型",
+        "default_model": "llama3.2-vision",
+        "default_base_url": "http://localhost:11434/v1",
+        "api_key_hint": "API Key（Ollama 可留空）",
+        "requires_api_key": False,
+        "transport": "chat_completions",
+        "models": [
+            {"value": "llama3.2-vision", "label": "llama3.2-vision（Ollama）"},
+            {"value": "llava", "label": "llava（Ollama）"},
         ],
     },
 ]
@@ -113,6 +130,42 @@ def vision_settings_options() -> dict[str, Any]:
         "default_provider": DEFAULT_VISION_PROVIDER,
         "default_threshold": DEFAULT_FALLBACK_THRESHOLD,
     }
+
+
+def _provider_requires_api_key(provider: str | None) -> bool:
+    defaults = provider_defaults(provider)
+    return bool(defaults.get("requires_api_key", True))
+
+
+def _provider_env_api_key(provider: str | None) -> str:
+    if provider == "qwen":
+        return os.getenv("DASHSCOPE_API_KEY", "")
+    if provider == "openai":
+        return os.getenv("OPENAI_API_KEY", "")
+    return os.getenv("CUSTOM_VISION_API_KEY") or os.getenv("OLLAMA_API_KEY", "")
+
+
+def _provider_key_name(provider: str | None) -> str:
+    if provider == "qwen":
+        return "DASHSCOPE_API_KEY"
+    if provider == "openai":
+        return "OPENAI_API_KEY"
+    return "CUSTOM_VISION_API_KEY"
+
+
+def _default_api_key(provider: str | None) -> str:
+    if not _provider_requires_api_key(provider):
+        return "ollama"
+    return ""
+
+
+def _build_provider_endpoint(provider: str | None, base_url: str) -> str:
+    base = str(base_url or provider_defaults(provider)["default_base_url"]).rstrip("/")
+    if base.endswith("/chat/completions") or base.endswith("/responses"):
+        return base
+    if provider == "openai":
+        return os.getenv("OPENAI_RESPONSES_URL", f"{base}/responses")
+    return f"{base}/chat/completions"
 
 
 def _env_bool(name: str, default: bool = False) -> bool:
@@ -292,8 +345,31 @@ def _field_schema() -> dict[str, Any]:
                     "required": ["label", "value", "confidence"],
                 },
             },
+            "tables": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "properties": {
+                        "title": {"type": "string"},
+                        "headers": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                        },
+                        "rows": {
+                            "type": "array",
+                            "items": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                            },
+                        },
+                        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+                    },
+                    "required": ["title", "headers", "rows", "confidence"],
+                },
+            },
         },
-        "required": ["document_type", "fields"],
+        "required": ["document_type", "fields", "tables"],
     }
 
 
@@ -387,7 +463,7 @@ def _extract_output_text(response_json: dict[str, Any]) -> str:
 
 
 def normalize_vision_payload(payload: dict[str, Any]) -> dict[str, Any]:
-    """把模型返回的 JSON 转成 SmartLDS 现有的“原字段名”字段结构。"""
+    """把模型返回的 JSON 转成 SmartLDS 的字段 + 表格结构。"""
     fields: dict[str, dict[str, Any]] = {}
     seen: dict[str, int] = {}
 
@@ -415,11 +491,39 @@ def normalize_vision_payload(payload: dict[str, Any]) -> dict[str, Any]:
             "source": "vision_fallback",
         }
 
+    tables = []
+    for item in payload.get("tables", []) or []:
+        if not isinstance(item, dict):
+            continue
+        headers = [str(header).strip() for header in (item.get("headers") or []) if str(header).strip()]
+        if not headers:
+            continue
+        rows = []
+        for row in item.get("rows", []) or []:
+            if not isinstance(row, list):
+                continue
+            normalized_row = [str(cell) for cell in row]
+            if len(normalized_row) < len(headers):
+                normalized_row.extend([""] * (len(headers) - len(normalized_row)))
+            rows.append(normalized_row[:len(headers)])
+        if not rows:
+            continue
+        tables.append({
+            "title": str(item.get("title") or "").strip(),
+            "headers": headers,
+            "rows": rows,
+            "confidence": round(_clamp01(_as_float(item.get("confidence"), 0.0)), 4),
+            "source": "vision_fallback",
+        })
+
+    first_table = deepcopy(tables[0]) if tables else {}
     return {
         "template": "vision_generic",
         "source": "vision_fallback",
         "document_type": str(payload.get("document_type") or "generic_form"),
         "fields": fields,
+        "table": first_table,
+        "tables": tables,
     }
 
 
@@ -431,21 +535,32 @@ def merge_vision_fallback_result(
     """视觉兜底成功时，用模型字段替换低置信度本地字段。"""
     merged = deepcopy(local_result)
     fields = vision_result.get("fields", {}) if isinstance(vision_result, dict) else {}
-    if not fields:
+    tables = vision_result.get("tables", []) if isinstance(vision_result, dict) else []
+    if not fields and not tables:
         return merged
 
     merged["template"] = vision_result.get("template", "vision_generic")
     merged["fields"] = fields
-    merged.setdefault("table", local_result.get("table", {}))
+    if tables:
+        merged["tables"] = tables
+        merged["table"] = deepcopy(tables[0])
+    else:
+        merged.setdefault("table", local_result.get("table", {}))
+
+    confidence_parts = [_as_float(f.get("confidence"), 0.0) for f in fields.values()]
+    confidence_parts.extend(_as_float(t.get("confidence"), 0.0) for t in tables if isinstance(t, dict))
+    table_rows = sum(len(t.get("rows", []) or []) for t in tables if isinstance(t, dict))
     meta = dict(merged.get("meta", {}))
     meta.update({
         "template": merged["template"],
         "extraction_source": "vision_fallback",
-        "confidence": round(sum(_as_float(f.get("confidence"), 0.0) for f in fields.values()) / max(len(fields), 1), 4),
+        "confidence": round(sum(confidence_parts) / max(len(confidence_parts), 1), 4),
         "local_rules_confidence": quality.get("overall_confidence", 0.0),
         "fallback_reason": ", ".join(quality.get("fallback_reasons", [])),
         "fields_total": len(fields),
         "fields_extracted": len(fields),
+        "table_count": len(tables),
+        "table_rows": table_rows,
         "vision_document_type": vision_result.get("document_type", ""),
     })
     merged["meta"] = meta
@@ -498,25 +613,22 @@ class VisionFallbackClient:
         provider = str(merged.get("provider") or DEFAULT_VISION_PROVIDER)
         defaults = provider_defaults(provider)
 
-        env_key = os.getenv("DASHSCOPE_API_KEY") if provider == "qwen" else os.getenv("OPENAI_API_KEY")
+        env_key = _provider_env_api_key(provider)
         self.provider = provider
-        self.api_key = api_key if api_key is not None else (merged.get("api_key") or env_key)
+        self.api_key = api_key if api_key is not None else (merged.get("api_key") or env_key or _default_api_key(provider))
         self.enabled = _env_bool("VISION_FALLBACK_ENABLED", bool(merged.get("enabled"))) if enabled is None else enabled
         self.model = model or os.getenv("VISION_FALLBACK_MODEL") or merged.get("model") or defaults["default_model"]
         self.base_url = str(merged.get("base_url") or defaults["default_base_url"]).rstrip("/")
         self.timeout = timeout or _env_float("VISION_FALLBACK_TIMEOUT", 90.0)
         self.endpoint = endpoint or os.getenv("VISION_FALLBACK_ENDPOINT", "")
         if not self.endpoint:
-            if self.provider == "openai":
-                self.endpoint = os.getenv("OPENAI_RESPONSES_URL", f"{self.base_url}/responses")
-            else:
-                self.endpoint = f"{self.base_url}/chat/completions"
+            self.endpoint = _build_provider_endpoint(self.provider, self.base_url)
 
     def unavailable_reason(self) -> str | None:
         if not self.enabled:
             return "视觉兜底未启用（VISION_FALLBACK_ENABLED 未设为 true）"
-        if not self.api_key:
-            key_name = "DASHSCOPE_API_KEY" if self.provider == "qwen" else "OPENAI_API_KEY"
+        if _provider_requires_api_key(self.provider) and not self.api_key:
+            key_name = _provider_key_name(self.provider)
             return f"视觉兜底未启用（缺少 {key_name} 或前端保存的 API Key）"
         return None
 
@@ -541,9 +653,9 @@ class VisionFallbackClient:
                 text = _extract_output_text(response_json)
                 parsed = json.loads(text)
                 normalized = normalize_vision_payload(parsed)
-                if normalized.get("fields"):
+                if normalized.get("fields") or normalized.get("tables"):
                     return {"success": True, "result": normalized, "attempts": attempt + 1}
-                last_error = "模型未返回有效字段"
+                last_error = "模型未返回有效字段或表格"
             except (json.JSONDecodeError, ValueError, urllib.error.URLError, TimeoutError, OSError) as e:
                 last_error = str(e)
                 time.sleep(0.2)
@@ -717,9 +829,11 @@ class VisionFallbackClient:
 
         return (
             "You are extracting fields from a logistics, customs, delivery, or generic form image.\n"
-            "Return only visible key-value fields. Use the original printed label text as the label; "
+            "Return visible key-value fields and structured tables. Use the original printed label text as the field label; "
             "do not map it to a preset schema. If a form has question-answer pairs, use the question text as the label. "
-            "Ignore decorative titles unless they have a value. Keep values concise but complete.\n\n"
+            "If content is arranged in a grid with repeated headers and rows, put it in tables instead of repeating "
+            "the column header as many fields. Preserve each table section title when visible. "
+            "Ignore decorative titles unless they have a value or name a table section. Keep values concise but complete.\n\n"
             f"Local extractor template: {local_result.get('template')}\n"
             f"Local quality: {json.dumps(quality, ensure_ascii=False)}\n"
             f"Local extracted fields: {json.dumps(local_fields[:30], ensure_ascii=False)}\n"
