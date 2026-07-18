@@ -17,6 +17,7 @@ import fitz
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime
+from pathlib import Path
 
 from ocr_engine import OCREngine
 from preprocess import Preprocessor
@@ -66,6 +67,70 @@ OUT_DIR = os.path.join(ROOT_DIR, "batch_output")
 os.makedirs(OUT_DIR, exist_ok=True)
 
 
+def _normalize_comparison_value(value):
+    """Normalize OCR and GT strings without changing their semantic content."""
+    return "".join(char for char in str(value or "").upper() if char.isalnum())
+
+
+def _report_file_uri(html_path):
+    """Return an absolute file URI so report-relative preview images resolve."""
+    return Path(html_path).resolve().as_uri()
+
+
+GT_KEY_GROUPS = {
+    "total_gross_weight": (("total_gw",),),
+    "total_measurement": (("total_cbm",),),
+    "place_date_of_issue": (("issue_place", "issue_date"),),
+    "quantity_unit": (("qty", "unit"),),
+}
+
+
+def _resolve_gt_value(field_name, canonical_key, gt):
+    for key in (canonical_key, field_name):
+        if key in gt:
+            return str(gt[key])
+
+    for key_group in GT_KEY_GROUPS.get(canonical_key, ()):
+        if all(key in gt for key in key_group):
+            return " ".join(str(gt[key]) for key in key_group)
+    return None
+
+
+def evaluate_extracted_fields(fields, gt):
+    """Compare source-label result fields with canonical-key GT values."""
+    correct = 0
+    total = 0
+    details = []
+
+    for field_name, info in (fields or {}).items():
+        canonical_key = str(info.get("canonical_key") or field_name)
+        expected = _resolve_gt_value(field_name, canonical_key, gt)
+        if expected is None:
+            continue
+
+        label = info.get("label", field_name)
+        display = f"{label} ({canonical_key})" if label != canonical_key else label
+        cleaned = info.get("corrected", info.get("cleaned", info.get("value", "")))
+        total += 1
+
+        if info.get("status") == "not_found":
+            details.append((display, cleaned, expected[:35], "MISS"))
+            continue
+
+        actual_norm = _normalize_comparison_value(cleaned)
+        expected_norm = _normalize_comparison_value(expected)
+        matched = bool(actual_norm and expected_norm) and (
+            actual_norm == expected_norm
+            or expected_norm in actual_norm
+            or actual_norm in expected_norm
+        )
+        if matched:
+            correct += 1
+        details.append((display, cleaned, expected[:35], "OK" if matched else "X"))
+
+    return correct, total, details
+
+
 def run_one(bol, desc, engine, parser, extractor):
     """运行一份样本的完整流水线"""
     pdf_path = os.path.join(os.path.dirname(OUT_DIR), "dataset", "pdf", f"bol_{bol}.pdf")
@@ -89,25 +154,7 @@ def run_one(bol, desc, engine, parser, extractor):
 
     # 统计准确率
     fields = extracted.get("fields", {})
-    correct = 0
-    total = 0
-    details = []
-    for fname, info in fields.items():
-        label = info.get("label", fname)
-        found = info["status"] != "not_found"
-        cleaned = info.get("cleaned", "")
-        display = f"{label} ({fname})" if label != fname else fname
-        if not found:
-            details.append((display, cleaned, "[未提取]", "—"))
-            continue
-        if fname in gt:
-            gt_val = str(gt[fname]).upper().strip().replace(",", "")
-            clean_up = cleaned.upper().strip().replace(",", "")
-            ok = gt_val == clean_up or gt_val in clean_up or clean_up in gt_val
-            if ok:
-                correct += 1
-            total += 1
-            details.append((display, cleaned, gt_val[:35], "OK" if ok else "X"))
+    correct, total, details = evaluate_extracted_fields(fields, gt)
 
     acc = correct / max(total, 1) * 100
 
@@ -131,6 +178,19 @@ def render_preview(pdf_path, blocks=None):
     return img
 
 
+def _save_preview(image, path, attempts=3):
+    """Save a preview with a short retry for transient Windows file errors."""
+    for attempt in range(attempts):
+        try:
+            image.save(path, "PNG")
+            return True
+        except OSError:
+            if attempt + 1 >= attempts:
+                return False
+            time.sleep(0.2 * (attempt + 1))
+    return False
+
+
 def build_html(results, summary):
     """生成 HTML 报告 — 按数据来源分组"""
     # 分组：合成数据 / FUNSD / 真实扫描
@@ -141,7 +201,7 @@ def build_html(results, summary):
     def render_sample(r):
         det = ""
         for fname, val, gt_val, ok in r["details"]:
-            cls = "ok" if ok == "OK" else ("miss" if ok == "[未提取]" else "err")
+            cls = "ok" if ok == "OK" else ("miss" if ok == "MISS" else "err")
             det += f'<tr class="{cls}"><td>{fname}</td><td class="val">{val[:40]}</td><td class="gt">{gt_val[:35]}</td><td class="mark">{ok}</td></tr>'
         tbl = ""
         t = r.get("table", {})
@@ -282,7 +342,9 @@ def main():
         results.append(r)
         # 保存预览图
         img = render_preview(r["pdf_path"])
-        img.save(os.path.join(previews_dir, f"bol_{bol}.png"), "PNG")
+        preview_path = os.path.join(previews_dir, f"bol_{bol}.png")
+        if not _save_preview(img, preview_path):
+            print(f"\n  [!] Could not refresh preview after retries: {preview_path}")
     print("\n")
 
     # 汇总
@@ -337,9 +399,9 @@ def main():
         with sync_playwright() as p:
             browser = p.chromium.launch()
             page = browser.new_page()
-            page.set_content(html)
+            page.goto(_report_file_uri(html_path), wait_until="networkidle")
             pdf_path = os.path.join(OUT_DIR, "report.pdf")
-            page.pdf(path=pdf_path, format="A3", landscape=True)
+            page.pdf(path=pdf_path, format="A3", landscape=True, print_background=True)
             browser.close()
         print(f"  PDF 报告: {pdf_path}")
     except Exception as e:

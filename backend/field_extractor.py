@@ -32,6 +32,20 @@ except ImportError:
     _HAS_YAML = False
 
 
+def _is_short_ascii_anchor(anchor):
+    """Return whether an anchor must match as a complete ASCII token."""
+    return bool(re.fullmatch(r"[A-Z0-9]{1,4}", str(anchor or "").upper()))
+
+
+def _contains_direct_anchor(text, anchor):
+    if _is_short_ascii_anchor(anchor):
+        return bool(re.search(
+            rf"(?<![A-Z0-9]){re.escape(anchor)}(?![A-Z0-9])",
+            text,
+        ))
+    return anchor in text
+
+
 # ================================================================
 # 内置默认配置（config.yaml 不存在时的回退）
 # ================================================================
@@ -1105,10 +1119,16 @@ class FieldExtractor:
             return None
 
         # 取锚点之后的文本
-        remainder = full_text[idx + len(matched_anchor):].strip()
+        suffix = full_text[idx + len(matched_anchor):]
+        ascii_label = bool(re.search(r"[A-Za-z]", matched_anchor)) and matched_anchor.isascii()
+        has_separator = bool(re.match(r"^\s*[:：]", suffix)) or matched_anchor.rstrip().endswith((":", "："))
+        if ascii_label and not has_separator:
+            return None
+
+        remainder = suffix.strip()
 
         # 去掉常见的分隔符（冒号、空格、破折号等）
-        remainder = remainder.lstrip(':、：\s-—―')
+        remainder = re.sub(r'^[\s:、：\-—―]+', '', remainder)
 
         # 去掉末尾的单位（KGS、CBM 等保留，不在这里处理）
         if not remainder or len(remainder) < 1:
@@ -1164,7 +1184,7 @@ class FieldExtractor:
                 anchor_upper = anchor.upper().strip()
 
                 # 1) 直接子串匹配（高优先级）
-                if anchor_upper in text_upper:
+                if _contains_direct_anchor(text_upper, anchor_upper):
                     # 锚点占文本比例越高 → 越可能是真正的标签块
                     # 防止 "托运人" 匹配到 "托运人信息" 这类标题块
                     len_ratio = len(anchor) / max(len(text), 1)
@@ -1174,8 +1194,13 @@ class FieldExtractor:
                     break
 
                 # 2) 模糊匹配：OCR 容错
+                if _is_short_ascii_anchor(anchor_upper):
+                    continue
                 sim = self._text_similarity(text_upper, anchor_upper)
-                if sim >= self.fuzzy_threshold:
+                threshold = self.fuzzy_threshold
+                if anchor_upper.isascii() and re.search(r"[A-Z]", anchor_upper):
+                    threshold = max(threshold, 0.78)
+                if sim >= threshold:
                     candidates.append((block, sim, anchor))
                     break
 
@@ -1207,7 +1232,10 @@ class FieldExtractor:
         # 去空格后的子串匹配
         text_ns = text.replace(' ', '')
         anchor_ns = anchor.replace(' ', '')
-        if anchor_ns in text_ns or text_ns in anchor_ns:
+        if (
+            not _is_short_ascii_anchor(anchor_ns)
+            and (anchor_ns in text_ns or text_ns in anchor_ns)
+        ):
             return 0.85
 
         # SequenceMatcher 基于最长公共子序列

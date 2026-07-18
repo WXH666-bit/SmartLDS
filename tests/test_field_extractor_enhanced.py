@@ -640,6 +640,48 @@ class EnhancedFieldExtractorTest(unittest.TestCase):
             "shipper",
         )
 
+    def test_inline_value_requires_an_explicit_ascii_label_separator(self):
+        extractor = FieldExtractor()
+
+        self.assertIsNone(
+            extractor._extract_inline_value(
+                block("Shipper Information", 0, 0, 180, 20),
+                "Shipper",
+            )
+        )
+        self.assertEqual(
+            extractor._extract_inline_value(
+                block("Shipper: Morgan PLC", 0, 0, 180, 20),
+                "Shipper",
+            ),
+            "Morgan PLC",
+        )
+
+    def test_short_ascii_anchor_only_matches_a_complete_token(self):
+        extractor = FieldExtractor()
+        blocks = [
+            block("Transport Information", 0, 0, 180, 20),
+            block("POD:", 0, 25, 60, 45),
+            block("POR:", 0, 30, 60, 50),
+        ]
+
+        matches = extractor._find_anchor_blocks(blocks, ["POR"])
+
+        self.assertEqual(len(matches), 1)
+        self.assertEqual(matches[0][0]["text"], "POR:")
+
+    def test_ascii_fuzzy_anchor_rejects_a_different_label(self):
+        extractor = FieldExtractor()
+        blocks = [
+            block("Container:", 0, 0, 100, 20),
+            block("Consignee:", 0, 30, 100, 50),
+        ]
+
+        matches = extractor._find_anchor_blocks(blocks, ["Consignee"])
+
+        self.assertEqual(len(matches), 1)
+        self.assertEqual(matches[0][0]["text"], "Consignee:")
+
 
 if __name__ == "__main__":
     unittest.main()
