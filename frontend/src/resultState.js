@@ -135,9 +135,11 @@ function findFieldObjectLine(lines, fieldKey) {
   const fieldsToken = '"fields":'
   const fieldsIndex = lines.findIndex(line => line.trim().startsWith(fieldsToken))
   if (fieldsIndex < 0) return -1
+  const fieldsIndent = lines[fieldsIndex].search(/\S/)
   for (let index = fieldsIndex + 1; index < lines.length; index += 1) {
     const trimmed = lines[index].trim()
-    if (trimmed === '},' || trimmed === '}') return -1
+    const indent = lines[index].search(/\S/)
+    if (indent <= fieldsIndent && trimmed.startsWith('}')) return -1
     if (trimmed.startsWith(fieldToken)) return index
   }
   return -1

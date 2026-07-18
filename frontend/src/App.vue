@@ -3,7 +3,30 @@
   <!-- ============ Top Bar ============ -->
   <header class="topbar">
     <div class="brand">
-      <div class="logo">LDS</div>
+      <div class="logo smartlds-logo" aria-hidden="true">
+        <svg viewBox="0 0 48 48" role="img">
+          <defs>
+            <linearGradient id="smartldsLogoBg" x1="8" y1="4" x2="42" y2="44" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#2563eb" />
+              <stop offset="1" stop-color="#6366f1" />
+            </linearGradient>
+            <linearGradient id="smartldsLogoScan" x1="13" y1="0" x2="35" y2="0" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#bfdbfe" stop-opacity="0" />
+              <stop offset=".5" stop-color="#eff6ff" />
+              <stop offset="1" stop-color="#bfdbfe" stop-opacity="0" />
+            </linearGradient>
+          </defs>
+          <rect class="logo-bg" x="3" y="3" width="42" height="42" rx="12" fill="url(#smartldsLogoBg)" />
+          <path class="logo-doc" d="M16 12h13l6 6v17H16z" fill="#f8fbff" />
+          <path d="M29 12v6h6" fill="#dbeafe" />
+          <path class="logo-line" d="M20 22h11M20 27h13M20 32h8" />
+          <path class="logo-scan" d="M13 18h22" />
+          <circle class="logo-node logo-node-a" cx="34" cy="23" r="2.1" />
+          <circle class="logo-node logo-node-b" cx="38" cy="30" r="1.7" />
+          <circle class="logo-node logo-node-c" cx="30" cy="36" r="1.5" />
+          <text x="12" y="38" class="logo-mark">LDS</text>
+        </svg>
+      </div>
       <div>
         <h1>SmartLDS</h1>
         <span class="subtitle">物流单证智能识别系统</span>
@@ -47,9 +70,34 @@
             <el-button size="large" round @click="showVisionSettings=true; loadVisionSettings()">配置大模型</el-button>
           </div>
           <div class="hero-metrics">
-            <div><b>规则优先</b><span>高置信度样本不花模型成本</span></div>
-            <div><b>原字段名</b><span>每个版式保留自己的 schema</span></div>
-            <div><b>可导出</b><span>JSON / Excel 一键保存</span></div>
+            <div class="hero-metric">
+              <span class="metric-copy"><b>规则优先</b><span>高置信度样本不花模型成本</span></span>
+              <svg class="metric-visual rule-priority" viewBox="0 0 72 44" aria-hidden="true">
+                <path class="metric-path" d="M9 22h18l7-9 8 18 7-9h14" />
+                <circle class="metric-dot metric-dot-a" cx="12" cy="22" r="3" />
+                <circle class="metric-dot metric-dot-b" cx="35" cy="14" r="3" />
+                <circle class="metric-dot metric-dot-c" cx="60" cy="22" r="3" />
+                <path class="metric-scan" d="M8 7h56" />
+              </svg>
+            </div>
+            <div class="hero-metric">
+              <span class="metric-copy"><b>原字段名</b><span>每个版式保留自己的 schema</span></span>
+              <svg class="metric-visual schema-labels" viewBox="0 0 72 44" aria-hidden="true">
+                <rect class="schema-tag schema-tag-a" x="10" y="8" width="34" height="10" rx="5" />
+                <rect class="schema-tag schema-tag-b" x="22" y="19" width="40" height="10" rx="5" />
+                <rect class="schema-tag schema-tag-c" x="14" y="30" width="30" height="10" rx="5" />
+              </svg>
+            </div>
+            <div class="hero-metric">
+              <span class="metric-copy"><b>可导出</b><span>JSON / Excel 一键保存</span></span>
+              <svg class="metric-visual export-ready" viewBox="0 0 72 44" aria-hidden="true">
+                <path class="export-page" d="M18 8h23l9 9v19H18z" />
+                <path class="export-fold" d="M41 8v9h9" />
+                <path class="export-line export-line-a" d="M24 22h17" />
+                <path class="export-line export-line-b" d="M24 28h12" />
+                <path class="export-check" d="M43 30l5 5 10-13" />
+              </svg>
+            </div>
           </div>
         </div>
         <div class="hero-card">
@@ -1561,7 +1609,24 @@ function confirmExport() {
 .app-shell{display:flex;flex-direction:column;height:100vh;background:#f0f2f5;font-family:-apple-system,'Segoe UI',sans-serif}
 .topbar{display:flex;align-items:center;padding:10px 24px;background:#fff;border-bottom:1px solid #e5e7eb;gap:20px;flex-shrink:0}
 .brand{display:flex;align-items:center;gap:12px}
-.logo{width:36px;height:36px;background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;letter-spacing:-0.5px}
+.logo{width:40px;height:40px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.smartlds-logo svg{width:40px;height:40px;display:block;filter:drop-shadow(0 6px 12px rgba(37,99,235,.16))}
+.logo-doc{filter:drop-shadow(0 1px 2px rgba(15,23,42,.14))}
+.logo-line{stroke:#2563eb;stroke-width:1.8;stroke-linecap:round;opacity:.78}
+.logo-scan{stroke:url(#smartldsLogoScan);stroke-width:4;stroke-linecap:round;animation:smartlds-scan 2.7s ease-in-out infinite}
+.logo-node{fill:#93c5fd;animation:smartlds-node 2.7s ease-in-out infinite}
+.logo-node-b{animation-delay:.32s}
+.logo-node-c{animation-delay:.62s}
+.logo-mark{font-size:7px;font-weight:900;letter-spacing:.2px;fill:#fff;font-family:Inter,Segoe UI,Arial,sans-serif}
+@keyframes smartlds-scan{
+  0%,18%{transform:translateY(-7px);opacity:0}
+  35%,68%{opacity:.95}
+  88%,100%{transform:translateY(17px);opacity:0}
+}
+@keyframes smartlds-node{
+  0%,42%,100%{opacity:.42;transform:scale(.86)}
+  58%{opacity:1;transform:scale(1.12)}
+}
 .brand h1{font-size:16px;margin:0;line-height:1.2}.subtitle{font-size:11px;color:#888}
 .spacer{flex:1}
 
@@ -1590,9 +1655,43 @@ function confirmExport() {
 .hero-copy p{max-width:620px;font-size:15px;line-height:1.8;color:#64748b;margin:0}
 .hero-actions{display:flex;gap:12px;margin-top:24px}
 .hero-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:26px;max-width:680px}
-.hero-metrics div{padding:14px 16px;border:1px solid rgba(148,163,184,.24);background:rgba(255,255,255,.72);backdrop-filter:blur(10px);border-radius:16px;box-shadow:0 10px 30px rgba(15,23,42,.04)}
+.hero-metric{position:relative;min-height:92px;padding:14px 16px;border:1px solid rgba(148,163,184,.24);background:rgba(255,255,255,.76);backdrop-filter:blur(10px);border-radius:16px;box-shadow:0 10px 30px rgba(15,23,42,.04);overflow:hidden;display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.hero-metric::after{content:"";position:absolute;inset:auto -24px -30px auto;width:88px;height:70px;background:radial-gradient(circle,rgba(59,130,246,.11),transparent 68%);pointer-events:none}
+.metric-copy{position:relative;z-index:1;min-width:0}
 .hero-metrics b{display:block;font-size:14px;color:#0f172a;margin-bottom:4px}
 .hero-metrics span{font-size:12px;color:#64748b}
+.metric-visual{position:relative;z-index:1;width:72px;height:44px;flex:0 0 72px;margin-top:2px;overflow:visible}
+.metric-path,.metric-scan,.export-line,.export-check{fill:none;stroke-linecap:round;stroke-linejoin:round}
+.metric-path{stroke:#2563eb;stroke-width:2.4;opacity:.62}
+.metric-scan{stroke:#60a5fa;stroke-width:5;opacity:.75;animation:metric-scan 2.8s ease-in-out infinite}
+.metric-dot{fill:#2563eb;animation:metric-pulse 2.8s ease-in-out infinite}
+.metric-dot-b{animation-delay:.28s}
+.metric-dot-c{animation-delay:.56s}
+.schema-tag{fill:#dbeafe;stroke:#93c5fd;stroke-width:1;animation:metric-float 3.2s ease-in-out infinite}
+.schema-tag-b{fill:#eef2ff;stroke:#a5b4fc;animation-delay:.22s}
+.schema-tag-c{fill:#ecfeff;stroke:#67e8f9;animation-delay:.44s}
+.export-page{fill:#fff;stroke:#93c5fd;stroke-width:1.5}
+.export-fold{fill:#dbeafe}
+.export-line{stroke:#60a5fa;stroke-width:1.8;opacity:.72}
+.export-check{stroke:#10b981;stroke-width:3;stroke-dasharray:24;stroke-dashoffset:24;animation:metric-check 2.9s ease-in-out infinite}
+@keyframes metric-scan{
+  0%,18%{transform:translateY(-9px);opacity:0}
+  42%,68%{opacity:.72}
+  92%,100%{transform:translateY(27px);opacity:0}
+}
+@keyframes metric-pulse{
+  0%,35%,100%{opacity:.42;transform:scale(.86)}
+  50%{opacity:1;transform:scale(1.15)}
+}
+@keyframes metric-float{
+  0%,100%{transform:translateX(0);opacity:.72}
+  50%{transform:translateX(5px);opacity:1}
+}
+@keyframes metric-check{
+  0%,38%{stroke-dashoffset:24;opacity:.35}
+  58%,82%{stroke-dashoffset:0;opacity:1}
+  100%{stroke-dashoffset:0;opacity:.45}
+}
 .hero-card{display:flex;justify-content:center}
 .scan-card{position:relative;width:360px;min-height:330px;border-radius:28px;background:linear-gradient(145deg,#ffffff,#edf4ff);box-shadow:0 30px 80px rgba(37,99,235,.22);border:1px solid rgba(255,255,255,.8);padding:24px;overflow:hidden}
 .scan-card:before{content:"";position:absolute;inset:18px;border:1px dashed rgba(37,99,235,.25);border-radius:22px}
@@ -1690,23 +1789,23 @@ function confirmExport() {
 .cargo-table-block{display:flex;flex-direction:column;gap:6px;margin-top:10px}
 .cargo-table-block:first-of-type{margin-top:0}
 .cargo-table-title{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;font-weight:800;color:#334155}
-.json-inspector{flex:0 0 420px;min-width:320px;max-width:460px;background:#0f172a;color:#cbd5e1;display:flex;overflow:hidden;transition:flex-basis .2s,min-width .2s}
-.json-inspector.collapsed{flex-basis:42px;min-width:42px;max-width:42px;background:#111827}
-.json-inspector-rail{width:42px;height:100%;border:0;background:#111827;color:#dbeafe;font-size:11px;font-weight:800;letter-spacing:.8px;writing-mode:vertical-rl;text-orientation:mixed;cursor:pointer}
-.json-inspector-rail:hover{background:#1e293b;color:#fff}
+.json-inspector{flex:0 0 420px;min-width:320px;max-width:460px;background:#f8fafc;color:#334155;display:flex;overflow:hidden;transition:flex-basis .2s,min-width .2s;border-left:1px solid #e2e8f0}
+.json-inspector.collapsed{flex-basis:42px;min-width:42px;max-width:42px;background:#eaf2ff}
+.json-inspector-rail{width:42px;height:100%;border:0;background:#eaf2ff;color:#1d4ed8;font-size:11px;font-weight:800;letter-spacing:.8px;writing-mode:vertical-rl;text-orientation:mixed;cursor:pointer}
+.json-inspector-rail:hover{background:#dbeafe;color:#1e40af}
 .json-inspector-panel{display:flex;flex-direction:column;gap:8px;width:100%;min-width:0;padding:12px}
-.json-inspector-head{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:28px;border-bottom:1px solid rgba(148,163,184,.22);padding-bottom:8px;font-size:12px;font-weight:800;color:#e2e8f0}
-.json-inspector-head :deep(.el-button){color:#93c5fd}
+.json-inspector-head{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:28px;border-bottom:1px solid #e2e8f0;padding-bottom:8px;font-size:12px;font-weight:800;color:#0f172a}
+.json-inspector-head :deep(.el-button){color:#2563eb}
 .json-collapse{margin-top:0;min-height:0}
 .json-inspector .json-collapse{flex:1;display:flex;flex-direction:column}
 .json-inspector .json-collapse :deep(.el-collapse){border:0}
 .json-inspector .json-collapse :deep(.el-collapse-item__wrap){background:transparent;border:0}
 .json-inspector .json-collapse :deep(.el-collapse-item__content){padding-bottom:0}
-.json-inspector .json-collapse :deep(.el-collapse-item__header){background:#172033;color:#bfdbfe;border:1px solid rgba(148,163,184,.18);border-radius:8px;height:34px;padding:0 10px;font-size:12px;font-weight:800}
+.json-inspector .json-collapse :deep(.el-collapse-item__header){background:#fff;color:#1e40af;border:1px solid #dbeafe;border-radius:8px;height:34px;padding:0 10px;font-size:12px;font-weight:800}
 .json-block{background:#1e293b;color:#a5b4c2;padding:14px;font-size:11px;font-family:Consolas,monospace;max-height:300px;overflow:auto;white-space:pre-wrap;border-radius:8px;margin:0;line-height:1.5}
-.json-inspector .json-block{height:calc(100vh - 190px);max-height:none;border:1px solid rgba(148,163,184,.18)}
+.json-inspector .json-block{height:calc(100vh - 190px);max-height:none;background:#fff;color:#334155;border:1px solid #e2e8f0;box-shadow:inset 0 1px 0 rgba(15,23,42,.03)}
 .json-line{display:block;min-height:16px;border-left:3px solid transparent;padding-left:6px;margin-left:-6px;transition:background .2s,border-color .2s,color .2s}
-.json-line.active{background:rgba(250,204,21,.18);border-left-color:#facc15;color:#fef9c3}
+.json-line.active{background:rgba(59,130,246,.12);border-left-color:#3b82f6;color:#1e3a8a}
 
 .table-editor{display:flex;flex-direction:column;gap:12px}
 .table-editor-head{display:flex;align-items:center;gap:8px}
@@ -1802,5 +1901,14 @@ function confirmExport() {
   .json-inspector{flex-basis:360px;min-width:300px}
   .json-inspector.collapsed{flex-basis:38px;min-width:38px;max-width:38px}
   .json-inspector-rail{width:38px}
+}
+
+@media (prefers-reduced-motion: reduce){
+  .logo-scan,.logo-node,.metric-scan,.metric-dot,.schema-tag,.export-check{animation:none}
+  .logo-scan{opacity:.78}
+  .logo-node{opacity:.72}
+  .metric-scan{opacity:.55}
+  .metric-dot,.schema-tag{opacity:.82}
+  .export-check{stroke-dashoffset:0;opacity:.85}
 }
 </style>

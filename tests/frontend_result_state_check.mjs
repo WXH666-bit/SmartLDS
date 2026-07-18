@@ -89,6 +89,32 @@ assert.ok(valueLine >= 0, '字段 value 应能定位到 JSON 行')
 assert.match(previewLines[labelLine], /"label": "来源国家"/)
 assert.match(previewLines[valueLine], /"value": "韩国"/)
 
+const multiFieldPreviewJson = buildResultPreviewJson({
+  fields: {
+    first: {
+      label: '第一个字段',
+      value: 'A',
+      cleaned: 'A',
+      status: 'extracted',
+    },
+    second: {
+      label: '第二个字段',
+      value: 'B',
+      cleaned: 'B',
+      status: 'extracted',
+    },
+  },
+  meta: {},
+}, [])
+const multiFieldLines = splitJsonPreviewLines(multiFieldPreviewJson)
+const secondFieldLine = findJsonPreviewTargetLine(multiFieldPreviewJson, {
+  type: 'field',
+  fieldKey: 'second',
+  prop: 'value',
+})
+assert.ok(secondFieldLine >= 0, '第二个及后续字段也应能定位到 JSON 行')
+assert.match(multiFieldLines[secondFieldLine], /"value": "B"/)
+
 const specialKeyPreviewJson = buildResultPreviewJson({
   fields: {
     'TO:/A "中文"': {
@@ -165,9 +191,21 @@ assert.equal(displayTables[0].title, 'WITHIN THE REGION')
 assert.deepEqual(displayTables[1].rows, [{ 0: 'Kroger', 1: '21' }])
 
 const appVue = fs.readFileSync(new URL('../frontend/src/App.vue', import.meta.url), 'utf8')
+assert.match(appVue, /class="logo smartlds-logo"/, '顶部品牌应使用 SmartLDS 动态 SVG 图标')
+assert.match(appVue, /class="logo-scan"/, '动态图标应包含扫描光线')
+assert.match(appVue, /class="logo-node/, '动态图标应包含数据节点')
+assert.match(appVue, /@media \(prefers-reduced-motion: reduce\)/, '动态图标应支持 reduced-motion 静态兜底')
+assert.match(appVue, /metric-visual rule-priority/, '规则优先卡片应包含动态规则优先视觉点')
+assert.match(appVue, /metric-visual schema-labels/, '原字段名卡片应包含动态 schema 标签视觉点')
+assert.match(appVue, /metric-visual export-ready/, '可导出卡片应包含动态导出视觉点')
+assert.match(appVue, /@keyframes metric-scan/, '首页指标卡应包含扫描动效')
+assert.match(appVue, /@keyframes metric-float/, '首页指标卡应包含轻量浮动动效')
 assert.match(appVue, /class="json-collapse"/, '结果页应保留第一版的普通 JSON 折叠块')
 assert.match(appVue, /title="JSON"/, 'JSON 折叠块标题应回到简单的 JSON')
 assert.match(appVue, /class="json-inspector"/, 'JSON 预览应移动到最右侧检查栏')
+assert.match(appVue, /\.json-inspector\{[^}]*background:#f8fafc/, 'JSON 检查栏应使用浅色核对面板背景')
+assert.match(appVue, /\.json-inspector \.json-block\{[^}]*background:#fff/, '右侧 JSON 代码块应使用浅色纸面背景')
+assert.match(appVue, /\.json-line\.active\{[^}]*rgba\(59,130,246,\.12\)/, 'JSON 高亮应使用柔和蓝色核对态')
 assert.match(appVue, /jsonInspectorOpen/, 'JSON 检查栏应支持显示和隐藏')
 assert.match(appVue, /toggleJsonInspector/, '用户应能手动切换右侧 JSON 检查栏')
 assert.match(appVue, /jsonInspectorOpen\.value = true/, '字段编辑定位时应自动展开右侧 JSON 检查栏')
