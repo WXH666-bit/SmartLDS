@@ -11,6 +11,7 @@ import app as app_module
 from app import (
     apply_corrections,
     apply_ai_fewshot_enhancement,
+    apply_ai_template_enhancement,
     apply_ocr_feedback_learning,
     build_export_json_payload,
     build_field_values,
@@ -37,6 +38,42 @@ class ManualResultFeedbackTest(unittest.TestCase):
             },
             "meta": {},
         }
+
+    def test_anchor_layout_detection_is_sanitized_without_keywords(self):
+        detection = app_module._sanitize_anchor_layout_detection({
+            "mode": "anchor_layout",
+            "min_score": 0.2,
+            "min_matches": 99,
+            "features": [
+                {"text": "陌生标签", "x": 0.25, "y": 0.4, "weight": 8, "role": "field_anchor"},
+                {"text": "越界", "x": 2, "y": 0.5},
+            ],
+        })
+
+        self.assertEqual(detection["mode"], "anchor_layout")
+        self.assertEqual(detection["min_score"], 0.35)
+        self.assertEqual(detection["features"][0]["weight"], 3.0)
+        self.assertEqual(len(detection["features"]), 1)
+
+    def test_feedback_signature_comes_from_ocr_text_and_coordinates(self):
+        blocks = [
+            {"text": "完全陌生确认书", "rect": [300, 20, 700, 60]},
+            {"text": "陌生标签", "rect": [50, 100, 180, 140]},
+            {"text": "ABC-001", "rect": [250, 100, 400, 140]},
+        ]
+        detection = app_module._feedback_layout_signature(
+            blocks,
+            {"fields": {"陌生标签": {"anchors": ["陌生标签"]}}},
+            ["陌生标签"],
+            {"陌生标签": {"value": "ABC-001"}},
+            [1000, 1000],
+        )
+
+        self.assertEqual(detection["mode"], "anchor_layout")
+        texts = {feature["text"] for feature in detection["features"]}
+        self.assertIn("陌生标签", texts)
+        self.assertIn("完全陌生确认书", texts)
+        self.assertNotIn("ABC-001", texts)
 
     def test_legacy_flat_corrections_still_update_existing_fields(self):
         result = apply_corrections(self.make_result(), {"提单号": "BL999"})
@@ -515,7 +552,17 @@ class ManualResultFeedbackTest(unittest.TestCase):
     def test_apply_ai_fewshot_enhancement_merges_suggestions_and_regenerates_yaml(self):
         learned = {
             "template_name": "bol_learned",
-            "keywords": ["BILL OF LADING"],
+            "keywords": [],
+            "source": "fewshot",
+            "detection": {
+                "mode": "anchor_layout",
+                "min_score": 0.55,
+                "min_matches": 2,
+                "features": [
+                    {"text": "提单号", "x": 0.1, "y": 0.2, "weight": 1.0, "role": "field_anchor"},
+                    {"text": "承运人", "x": 0.1, "y": 0.1, "weight": 1.0, "role": "stable_text"},
+                ],
+            },
             "fields": {
                 "提单号": {
                     "label": "提单号",
@@ -553,14 +600,140 @@ class ManualResultFeedbackTest(unittest.TestCase):
         )
 
         self.assertTrue(changes["applied"])
-        self.assertIn("MAERSK LINE", learned["keywords"])
+        self.assertEqual(learned["keywords"], [])
+        self.assertNotIn("MAERSK LINE", learned["yaml_text"])
+        self.assertIn("anchor_layout", learned["yaml_text"])
+        self.assertIn("提单号", learned["detection"]["features"][0]["text"])
         self.assertIn("B/L No.", learned["fields"]["提单号"]["anchors"])
         self.assertEqual(learned["fields"]["提单号"]["value_pattern"], r"^[A-Z]{2}\d+$")
         self.assertTrue(learned["has_table"])
         self.assertEqual(learned["table_headers"], ["Container No.", "Gross Weight"])
-        self.assertIn("MAERSK LINE", learned["yaml_text"])
         self.assertIn("B/L No.", learned["yaml_text"])
         self.assertIn("AI 增强：表头来自 AI 增强", warnings)
+
+
+    def test_ai_template_enhancement_malformed_model_payload_warns_without_raising(self):
+        target_template = {
+            "keywords": ["TARGET"],
+            "fields": {"Field A": {"label": "Field A", "anchors": ["Field A"]}},
+            "table_headers": [],
+        }
+        warnings = []
+
+        changes = apply_ai_template_enhancement(
+            target_template,
+            {
+                "template_keywords": 123,
+                "fields": {"field": "Field A"},
+                "table_headers": 456,
+                "warnings": 789,
+            },
+            selected_fields=["Field A"],
+            include_table=True,
+            warnings=warnings,
+        )
+
+        self.assertFalse(changes["applied"])
+        self.assertEqual(target_template["keywords"], ["TARGET"])
+        self.assertTrue(any("AI" in warning for warning in warnings))
+
+    def test_feedback_ai_enhance_bad_model_payload_does_not_break_feedback(self):
+        old_get_vision_fallback = app_module.get_vision_fallback
+        old_find_original_file = app_module.find_original_file
+        old_render_first_page = app_module.render_first_page_for_vision
+        old_load_blocks = app_module.load_blocks
+
+        class FakeClient:
+            def unavailable_reason(self):
+                return None
+
+            def enhance_template_config(self, **kwargs):
+                return {
+                    "success": True,
+                    "result": {
+                        "template_keywords": 123,
+                        "fields": {"field": "Field A"},
+                        "table_headers": 456,
+                        "warnings": 789,
+                    },
+                }
+
+        warnings = []
+        target_template = {
+            "keywords": ["TARGET"],
+            "fields": {"Field A": {"label": "Field A", "anchors": ["Field A"]}},
+            "output": ["Field A"],
+        }
+
+        try:
+            app_module.get_vision_fallback = lambda: FakeClient()
+            app_module.find_original_file = lambda job_id: ("sample.pdf", "pdf")
+            app_module.render_first_page_for_vision = lambda file_path, file_type, tmp_dir: "sample.png"
+            app_module.load_blocks = lambda job_id: []
+
+            changes = app_module.ai_enhance_feedback_template(
+                job_id="abcdef123456",
+                template_name="target_tpl",
+                target_template=target_template,
+                final_result={"fields": {"Field A": {"label": "Field A", "value": "ABC"}}},
+                selected_fields=["Field A"],
+                include_table=True,
+                warnings=warnings,
+            )
+
+            self.assertFalse(changes["applied"])
+            self.assertTrue(any("AI" in warning for warning in warnings))
+        finally:
+            app_module.get_vision_fallback = old_get_vision_fallback
+            app_module.find_original_file = old_find_original_file
+            app_module.render_first_page_for_vision = old_render_first_page
+            app_module.load_blocks = old_load_blocks
+
+    def test_fewshot_ai_enhance_bad_model_payload_does_not_break_learning(self):
+        old_get_vision_fallback = app_module.get_vision_fallback
+        old_render_first_page = app_module.render_first_page_for_vision
+
+        class FakeClient:
+            def unavailable_reason(self):
+                return None
+
+            def enhance_template_config(self, **kwargs):
+                return {
+                    "success": True,
+                    "result": {
+                        "template_keywords": 123,
+                        "fields": {"field": "Field A"},
+                        "table_headers": 456,
+                        "warnings": 789,
+                    },
+                }
+
+        learned = {
+            "template_name": "bad_ai_payload",
+            "keywords": ["TARGET"],
+            "fields": {"Field A": {"label": "Field A", "anchors": ["Field A"]}},
+            "has_table": False,
+            "table_headers": [],
+            "yaml_text": "old yaml",
+        }
+        warnings = []
+
+        try:
+            app_module.get_vision_fallback = lambda: FakeClient()
+            app_module.render_first_page_for_vision = lambda file_path, file_type, tmp_dir: "sample.png"
+
+            changes = app_module.ai_enhance_fewshot_learning(
+                [("sample.txt", {"Field A": "ABC"})],
+                learned,
+                warnings,
+            )
+
+            self.assertFalse(changes["applied"])
+            self.assertFalse(learned["ai_enhanced"])
+            self.assertTrue(any("AI" in warning for warning in warnings))
+        finally:
+            app_module.get_vision_fallback = old_get_vision_fallback
+            app_module.render_first_page_for_vision = old_render_first_page
 
 
 if __name__ == "__main__":

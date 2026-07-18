@@ -1,6 +1,7 @@
 import axios from 'axios'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api'
+const AI_OPERATION_TIMEOUT_MS = 600000
 
 const API = axios.create({
   baseURL: API_BASE,
@@ -57,7 +58,7 @@ export default {
     return API.post('/config/apply', data)
   },
   fewshotFromResult(data) {
-    return API.post('/fewshot/from-result', data)
+    return API.post('/fewshot/from-result', data, { timeout: AI_OPERATION_TIMEOUT_MS })
   },
   getVisionSettings() {
     return API.get('/vision-settings')
@@ -65,11 +66,17 @@ export default {
   saveVisionSettings(data) {
     return API.post('/vision-settings', data)
   },
+  probeVisionModels(data) {
+    return API.post('/vision-settings/probe', data, { timeout: 60000 })
+  },
+  revealVisionApiKey() {
+    return API.get('/vision-settings/api-key')
+  },
   clearVisionSettings() {
     return API.delete('/vision-settings')
   },
   fewshotLearn(formData) {
-    return API.post('/fewshot/learn', formData, { timeout: 300000 })
+    return API.post('/fewshot/learn', formData, { timeout: AI_OPERATION_TIMEOUT_MS })
   },
   getHistory() {
     return API.get('/history')

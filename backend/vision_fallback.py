@@ -37,13 +37,14 @@ VISION_PROVIDER_OPTIONS = [
     {
         "key": "qwen",
         "label": "通义千问 / 阿里云百炼",
-        "default_model": "qwen3.6-plus",
+        "default_model": "qwen-3.6-flash",
         "default_base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
         "api_key_hint": "DashScope API Key",
         "requires_api_key": True,
         "transport": "chat_completions",
         "models": [
-            {"value": "qwen3.6-plus", "label": "qwen3.6-plus（默认）"},
+            {"value": "qwen-3.6-flash", "label": "qwen-3.6-flash（默认）"},
+            {"value": "qwen3.6-plus", "label": "qwen3.6-plus"},
             {"value": "qwen-vl-max", "label": "qwen-vl-max"},
             {"value": "qwen2.5-vl-72b-instruct", "label": "qwen2.5-vl-72b-instruct"},
             {"value": "qwen2.5-vl-32b-instruct", "label": "qwen2.5-vl-32b-instruct"},
@@ -166,6 +167,100 @@ def _build_provider_endpoint(provider: str | None, base_url: str) -> str:
     if provider == "openai":
         return os.getenv("OPENAI_RESPONSES_URL", f"{base}/responses")
     return f"{base}/chat/completions"
+
+
+def _build_models_endpoint(provider: str | None, base_url: str) -> str:
+    base = str(base_url or provider_defaults(provider)["default_base_url"]).rstrip("/")
+    for suffix in ("/chat/completions", "/responses", "/completions"):
+        if base.endswith(suffix):
+            base = base[: -len(suffix)]
+            break
+    return f"{base}/models"
+
+
+def _model_has_vision_hint(model_id: str) -> bool:
+    text = str(model_id or "").lower()
+    vision_tokens = ("vision", "vl", "omni", "flash", "4o", "qwen")
+    return any(token in text for token in vision_tokens)
+
+
+def _normalize_probe_models(payload: dict[str, Any]) -> list[dict[str, Any]]:
+    raw_models = []
+    if isinstance(payload.get("data"), list):
+        raw_models = payload["data"]
+    elif isinstance(payload.get("models"), list):
+        raw_models = payload["models"]
+
+    models = []
+    seen = set()
+    for item in raw_models:
+        if isinstance(item, str):
+            model_id = item
+        elif isinstance(item, dict):
+            model_id = item.get("id") or item.get("name") or item.get("model")
+        else:
+            continue
+        model_id = str(model_id or "").strip()
+        if not model_id or model_id in seen:
+            continue
+        seen.add(model_id)
+        models.append({
+            "value": model_id,
+            "label": model_id,
+            "vision_hint": _model_has_vision_hint(model_id),
+        })
+
+    return sorted(models, key=lambda item: (not item["vision_hint"], item["value"].lower()))
+
+
+def probe_vision_models(data: dict[str, Any], saved_settings: dict[str, Any] | None = None) -> dict[str, Any]:
+    settings = dict(saved_settings or default_vision_settings())
+    provider = str(data.get("provider") or settings.get("provider") or DEFAULT_VISION_PROVIDER)
+    provider_cfg = provider_defaults(provider)
+    base_url = str(data.get("base_url") or settings.get("base_url") or provider_cfg["default_base_url"]).strip()
+    api_key = str(data.get("api_key") or settings.get("api_key") or _provider_env_api_key(provider) or _default_api_key(provider)).strip()
+
+    if _provider_requires_api_key(provider) and not api_key:
+        return {
+            "success": False,
+            "models": [],
+            "warning": f"缺少 {provider_cfg.get('api_key_hint') or _provider_key_name(provider)}",
+            "endpoint": _build_models_endpoint(provider, base_url),
+        }
+
+    endpoint = _build_models_endpoint(provider, base_url)
+    headers = {"Content-Type": "application/json"}
+    if api_key:
+        headers["Authorization"] = f"Bearer {api_key}"
+    req = urllib.request.Request(endpoint, method="GET", headers=headers)
+
+    try:
+        with urllib.request.urlopen(req, timeout=45.0) as resp:
+            body = resp.read().decode("utf-8")
+        payload = json.loads(body)
+        models = _normalize_probe_models(payload if isinstance(payload, dict) else {})
+    except (json.JSONDecodeError, ValueError, urllib.error.URLError, TimeoutError, OSError) as exc:
+        return {
+            "success": False,
+            "models": [],
+            "warning": f"模型检测失败：{exc}",
+            "endpoint": endpoint,
+        }
+
+    if not models:
+        return {
+            "success": False,
+            "models": [],
+            "warning": "检测成功，但接口未返回可用模型",
+            "endpoint": endpoint,
+        }
+
+    return {
+        "success": True,
+        "models": models,
+        "endpoint": endpoint,
+        "warnings": [] if any(item["vision_hint"] for item in models) else ["未能从模型名判断视觉能力，请选择支持图片输入的模型"],
+    }
 
 
 def _env_bool(name: str, default: bool = False) -> bool:

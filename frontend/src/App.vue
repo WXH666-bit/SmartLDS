@@ -446,8 +446,21 @@
         />
       </el-form-item>
     </el-form>
+    <div v-if="feedback.loading" class="operation-progress feedback-progress" aria-live="polite">
+      <div class="operation-progress-head">
+        <span>{{ feedbackProgressText }}</span>
+        <b>{{ feedback.ai_enhance ? 'AI 增强中' : '处理中' }}</b>
+      </div>
+      <div class="operation-progress-track">
+        <span
+          class="operation-progress-fill"
+          :class="{ indeterminate: feedback.ai_enhance }"
+          :style="{ width: feedbackProgress + '%' }"
+        ></span>
+      </div>
+    </div>
     <template #footer>
-      <el-button @click="showFeedback=false">取消</el-button>
+      <el-button :disabled="feedback.loading" @click="showFeedback=false">取消</el-button>
       <el-button type="primary" :loading="feedback.loading" @click="submitFeedback">开始反哺</el-button>
     </template>
   </el-dialog>
@@ -504,24 +517,47 @@
           <el-option v-for="p in visionOptions.providers" :key="p.key" :label="p.label" :value="p.key" />
         </el-select>
       </el-form-item>
-      <el-form-item label="模型">
-        <el-select v-model="visionSettings.model" filterable allow-create style="width:100%">
-          <el-option v-for="m in currentVisionModels" :key="m.value" :label="m.label" :value="m.value" />
-        </el-select>
-      </el-form-item>
       <el-form-item label="API Key">
         <el-input v-model="visionSettings.api_key" type="password" show-password clearable :placeholder="visionApiKeyPlaceholder" />
         <div class="form-hint">
-          <span v-if="visionSettings.has_api_key">已保存：{{ visionSettings.masked_api_key }}</span>
+          <span v-if="visionSettings.has_api_key" class="saved-api-key-line">
+            已保存：{{ visionSavedApiKeyDisplay }}
+            <el-button
+              text
+              circle
+              size="small"
+              class="saved-key-eye"
+              :loading="visionSavedApiKeyLoading"
+              :title="visionSavedApiKeyVisible ? '隐藏已保存 API Key' : '查看已保存 API Key'"
+              @click="toggleSavedVisionApiKey"
+            >
+              <el-icon><Hide v-if="visionSavedApiKeyVisible" /><View v-else /></el-icon>
+            </el-button>
+          </span>
           <span v-else>{{ visionApiKeyHint }}</span>
         </div>
-      </el-form-item>
-      <el-form-item label="触发阈值">
-        <el-slider v-model="visionSettings.threshold" :min="0.1" :max="0.95" :step="0.01" show-input />
       </el-form-item>
       <el-form-item label="接口地址">
         <el-input v-model="visionSettings.base_url" clearable />
         <div class="form-hint">{{ visionBaseUrlHint }}</div>
+      </el-form-item>
+      <el-form-item label="检测模型">
+        <div class="vision-probe-row">
+          <el-button type="primary" plain :loading="visionProbeLoading" @click="probeVisionModels">检测模型</el-button>
+          <span v-if="visionProbeMessage" class="vision-probe-message" :class="{ error: visionProbeError }">{{ visionProbeMessage }}</span>
+        </div>
+      </el-form-item>
+      <el-form-item label="模型">
+        <el-select v-model="visionSettings.model" filterable allow-create style="width:100%" placeholder="先检测模型，或手动输入模型名">
+          <el-option v-for="m in currentVisionModels" :key="m.value" :label="m.label" :value="m.value">
+            <span>{{ m.label }}</span>
+            <span v-if="m.vision_hint" class="model-vision-hint">视觉</span>
+          </el-option>
+        </el-select>
+        <div class="form-hint">检测列表仅供选择；部分供应商不会标注视觉能力，请选择支持图片输入的模型。</div>
+      </el-form-item>
+      <el-form-item label="触发阈值">
+        <el-slider v-model="visionSettings.threshold" :min="0.1" :max="0.95" :step="0.01" show-input />
       </el-form-item>
       <div class="vision-actions">
         <el-button type="danger" plain @click="clearVisionSettings">清除保存</el-button>
@@ -581,12 +617,25 @@
       <el-button size="small" type="primary" :loading="fsLearning" @click="doFewshotLearn" :disabled="fsPairs.length<2">开始学习</el-button>
     </div>
     <p v-if="fsAiEnhance && !visionSettings.enabled" class="fs-ai-hint">需要先在“模型设置”中启用视觉兜底并保存模型设置。</p>
+    <div v-if="fsLearning" class="operation-progress fs-progress" aria-live="polite">
+      <div class="operation-progress-head">
+        <span>{{ fsProgressText }}</span>
+        <b>{{ fsAiEnhance ? 'AI 增强中' : '学习中' }}</b>
+      </div>
+      <div class="operation-progress-track">
+        <span
+          class="operation-progress-fill"
+          :class="{ indeterminate: fsAiEnhance }"
+          :style="{ width: fsProgress + '%' }"
+        ></span>
+      </div>
+    </div>
 
     <!-- Result -->
     <div v-if="fsResult" class="fs-result">
       <div class="section-title">学习结果</div>
       <p style="font-size:12px;color:#888;margin:0 0 8px">
-        版式: <b>{{ fsResult.template_name }}</b> · {{ fsResult.keywords.length }} 关键词 · {{ Object.keys(fsResult.fields||{}).length }} 字段
+        版式: <b>{{ fsResult.template_name }}</b> · {{ fsResult.detection?.features?.length || 0 }} 个版式特征 · {{ Object.keys(fsResult.fields||{}).length }} 字段
         <el-tag v-if="fsResult.ai_enhanced" size="small" type="success" effect="plain" style="margin-left:8px">AI 已增强</el-tag>
       </p>
       <el-alert
@@ -619,10 +668,15 @@
             </template>
           </el-popconfirm>
         </div>
-        <div class="cc-keywords">
+        <div v-if="tpl.detection?.mode === 'anchor_layout'" class="cc-keywords">
+          <span class="cc-label">版式识别：</span>
+          <el-tag size="small" type="primary" effect="plain">锚点布局</el-tag>
+          <span class="cc-none">{{ tpl.detection.features?.length || 0 }} 个样本特征</span>
+        </div>
+        <div v-else class="cc-keywords">
           <span class="cc-label">关键词：</span>
           <el-tag v-for="kw in tpl.keywords" :key="kw" size="small" class="cc-kw">{{ kw }}</el-tag>
-          <span v-if="!tpl.keywords.length" class="cc-none">自动检测</span>
+          <span v-if="!tpl.keywords.length" class="cc-none">未配置</span>
         </div>
         <div class="cc-fields">
           <div class="cc-field-head">
@@ -655,7 +709,7 @@
 <script setup>
 import { ref, reactive, computed, nextTick, onMounted, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Loading } from '@element-plus/icons-vue'
+import { Loading, View, Hide } from '@element-plus/icons-vue'
 import api from './api/index.js'
 import {
   buildDisplayTables,
@@ -663,7 +717,9 @@ import {
   buildResultPreviewJson,
   finishFieldEdit,
   finishFieldLabelEdit,
+  isFeedbackCreateConflict,
   isFieldRowFound,
+  resolveFeedbackDefaults,
   splitJsonPreviewLines,
 } from './resultState.js'
 
@@ -718,6 +774,12 @@ const feedback = reactive({
   ai_enhance: false,
   loading: false
 })
+const feedbackProgress = computed(() => feedback.loading ? (feedback.ai_enhance ? 72 : 48) : 0)
+const feedbackProgressText = computed(() => (
+  feedback.ai_enhance
+    ? '正在调用视觉模型增强版式，可能需要几十秒'
+    : '正在保存当前字段和表格结构'
+))
 const feedbackFieldOptions = computed(() =>
   fieldRows.value.filter(row => row.found && String(row.display || '').trim())
 )
@@ -731,11 +793,18 @@ const configTemplates = ref([])
 const showVisionSettings = ref(false)
 const visionSettingsLoading = ref(false)
 const visionSettingsSaving = ref(false)
+const visionProbeLoading = ref(false)
+const visionProbeMessage = ref('')
+const visionProbeError = ref(false)
+const visionDetectedModels = ref([])
+const visionSavedApiKeyVisible = ref(false)
+const visionSavedApiKeyLoading = ref(false)
+const visionSavedApiKey = ref('')
 const visionOptions = reactive({ providers: [] })
 const visionSettings = reactive({
   enabled: false,
   provider: 'qwen',
-  model: 'qwen3.6-plus',
+  model: 'qwen-3.6-flash',
   base_url: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
   api_key: '',
   threshold: 0.55,
@@ -743,6 +812,7 @@ const visionSettings = reactive({
   masked_api_key: ''
 })
 const currentVisionModels = computed(() => {
+  if (visionDetectedModels.value.length) return visionDetectedModels.value
   const provider = visionOptions.providers.find(p => p.key === visionSettings.provider)
   return provider?.models || []
 })
@@ -759,6 +829,11 @@ const visionApiKeyHint = computed(() => {
   }
   return `尚未保存 ${currentVisionProvider.value.api_key_hint || 'API Key'}`
 })
+const visionSavedApiKeyDisplay = computed(() => (
+  visionSavedApiKeyVisible.value && visionSavedApiKey.value
+    ? visionSavedApiKey.value
+    : visionSettings.masked_api_key
+))
 const visionBaseUrlHint = computed(() => {
   if (visionSettings.provider === 'custom') {
     return '自定义模型使用 OpenAI-compatible chat/completions；Ollama 通常填 http://localhost:11434/v1。'
@@ -768,6 +843,18 @@ const visionBaseUrlHint = computed(() => {
   }
   return '千问默认使用 DashScope OpenAI 兼容模式；通常不用改。'
 })
+
+function formatApiError(e) {
+  const backendError = e?.response?.data?.error
+  if (backendError) return backendError
+  const backendWarning = e?.response?.data?.warning
+  if (backendWarning) return backendWarning
+  const message = String(e?.message || '')
+  if (e?.code === 'ECONNABORTED' || /timeout/i.test(message)) {
+    return '模型响应超时，请确认本地模型已启动，或稍后重试'
+  }
+  return message || '请求失败'
+}
 
 // History
 const showHistory = ref(false)
@@ -811,11 +898,16 @@ async function deleteTemplate(name) {
 function applyVisionSettingsPayload(payload) {
   const data = payload || {}
   if (data.options?.providers) visionOptions.providers = data.options.providers
+  visionDetectedModels.value = []
+  visionProbeMessage.value = ''
+  visionProbeError.value = false
+  visionSavedApiKeyVisible.value = false
+  visionSavedApiKey.value = ''
   const s = data.settings || {}
   Object.assign(visionSettings, {
     enabled: !!s.enabled,
     provider: s.provider || 'qwen',
-    model: s.model || 'qwen3.6-plus',
+    model: s.model || 'qwen-3.6-flash',
     base_url: s.base_url || 'https://dashscope.aliyuncs.com/compatible-mode/v1',
     api_key: '',
     threshold: Number(s.threshold ?? 0.55),
@@ -839,8 +931,71 @@ async function loadVisionSettings() {
 function onVisionProviderChange() {
   const provider = visionOptions.providers.find(p => p.key === visionSettings.provider)
   if (!provider) return
+  visionDetectedModels.value = []
+  visionProbeMessage.value = ''
+  visionProbeError.value = false
+  visionSavedApiKeyVisible.value = false
+  visionSavedApiKey.value = ''
   visionSettings.model = provider.default_model || provider.models?.[0]?.value || visionSettings.model
   visionSettings.base_url = provider.default_base_url || visionSettings.base_url
+}
+
+async function probeVisionModels() {
+  visionProbeLoading.value = true
+  visionProbeMessage.value = ''
+  visionProbeError.value = false
+  try {
+    const payload = {
+      provider: visionSettings.provider,
+      base_url: visionSettings.base_url,
+    }
+    if (visionSettings.api_key.trim()) payload.api_key = visionSettings.api_key.trim()
+    const { data } = await api.probeVisionModels(payload)
+    visionDetectedModels.value = data.models || []
+    const preferred = visionDetectedModels.value.find(model => model.vision_hint) || visionDetectedModels.value[0]
+    if (preferred) visionSettings.model = preferred.value
+    const count = visionDetectedModels.value.length
+    const warning = data.warnings?.length ? `，${data.warnings.length} 条提示` : ''
+    visionProbeMessage.value = `检测到 ${count} 个模型${warning}`
+    ElMessage.success('模型检测完成')
+  } catch (e) {
+    visionDetectedModels.value = []
+    visionProbeError.value = true
+    visionProbeMessage.value = formatApiError(e)
+    ElMessage.error('模型检测失败: ' + formatApiError(e))
+  } finally {
+    visionProbeLoading.value = false
+  }
+}
+
+async function revealSavedVisionApiKey() {
+  visionSavedApiKeyLoading.value = true
+  try {
+    const { data } = await api.revealVisionApiKey()
+    visionSavedApiKey.value = data.api_key || ''
+    if (!data.has_api_key) {
+      visionSavedApiKeyVisible.value = false
+      ElMessage.info('当前没有已保存的 API Key')
+      return
+    }
+    visionSavedApiKeyVisible.value = true
+  } catch (e) {
+    ElMessage.error('读取已保存 API Key 失败: ' + formatApiError(e))
+  } finally {
+    visionSavedApiKeyLoading.value = false
+  }
+}
+
+async function toggleSavedVisionApiKey() {
+  if (visionSavedApiKeyVisible.value) {
+    visionSavedApiKeyVisible.value = false
+    return
+  }
+  if (visionSavedApiKey.value) {
+    visionSavedApiKeyVisible.value = true
+    return
+  }
+  await revealSavedVisionApiKey()
 }
 
 async function saveVisionSettings() {
@@ -1164,6 +1319,12 @@ const fsTemplateName = ref('')
 const fsAiEnhance = ref(false)
 const fsLearning = ref(false)
 const fsResult = ref(null)
+const fsProgress = computed(() => fsLearning.value ? (fsAiEnhance.value ? 72 : 46) : 0)
+const fsProgressText = computed(() => (
+  fsAiEnhance.value
+    ? '正在学习样本并调用视觉模型增强版式，可能需要几十秒'
+    : '正在从配对样本学习版式'
+))
 
 function fsBatchDrop(e) {
   fsBatchSelect({ target: e.dataTransfer })
@@ -1251,10 +1412,18 @@ async function doFewshotLearn() {
       if (!fsTemplateName.value) {
         fsTemplateName.value = data.result.template_name
       }
-      ElMessage.success('学习完成')
+      const warningCount = data.result?.warnings?.length || 0
+      const warningText = warningCount ? `，${warningCount} 条警告` : ''
+      if (fsAiEnhance.value && !data.result?.ai_enhanced) {
+        ElMessage.success(`学习完成，AI 增强未完成${warningText}`)
+      } else if (data.result?.ai_enhanced) {
+        ElMessage.success(`学习完成，AI 已增强${warningText}`)
+      } else {
+        ElMessage.success(`学习完成${warningText}`)
+      }
     }
     else { ElMessage.error(data.error || '学习失败') }
-  } catch(e) { ElMessage.error('请求失败: ' + e.message) }
+  } catch(e) { ElMessage.error('请求失败: ' + formatApiError(e)) }
   finally { fsLearning.value = false }
 }
 
@@ -1265,6 +1434,8 @@ async function fsApplyResult() {
     const { data } = await api.applyConfig({
       template_name: name,
       keywords: fsResult.value.keywords,
+      source: fsResult.value.source || 'fewshot',
+      detection: fsResult.value.detection,
       fields: fsResult.value.fields,
       validators: fsResult.value.validators || {},
       has_table: !!fsResult.value.has_table,
@@ -1478,10 +1649,13 @@ function suggestTemplateName() {
 
 async function openFeedbackDialog() {
   if (!configTemplates.value.length) await loadConfig()
-  const currentTemplate = meta.template && meta.template !== 'unknown' ? meta.template : ''
-  const canMergeCurrent = configTemplates.value.some(t => t.name === currentTemplate)
-  feedback.mode = canMergeCurrent ? 'merge' : 'create'
-  feedback.template_name = canMergeCurrent ? currentTemplate : suggestTemplateName()
+  const defaults = resolveFeedbackDefaults({
+    metaTemplate: meta.template,
+    templates: configTemplates.value,
+    suggestedName: suggestTemplateName(),
+  })
+  feedback.mode = defaults.mode
+  feedback.template_name = defaults.templateName
   feedback.field_names = feedbackFieldOptions.value.map(row => row.name)
   feedback.include_table = !!tableData.headers.length
   feedback.ai_enhance = false
@@ -1490,6 +1664,13 @@ async function openFeedbackDialog() {
 
 async function submitFeedback() {
   if (!feedback.template_name) return ElMessage.error('请填写或选择目标版式')
+  if (isFeedbackCreateConflict({
+    mode: feedback.mode,
+    templateName: feedback.template_name,
+    templates: configTemplates.value,
+  })) {
+    return ElMessage.error('版式名已存在，请切换到“合并已有版式”或更换新版式名称')
+  }
   if (!feedback.field_names.length && !feedback.include_table) {
     return ElMessage.error('至少选择一个字段或表格')
   }
@@ -1504,14 +1685,16 @@ async function submitFeedback() {
       ai_enhance: feedback.ai_enhance,
       mode: feedback.mode
     })
-    const warn = data.warnings?.length ? `，${data.warnings.length} 条提醒` : ''
-    const ai = data.ai_enhanced ? '，AI 已增强' : ''
+    const warn = data.warnings?.length ? `，${data.warnings.length} 条警告` : ''
+    const ai = data.ai_enhanced
+      ? '，AI 已增强'
+      : (feedback.ai_enhance ? '，AI 增强未完成' : '')
     const action = data.created ? '已创建并反哺到' : '已反哺到'
     ElMessage.success(`${action} ${data.template}${ai}${warn}`)
     showFeedback.value = false
     await loadConfig()
   } catch (e) {
-    ElMessage.error('反哺失败: ' + (e.response?.data?.error || e.message))
+    ElMessage.error('反哺失败: ' + formatApiError(e))
   } finally {
     feedback.loading = false
   }
@@ -1821,6 +2004,13 @@ function confirmExport() {
 .table-row-actions{width:86px;padding:8px;display:flex;align-items:center;justify-content:center;background:#fafafa}
 .feedback-field-list{max-height:260px;overflow:auto;display:flex;flex-direction:column;gap:6px;padding:8px;border:1px solid #e5e7eb;border-radius:10px;background:#fafafa}
 .feedback-value{margin-left:8px;color:#94a3b8;font-size:12px}
+.operation-progress{margin:12px 0 2px;padding:10px 12px;border:1px solid #dbeafe;border-radius:10px;background:#f8fbff}
+.operation-progress-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px;font-size:12px;color:#475569}
+.operation-progress-head b{font-size:11px;color:#2563eb;white-space:nowrap}
+.operation-progress-track{height:7px;border-radius:999px;background:#e0ecff;overflow:hidden}
+.operation-progress-fill{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#3b82f6,#06b6d4);transition:width .35s ease}
+.operation-progress-fill.indeterminate{width:58%!important;background:linear-gradient(90deg,#3b82f6,#06b6d4,#60a5fa);animation:operation-progress-flow 1.15s ease-in-out infinite}
+@keyframes operation-progress-flow{0%{transform:translateX(-70%)}50%{transform:translateX(35%)}100%{transform:translateX(115%)}}
 .export-option{display:flex;margin:10px 0;padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px;background:#fafafa}
 .export-option span{margin-left:8px;color:#94a3b8;font-size:12px}
 
@@ -1853,6 +2043,7 @@ function confirmExport() {
 .fs-pair-detail{flex:1;font-size:11px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .fs-pair-check{font-size:14px;color:#10b981;flex-shrink:0}
 .fs-result{margin-top:16px}
+.fs-progress{margin-top:12px}
 .fs-ai-hint{font-size:11px;color:#a16207;margin:8px 0 0;text-align:right}
 
 /* History */
@@ -1868,6 +2059,13 @@ function confirmExport() {
 /* Vision settings */
 .vision-form{padding-top:4px}
 .form-hint{font-size:12px;color:#94a3b8;line-height:1.6;margin-top:6px}
+.vision-probe-row{display:flex;align-items:center;gap:10px;min-height:32px}
+.vision-probe-message{font-size:12px;color:#2563eb;line-height:1.4}
+.vision-probe-message.error{color:#dc2626}
+.model-vision-hint{float:right;margin-left:12px;color:#2563eb;font-size:11px;font-weight:700}
+.saved-api-key-line{display:inline-flex;align-items:center;gap:4px}
+.saved-key-eye{width:24px;height:24px;color:#64748b;vertical-align:middle}
+.saved-key-eye:hover{color:#2563eb;background:#eff6ff}
 .vision-actions{display:flex;align-items:center;gap:10px;margin-top:18px}
 
 /* Config drawer */
@@ -1904,7 +2102,8 @@ function confirmExport() {
 }
 
 @media (prefers-reduced-motion: reduce){
-  .logo-scan,.logo-node,.metric-scan,.metric-dot,.schema-tag,.export-check{animation:none}
+  .logo-scan,.logo-node,.metric-scan,.metric-dot,.schema-tag,.export-check,.operation-progress-fill.indeterminate{animation:none}
+  .operation-progress-fill.indeterminate{transform:none;width:72%!important}
   .logo-scan{opacity:.78}
   .logo-node{opacity:.72}
   .metric-scan{opacity:.55}

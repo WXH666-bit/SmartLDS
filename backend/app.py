@@ -36,6 +36,7 @@ from ocr_engine import OCREngine
 from preprocess import Preprocessor
 from layout_parser import LayoutParser
 from field_extractor import FieldExtractor
+from template_signature import build_anchor_layout_signature
 from vision_fallback import (
     VisionFallbackClient,
     add_meta_warning,
@@ -44,6 +45,7 @@ from vision_fallback import (
     evaluate_recognition_quality,
     merge_vision_fallback_result,
     normalize_vision_model,
+    probe_vision_models,
     provider_defaults,
     public_vision_settings,
     vision_settings_options,
@@ -326,14 +328,50 @@ def _field_has_reliable_anchor(field_name: str, info: dict) -> bool:
     return bool(explicit) and (info or {}).get("source") != "manual"
 
 
-def _feedback_template_keywords(blocks: list[dict] | None, field_names: list[str]) -> list[str]:
-    keywords = []
-    for block in (blocks or [])[:12]:
-        text = str(block.get("text") or "").strip()
-        if 2 <= len(text) <= 60:
-            keywords.append(text)
-    keywords.extend(field_names[:6])
-    return _merge_unique_strings([], keywords, limit=8)
+def _feedback_layout_signature(blocks, target_template, selected_fields, final_fields, image_size):
+    """Build a vocabulary-free signature for a newly created feedback template."""
+    blocks = blocks or []
+    if not image_size or len(image_size) < 2:
+        rects = [_block_rect(block) for block in blocks]
+        rects = [rect for rect in rects if rect]
+        image_size = [
+            max((rect[2] for rect in rects), default=1),
+            max((rect[3] for rect in rects), default=1),
+        ]
+
+    observations = {}
+    excluded = set()
+    fields = target_template.get("fields", {})
+    for info in (final_fields or {}).values():
+        if not isinstance(info, dict):
+            continue
+        value = str(info.get("corrected") or info.get("cleaned") or info.get("value") or "").strip()
+        value_block = _find_ocr_text_block(blocks, value) if value else None
+        if value_block:
+            excluded.add(id(value_block))
+    for field_name in selected_fields:
+        entry = fields.get(field_name) or {}
+        info = final_fields.get(field_name) or {}
+        anchors = entry.get("anchors") or _field_feedback_anchors(field_name, info)
+        anchor_block = _find_anchor_text_block(blocks, anchors)
+        value = str(info.get("corrected") or info.get("cleaned") or info.get("value") or "").strip()
+        value_block = _find_ocr_text_block(blocks, value) if value else None
+        anchor_rect = _block_rect(anchor_block)
+        if not anchor_rect or anchor_block is value_block:
+            continue
+        observations[field_name] = [{
+            "sample_idx": 0,
+            "anchor_text": str(anchor_block.get("text") or "").strip(),
+            "anchor_rect": anchor_rect,
+            "score": 1.0,
+        }]
+
+    return build_anchor_layout_signature(
+        [blocks],
+        observations,
+        [image_size],
+        excluded_block_ids=[excluded],
+    )
 
 
 def _normalize_ocr_text(text: str | None) -> str:
@@ -475,37 +513,46 @@ def _valid_ai_position(position: str | None) -> str | None:
     return position if position in {"right", "below", "inline"} else None
 
 
+def _empty_ai_changes() -> dict:
+    return {"applied": False, "keywords": [], "fields": [], "table_headers": []}
+
+
+def _ai_array(value, name: str, warnings: list[str]) -> list:
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return value
+    warnings.append(f"AI 增强返回的 {name} 不是数组，已跳过")
+    return []
+
+
 def apply_ai_template_enhancement(
     target_template: dict,
     enhancement: dict,
     selected_fields: list[str],
     include_table: bool,
     warnings: list[str],
+    allow_keywords: bool = True,
 ) -> dict:
     """把 AI 返回的版式增强建议安全合并到目标模板。"""
     selected = {str(name).strip() for name in selected_fields if str(name).strip()}
-    changes = {
-        "applied": False,
-        "keywords": [],
-        "fields": [],
-        "table_headers": [],
-    }
+    changes = _empty_ai_changes()
     if not isinstance(enhancement, dict):
         warnings.append("AI 增强未返回有效配置对象")
         return changes
 
     keywords = [
         str(item).strip()
-        for item in (enhancement.get("template_keywords") or [])
+        for item in _ai_array(enhancement.get("template_keywords"), "template_keywords", warnings)
         if str(item).strip()
     ]
-    if keywords:
+    if keywords and allow_keywords:
         before = list(target_template.get("keywords", []) or [])
         target_template["keywords"] = _merge_unique_strings(before, keywords, limit=12)
         changes["keywords"] = [item for item in target_template["keywords"] if item not in before]
 
     target_fields = target_template.setdefault("fields", {})
-    for item in (enhancement.get("fields") or []):
+    for item in _ai_array(enhancement.get("fields"), "fields", warnings):
         if not isinstance(item, dict):
             continue
         field_name = str(item.get("field") or item.get("label") or "").strip()
@@ -551,7 +598,7 @@ def apply_ai_template_enhancement(
     if include_table:
         headers = [
             str(header).strip()
-            for header in (enhancement.get("table_headers") or [])
+            for header in _ai_array(enhancement.get("table_headers"), "table_headers", warnings)
             if str(header).strip()
         ]
         if headers:
@@ -562,7 +609,7 @@ def apply_ai_template_enhancement(
                 item for item in target_template["table_headers"] if item not in before
             ]
 
-    for warning in enhancement.get("warnings") or []:
+    for warning in _ai_array(enhancement.get("warnings"), "warnings", warnings):
         text = str(warning).strip()
         if text:
             warnings.append(f"AI 增强：{text}")
@@ -615,6 +662,7 @@ def ai_enhance_feedback_template(
         selected_fields=selected_fields,
         include_table=include_table,
         warnings=warnings,
+        allow_keywords=(target_template.get("detection") or {}).get("mode") != "anchor_layout",
     )
 
 
@@ -655,6 +703,8 @@ def _regenerate_fewshot_yaml(learned_result: dict) -> str:
         learned_result.get("fields") or {},
         has_table=bool(learned_result.get("has_table")),
         table_headers=learned_result.get("table_headers") or [],
+        detection=learned_result.get("detection"),
+        source=learned_result.get("source") or "fewshot",
     )
 
 
@@ -678,9 +728,10 @@ def apply_ai_fewshot_enhancement(
         selected_fields=selected_fields,
         include_table=True,
         warnings=warnings,
+        allow_keywords=False,
     )
 
-    learned_result["keywords"] = target_template.get("keywords", [])
+    learned_result["keywords"] = []
     learned_result["fields"] = target_template.get("fields", {})
     learned_result["has_table"] = bool(target_template.get("has_table", False))
     learned_result["table_headers"] = target_template.get("table_headers", [])
@@ -1600,6 +1651,8 @@ def api_config():
             "name": tname,
             "has_table": tcfg.get("has_table", False),
             "keywords": tcfg.get("keywords", []),
+            "source": tcfg.get("source", "builtin"),
+            "detection": tcfg.get("detection"),
             "fields": [],
         }
         for fname in output_list:
@@ -1656,6 +1709,45 @@ def api_config_delete(template_name):
 # API: 版式管理 — 应用 Few-shot 生成的配置
 # ================================================================
 
+def _sanitize_anchor_layout_detection(value):
+    """Keep only the supported, serializable sample-signature shape."""
+    if not isinstance(value, dict) or value.get("mode") != "anchor_layout":
+        return None
+    features = []
+    for feature in value.get("features") or []:
+        if not isinstance(feature, dict):
+            continue
+        text = str(feature.get("text") or "").strip()
+        try:
+            x = float(feature.get("x"))
+            y = float(feature.get("y"))
+            weight = float(feature.get("weight", 1.0))
+        except (TypeError, ValueError):
+            continue
+        if not text or not (0.0 <= x <= 1.0 and 0.0 <= y <= 1.0):
+            continue
+        features.append({
+            "text": text[:120],
+            "x": round(x, 4),
+            "y": round(y, 4),
+            "weight": max(0.1, min(weight, 3.0)),
+            "role": "stable_text" if feature.get("role") == "stable_text" else "field_anchor",
+        })
+    if not features:
+        return None
+    try:
+        min_score = float(value.get("min_score", 0.55))
+        min_matches = int(value.get("min_matches", 2))
+    except (TypeError, ValueError):
+        min_score = 0.55
+        min_matches = 2
+    return {
+        "mode": "anchor_layout",
+        "min_score": max(0.35, min(min_score, 0.95)),
+        "min_matches": max(2, min(min_matches, len(features))),
+        "features": features,
+    }
+
 @app.route("/api/config/apply", methods=["POST"])
 def api_config_apply():
     """
@@ -1682,6 +1774,10 @@ def api_config_apply():
     keywords = data.get("keywords", [])
     fields = data.get("fields", {})
     validators = data.get("validators", {})
+    source = str(data.get("source") or "fewshot").strip() or "fewshot"
+    detection = _sanitize_anchor_layout_detection(data.get("detection"))
+    if detection:
+        keywords = []
     table_headers = [str(h).strip() for h in (data.get("table_headers") or []) if str(h).strip()]
     has_table = bool(data.get("has_table")) or bool(table_headers)
 
@@ -1717,10 +1813,13 @@ def api_config_apply():
         cfg["templates"] = {}
     cfg["templates"][template_name] = {
         "keywords": keywords,
+        "source": source,
         "has_table": has_table,
         "fields": template_fields,
         "output": list(fields.keys()),
     }
+    if detection:
+        cfg["templates"][template_name]["detection"] = detection
     if table_headers:
         cfg["templates"][template_name]["table_headers"] = table_headers
 
@@ -1792,9 +1891,9 @@ def api_fewshot_from_result():
     if mode == "create":
         if template_name in templates:
             return jsonify({"error": f"template '{template_name}' already exists"}), 409
-        selected_for_keywords = [str(name).strip() for name in field_names if str(name).strip()]
         templates[template_name] = {
-            "keywords": _feedback_template_keywords(load_blocks(job_id), selected_for_keywords),
+            "keywords": [],
+            "source": "feedback",
             "has_table": False,
             "enabled": True,
             "hidden": False,
@@ -1877,6 +1976,21 @@ def api_fewshot_from_result():
         blocks=load_blocks(job_id),
         warnings=warnings,
     )
+
+    if created:
+        job_blocks = load_blocks(job_id)
+        detection = _feedback_layout_signature(
+            job_blocks,
+            target_template,
+            selected_fields,
+            final_fields,
+            final_result.get("meta", {}).get("image_size"),
+        )
+        if detection.get("features"):
+            target_template["keywords"] = []
+            target_template["detection"] = detection
+        else:
+            warnings.append("当前样本没有形成可靠版式特征，新版式已保存但暂不会自动命中")
 
     ai_changes = {"applied": False, "keywords": [], "fields": [], "table_headers": []}
     if ai_enhance:
@@ -2100,6 +2214,26 @@ def api_vision_settings_save():
         "success": True,
         "settings": settings,
         "options": vision_settings_options(),
+    })
+
+
+@app.route("/api/vision-settings/probe", methods=["POST"])
+def api_vision_settings_probe():
+    """按当前表单配置检测可用模型；不保存 API Key 或模型设置。"""
+    data = request.get_json(silent=True) or {}
+    result = probe_vision_models(data, saved_settings=load_vision_settings(include_secret=True))
+    return jsonify(result), 200 if result.get("success") else 400
+
+
+@app.route("/api/vision-settings/api-key", methods=["GET"])
+def api_vision_settings_api_key():
+    """按需返回本地保存的 API Key 明文；仅用于本地设置弹窗的小眼睛查看。"""
+    settings = load_vision_settings(include_secret=True)
+    api_key = str(settings.get("api_key") or "")
+    return jsonify({
+        "success": True,
+        "has_api_key": bool(api_key),
+        "api_key": api_key,
     })
 
 

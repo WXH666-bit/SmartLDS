@@ -23,6 +23,8 @@ import re
 import math
 from difflib import SequenceMatcher
 
+from template_signature import score_anchor_layout_signature
+
 try:
     import yaml
     _HAS_YAML = True
@@ -605,7 +607,7 @@ class FieldExtractor:
             return {"fields": {}, "table": [], "template": "unknown"}
 
         # 版式识别
-        template = self._detect_template(blocks)
+        template = self._detect_template(blocks, image_size)
 
         # 从当前模板读取字段定义（各版式独立，不再依赖全局 field_defs）
         tpl_config = self.config.get("templates", {}).get(template, {})
@@ -744,12 +746,26 @@ class FieldExtractor:
     # 版式识别
     # ================================================================
 
-    def _detect_template(self, blocks):
-        """加权关键词评分选版式（关键词列表来自 config.yaml 或内置默认值）"""
+    def _detect_template(self, blocks, image_size=None):
+        """Select learned templates by layout signature and legacy ones by keywords."""
         all_text = " ".join(b["text"] for b in blocks).upper()
 
         scores = {}
-        for tpl, keywords in self.template_keywords.items():
+        candidates = {}
+        templates = self.config.get("templates", {})
+        for tpl, template_cfg in templates.items():
+            if template_cfg.get("enabled", True) is False:
+                continue
+
+            detection = template_cfg.get("detection")
+            if isinstance(detection, dict) and detection.get("mode") == "anchor_layout":
+                info = score_anchor_layout_signature(detection, blocks, image_size)
+                scores[tpl] = info
+                if info.get("accepted"):
+                    candidates[tpl] = info
+                continue
+
+            keywords = template_cfg.get("keywords", [])
             if not keywords:
                 continue
             total_weight = 0.0
@@ -772,17 +788,29 @@ class FieldExtractor:
                     "matched": matched,
                     "matched_count": len(matched),
                     "keywords_count": len(keywords),
+                    "mode": "keywords",
                 }
+                candidates[tpl] = scores[tpl]
 
         self._last_template_scores = scores
-        if not scores:
+        if not candidates:
             return "unknown"
 
-        ranked = sorted(scores.items(), key=lambda item: item[1]["score"], reverse=True)
+        ranked = sorted(
+            candidates.items(),
+            key=lambda item: (
+                item[1].get("mode") == "anchor_layout",
+                item[1]["score"],
+            ),
+            reverse=True,
+        )
         best_tpl, best_info = ranked[0]
         best_score = best_info["score"]
         second_score = ranked[1][1]["score"] if len(ranked) > 1 else 0.0
         gap = best_score - second_score
+
+        if best_info.get("mode") == "anchor_layout":
+            return best_tpl
 
         # One strong unique keyword is enough for known logistics templates, but
         # weak/conflicting evidence should stay unknown instead of forcing a template.

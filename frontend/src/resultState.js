@@ -3,6 +3,34 @@ export function isFieldRowFound(info = {}, display = '') {
   return String(display ?? '').trim().length > 0
 }
 
+function templateNameSet(templates = []) {
+  return new Set(
+    (templates || [])
+      .map(template => (typeof template === 'string' ? template : template?.name))
+      .map(name => String(name ?? '').trim())
+      .filter(Boolean)
+  )
+}
+
+export function isFeedbackCreateConflict({ mode = 'merge', templateName = '', templates = [] } = {}) {
+  if (String(mode || '').toLowerCase() !== 'create') return false
+  const name = String(templateName ?? '').trim()
+  return !!name && templateNameSet(templates).has(name)
+}
+
+export function resolveFeedbackDefaults({ metaTemplate = '', templates = [], suggestedName = '' } = {}) {
+  const names = templateNameSet(templates)
+  const current = String(metaTemplate ?? '').trim()
+  const suggested = String(suggestedName ?? '').trim()
+  if (current && current !== 'unknown' && names.has(current)) {
+    return { mode: 'merge', templateName: current }
+  }
+  if (suggested && names.has(suggested)) {
+    return { mode: 'merge', templateName: suggested }
+  }
+  return { mode: 'create', templateName: suggested }
+}
+
 export function finishFieldEdit(row) {
   row.display = row.editVal
   row.editing = false

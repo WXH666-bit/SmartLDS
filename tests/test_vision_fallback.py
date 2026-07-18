@@ -31,9 +31,9 @@ def block(text, confidence=0.95):
 
 class VisionFallbackRoutingTest(unittest.TestCase):
     def test_qwen_default_model_uses_current_available_model(self):
-        self.assertEqual(provider_defaults("qwen")["default_model"], "qwen3.6-plus")
-        self.assertEqual(default_vision_settings()["model"], "qwen3.6-plus")
-        self.assertEqual(normalize_vision_model("qwen", "qwen-vl-plus"), "qwen3.6-plus")
+        self.assertEqual(provider_defaults("qwen")["default_model"], "qwen-3.6-flash")
+        self.assertEqual(default_vision_settings()["model"], "qwen-3.6-flash")
+        self.assertEqual(normalize_vision_model("qwen", "qwen-vl-plus"), "qwen-3.6-flash")
 
     def test_custom_provider_defaults_to_local_openai_compatible_model(self):
         custom = provider_defaults("custom")
