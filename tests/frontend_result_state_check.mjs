@@ -3,9 +3,11 @@ import fs from 'node:fs'
 import {
   buildDisplayTables,
   buildResultPreviewJson,
+  findJsonPreviewTargetLine,
   finishFieldEdit,
   finishFieldLabelEdit,
   isFieldRowFound,
+  splitJsonPreviewLines,
 } from '../frontend/src/resultState.js'
 
 assert.equal(
@@ -78,6 +80,38 @@ assert.equal(preview.fields.origin.status, 'corrected')
 assert.equal(preview.meta.preview_unsaved, true)
 assert.equal(baseResult.fields.origin.value, '', 'JSON 预览不应直接污染原始 result 对象')
 
+const previewLines = splitJsonPreviewLines(previewJson)
+assert.ok(previewLines.length > 0, 'JSON 预览应可拆分为行以支持高亮渲染')
+const labelLine = findJsonPreviewTargetLine(previewJson, { type: 'field', fieldKey: 'origin', prop: 'label' })
+const valueLine = findJsonPreviewTargetLine(previewJson, { type: 'field', fieldKey: 'origin', prop: 'value' })
+assert.ok(labelLine >= 0, '字段 label 应能定位到 JSON 行')
+assert.ok(valueLine >= 0, '字段 value 应能定位到 JSON 行')
+assert.match(previewLines[labelLine], /"label": "来源国家"/)
+assert.match(previewLines[valueLine], /"value": "韩国"/)
+
+const specialKeyPreviewJson = buildResultPreviewJson({
+  fields: {
+    'TO:/A "中文"': {
+      label: 'TO:/A "中文"',
+      value: 'K. A. Sparrow',
+      cleaned: 'K. A. Sparrow',
+      status: 'extracted',
+    },
+  },
+  meta: {},
+}, [])
+const specialValueLine = findJsonPreviewTargetLine(specialKeyPreviewJson, {
+  type: 'field',
+  fieldKey: 'TO:/A "中文"',
+  prop: 'value',
+})
+assert.ok(specialValueLine >= 0, '含中文和引号的字段 key 也应安全定位')
+assert.equal(findJsonPreviewTargetLine(specialKeyPreviewJson, {
+  type: 'field',
+  fieldKey: 'missing',
+  prop: 'value',
+}), -1, '找不到目标时应安全退化')
+
 const multiTableResult = {
   fields: {
     'TO:': {
@@ -117,6 +151,13 @@ const multiTablePreview = JSON.parse(buildResultPreviewJson(multiTableResult, []
 assert.equal(multiTablePreview.tables.length, 2, '多表格预览应保留完整 tables 数组')
 assert.equal(multiTablePreview.tables[1].title, 'OUTSIDE THE REGION')
 assert.deepEqual(multiTablePreview.table.rows, [['Sico Serve', '18']], '旧 table 兼容字段应继续可用')
+const multiTablePreviewJson = buildResultPreviewJson(multiTableResult, [], {
+  title: 'WITHIN THE REGION',
+  headers: ['NAME OF ACCOUNT', 'NO. OF STORES'],
+  rows: [{ 0: 'Sico Serve', 1: '18' }],
+  source: 'vision_fallback',
+})
+assert.ok(findJsonPreviewTargetLine(multiTablePreviewJson, { type: 'table' }) >= 0, '表格保存后应能定位到 JSON 表格区域')
 
 const displayTables = buildDisplayTables(multiTableResult)
 assert.equal(displayTables.length, 2, '结果页应展示所有视觉兜底表格，而不是只展示第一个 table')
@@ -126,6 +167,16 @@ assert.deepEqual(displayTables[1].rows, [{ 0: 'Kroger', 1: '21' }])
 const appVue = fs.readFileSync(new URL('../frontend/src/App.vue', import.meta.url), 'utf8')
 assert.match(appVue, /class="json-collapse"/, '结果页应保留第一版的普通 JSON 折叠块')
 assert.match(appVue, /title="JSON"/, 'JSON 折叠块标题应回到简单的 JSON')
+assert.match(appVue, /class="json-inspector"/, 'JSON 预览应移动到最右侧检查栏')
+assert.match(appVue, /jsonInspectorOpen/, 'JSON 检查栏应支持显示和隐藏')
+assert.match(appVue, /toggleJsonInspector/, '用户应能手动切换右侧 JSON 检查栏')
+assert.match(appVue, /jsonInspectorOpen\.value = true/, '字段编辑定位时应自动展开右侧 JSON 检查栏')
+assert.match(appVue, /jsonCollapseActive/, 'JSON 折叠块应有主动展开状态以便编辑时自动展开')
+assert.match(appVue, /jsonBlockRef/, 'JSON 预览应有滚动容器 ref')
+assert.match(appVue, /activeJsonLine/, 'JSON 预览应记录当前高亮行')
+assert.match(appVue, /@input="previewFieldValueInJson\(row\)"/, '字段值输入中应实时同步并定位 JSON')
+assert.match(appVue, /@input="previewFieldLabelInJson\(row\)"/, '字段名输入中应实时同步并定位 JSON')
+assert.match(appVue, /syncJsonPreview\(\{ type: 'table' \}\)/, '表格保存后应定位到 JSON 表格区域')
 assert.match(appVue, /fsAiEnhance/, 'Few-shot 学习弹窗应提供 AI 增强开关状态')
 assert.match(appVue, /fd\.append\('ai_enhance', fsAiEnhance\.value \? '1' : '0'\)/, 'Few-shot 学习请求应把 AI 增强开关传给后端')
 assert.doesNotMatch(appVue, /result-preview-collapse/, '不应再显示导出预览增强面板')

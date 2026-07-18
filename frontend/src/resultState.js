@@ -56,7 +56,8 @@ export function buildResultPreview(result = {}, fieldRows = [], tableData = null
   for (const row of fieldRows || []) {
     const name = row?.name
     if (!name) continue
-    const display = String(row.display ?? '')
+    const display = String(row.editing ? row.editVal ?? '' : row.display ?? '')
+    const label = String(row.labelEditing ? row.labelEditVal ?? '' : row.label ?? '').trim()
     const existing = fields[name] && typeof fields[name] === 'object' ? fields[name] : {}
     const valueChanged = display !== String(row._original ?? '')
     if (valueChanged) hasUnsaved = true
@@ -69,13 +70,13 @@ export function buildResultPreview(result = {}, fieldRows = [], tableData = null
 
     fields[name] = {
       ...existing,
-      label: row.label || existing.label || name,
+      label: label || row.label || existing.label || name,
       value: display,
       cleaned: display,
       corrected: valueChanged || existing.corrected !== undefined ? display : existing.corrected,
       status: nextStatus,
     }
-    if (row._originalLabel !== undefined && row.label !== row._originalLabel) {
+    if (row._originalLabel !== undefined && fields[name].label !== row._originalLabel) {
       fields[name].label_corrected = true
       hasUnsaved = true
     }
@@ -112,6 +113,55 @@ export function buildResultPreview(result = {}, fieldRows = [], tableData = null
 
 export function buildResultPreviewJson(result = {}, fieldRows = [], tableData = null) {
   return JSON.stringify(buildResultPreview(result, fieldRows, tableData), null, 2)
+}
+
+export function splitJsonPreviewLines(jsonText = '') {
+  const text = String(jsonText ?? '')
+  return text ? text.split('\n') : []
+}
+
+function findPropertyLine(lines, startIndex, prop) {
+  const propToken = `${JSON.stringify(String(prop))}:`
+  for (let index = startIndex + 1; index < lines.length; index += 1) {
+    const trimmed = lines[index].trim()
+    if (trimmed === '},' || trimmed === '}') return -1
+    if (trimmed.startsWith(propToken)) return index
+  }
+  return -1
+}
+
+function findFieldObjectLine(lines, fieldKey) {
+  const fieldToken = `${JSON.stringify(String(fieldKey))}:`
+  const fieldsToken = '"fields":'
+  const fieldsIndex = lines.findIndex(line => line.trim().startsWith(fieldsToken))
+  if (fieldsIndex < 0) return -1
+  for (let index = fieldsIndex + 1; index < lines.length; index += 1) {
+    const trimmed = lines[index].trim()
+    if (trimmed === '},' || trimmed === '}') return -1
+    if (trimmed.startsWith(fieldToken)) return index
+  }
+  return -1
+}
+
+export function findJsonPreviewTargetLine(jsonText = '', target = {}) {
+  const lines = splitJsonPreviewLines(jsonText)
+  if (!lines.length || !target?.type) return -1
+
+  if (target.type === 'field') {
+    const fieldIndex = findFieldObjectLine(lines, target.fieldKey)
+    if (fieldIndex < 0) return -1
+    if (!target.prop) return fieldIndex
+    const propIndex = findPropertyLine(lines, fieldIndex, target.prop)
+    return propIndex >= 0 ? propIndex : fieldIndex
+  }
+
+  if (target.type === 'table') {
+    const tableIndex = lines.findIndex(line => line.trim().startsWith('"table":'))
+    if (tableIndex >= 0) return tableIndex
+    return lines.findIndex(line => line.trim().startsWith('"tables":'))
+  }
+
+  return -1
 }
 
 export function buildFieldValueRows(fieldRows = []) {

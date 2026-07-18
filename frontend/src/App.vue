@@ -161,6 +161,7 @@
           <el-button size="small" type="primary" plain @click="openAddFieldDialog">添加字段</el-button>
           <el-button size="small" type="primary" plain @click="openTableEditor">编辑表格</el-button>
           <el-button size="small" type="success" plain @click="openFeedbackDialog">反哺版式</el-button>
+          <el-button size="small" plain @click="toggleJsonInspector">{{ jsonInspectorOpen ? '隐藏 JSON' : '显示 JSON' }}</el-button>
           <el-button size="small" @click="openExportDialog('json')">JSON</el-button>
           <el-button size="small" @click="openExportDialog('xlsx')">Excel</el-button>
           <el-button size="small" type="warning" @click="doCorrect">保存校正</el-button>
@@ -218,6 +219,7 @@
                 v-model="row.labelEditVal"
                 size="small"
                 class="fc-label-input"
+                @input="previewFieldLabelInJson(row)"
                 @blur="finishFieldLabelEditAndSync(row)"
                 @keyup.enter="finishFieldLabelEditAndSync(row)"
                 autofocus
@@ -226,7 +228,7 @@
               <div class="fc-value" v-if="!row.editing"
                    @dblclick="row.editing=true; row.editVal=row.display"
                    :class="{ empty: !row.display }">{{ row.display || '(空)' }}</div>
-              <el-input v-else v-model="row.editVal" size="small" @blur="finishFieldEditAndSync(row)" @keyup.enter="finishFieldEditAndSync(row)" autofocus />
+              <el-input v-else v-model="row.editVal" size="small" @input="previewFieldValueInJson(row)" @blur="finishFieldEditAndSync(row)" @keyup.enter="finishFieldEditAndSync(row)" autofocus />
               <div class="fc-conf" v-if="row.confidence">{{ row.confidence }}</div>
               <el-button v-if="row.manual" size="small" text type="danger" @click="removeManualField(row.name)">删除</el-button>
             </div>
@@ -247,10 +249,34 @@
               </el-table>
             </div>
           </div>
-          <el-collapse class="json-collapse">
-            <el-collapse-item title="JSON"><pre class="json-block">{{ jsonText }}</pre></el-collapse-item>
-          </el-collapse>
         </div>
+        <aside class="json-inspector" :class="{ collapsed: !jsonInspectorOpen }">
+          <button
+            v-if="!jsonInspectorOpen"
+            class="json-inspector-rail"
+            type="button"
+            @click="toggleJsonInspector"
+          >
+            JSON
+          </button>
+          <div v-else class="json-inspector-panel">
+            <div class="json-inspector-head">
+              <span>JSON 检查</span>
+              <el-button size="small" text @click="toggleJsonInspector">隐藏</el-button>
+            </div>
+            <el-collapse v-model="jsonCollapseActive" class="json-collapse">
+              <el-collapse-item title="JSON" name="json">
+                <pre ref="jsonBlockRef" class="json-block"><span
+                  v-for="(line, index) in jsonLines"
+                  :key="index"
+                  class="json-line"
+                  :class="{ active: index === activeJsonLine }"
+                  :data-json-line="index"
+                >{{ line }}</span></pre>
+              </el-collapse-item>
+            </el-collapse>
+          </div>
+        </aside>
       </div>
     </div>
   </main>
@@ -579,16 +605,18 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, computed, nextTick, onMounted, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Loading } from '@element-plus/icons-vue'
 import api from './api/index.js'
 import {
   buildDisplayTables,
+  findJsonPreviewTargetLine,
   buildResultPreviewJson,
   finishFieldEdit,
   finishFieldLabelEdit,
   isFieldRowFound,
+  splitJsonPreviewLines,
 } from './resultState.js'
 
 // Check URL for ?job=xxx → auto-load result in new tab
@@ -608,10 +636,15 @@ const tableData = reactive({ title: '', headers: [], rows: [], source: '', confi
 const tableList = ref([])
 const tableDirty = ref(false)
 const jsonText = ref('')
+const jsonInspectorOpen = ref(true)
+const jsonCollapseActive = ref(['json'])
+const jsonBlockRef = ref(null)
+const activeJsonLine = ref(-1)
 const imageUrl = ref('')
 const unknownDetected = ref(false)
 const ocrPreview = ref([])  // OCR blocks for unknown template preview
 let progressTimer = null
+let jsonHighlightTimer = null
 
 // 识别后人工补充：字段、表格、反哺指定版式
 const showAddField = ref(false)
@@ -808,6 +841,7 @@ const extractionSourceLabel = computed(() => {
 const displayTableRowCount = computed(() =>
   tableList.value.reduce((total, table) => total + (table.rows?.length || 0), 0)
 )
+const jsonLines = computed(() => splitJsonPreviewLines(jsonText.value))
 
 function formatSize(bytes) {
   if (!bytes || bytes < 0) return '-'
@@ -872,6 +906,7 @@ function startProgressTicker() {
 
 onUnmounted(() => {
   if (progressTimer) clearInterval(progressTimer)
+  clearJsonHighlightTimer()
 })
 
 // ============ File handling ============
@@ -1014,19 +1049,62 @@ function showResult(data) {
   ocrPreview.value = tpl === 'unknown' ? blocks : []
 }
 
-function syncJsonPreview() {
+function clearJsonHighlightTimer() {
+  if (!jsonHighlightTimer) return
+  clearTimeout(jsonHighlightTimer)
+  jsonHighlightTimer = null
+}
+
+function toggleJsonInspector() {
+  jsonInspectorOpen.value = !jsonInspectorOpen.value
+}
+
+async function revealJsonTarget(target) {
+  if (!target) return
+  jsonInspectorOpen.value = true
+  if (!jsonCollapseActive.value.includes('json')) {
+    jsonCollapseActive.value = ['json']
+  }
+  await nextTick()
+  const lineIndex = findJsonPreviewTargetLine(jsonText.value, target)
+  if (lineIndex < 0) return
+  activeJsonLine.value = lineIndex
+  await nextTick()
+  const block = jsonBlockRef.value
+  const lineEl = block?.querySelector?.(`[data-json-line="${lineIndex}"]`)
+  if (block && lineEl) {
+    const targetTop = lineEl.offsetTop - (block.clientHeight * 0.35)
+    block.scrollTop = Math.max(0, targetTop)
+  }
+  clearJsonHighlightTimer()
+  jsonHighlightTimer = setTimeout(() => {
+    activeJsonLine.value = -1
+    jsonHighlightTimer = null
+  }, 1800)
+}
+
+function syncJsonPreview(target = null) {
   if (!viewingData.value) return
   jsonText.value = buildResultPreviewJson(viewingData.value, fieldRows.value, tableData)
+  if (target) revealJsonTarget(target)
+}
+
+function previewFieldValueInJson(row) {
+  syncJsonPreview({ type: 'field', fieldKey: row.name, prop: 'value' })
+}
+
+function previewFieldLabelInJson(row) {
+  syncJsonPreview({ type: 'field', fieldKey: row.name, prop: 'label' })
 }
 
 function finishFieldEditAndSync(row) {
   finishFieldEdit(row)
-  syncJsonPreview()
+  syncJsonPreview({ type: 'field', fieldKey: row.name, prop: 'value' })
 }
 
 function finishFieldLabelEditAndSync(row) {
   finishFieldLabelEdit(row)
-  syncJsonPreview()
+  syncJsonPreview({ type: 'field', fieldKey: row.name, prop: 'label' })
 }
 
 // Few-shot dialog
@@ -1337,7 +1415,7 @@ function saveTableEditor() {
   if (tableList.value.length) tableList.value[0] = firstTable
   else if (firstTable.headers.length || firstTable.rows.length) tableList.value = [firstTable]
   tableDirty.value = true
-  syncJsonPreview()
+  syncJsonPreview({ type: 'table' })
   showTableEditor.value = false
 }
 
@@ -1591,7 +1669,7 @@ function confirmExport() {
 .dual-pane{flex:1;display:flex;overflow:hidden;gap:2px;background:#d1d5db}
 .pane-original{flex:1;overflow:auto;background:#e5e7eb;display:flex;align-items:flex-start;justify-content:center;min-width:0}
 .orig-img{max-width:100%;height:auto}
-.pane-fields{flex:0 0 42%;min-width:400px;max-width:550px;overflow-y:auto;padding:14px;background:#fff;display:flex;flex-direction:column;gap:10px}
+.pane-fields{flex:0 0 34%;min-width:360px;max-width:500px;overflow-y:auto;padding:14px;background:#fff;display:flex;flex-direction:column;gap:10px}
 .section-title{font-size:13px;font-weight:700;color:#1e293b;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid #f1f5f9;letter-spacing:.3px}
 .field-cards{display:flex;flex-direction:column;gap:3px}
 .field-card{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:#fff;border:1px solid #f1f5f9;font-size:13px;transition:all .2s}
@@ -1612,8 +1690,23 @@ function confirmExport() {
 .cargo-table-block{display:flex;flex-direction:column;gap:6px;margin-top:10px}
 .cargo-table-block:first-of-type{margin-top:0}
 .cargo-table-title{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;font-weight:800;color:#334155}
-.json-collapse{margin-top:8px}
+.json-inspector{flex:0 0 420px;min-width:320px;max-width:460px;background:#0f172a;color:#cbd5e1;display:flex;overflow:hidden;transition:flex-basis .2s,min-width .2s}
+.json-inspector.collapsed{flex-basis:42px;min-width:42px;max-width:42px;background:#111827}
+.json-inspector-rail{width:42px;height:100%;border:0;background:#111827;color:#dbeafe;font-size:11px;font-weight:800;letter-spacing:.8px;writing-mode:vertical-rl;text-orientation:mixed;cursor:pointer}
+.json-inspector-rail:hover{background:#1e293b;color:#fff}
+.json-inspector-panel{display:flex;flex-direction:column;gap:8px;width:100%;min-width:0;padding:12px}
+.json-inspector-head{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:28px;border-bottom:1px solid rgba(148,163,184,.22);padding-bottom:8px;font-size:12px;font-weight:800;color:#e2e8f0}
+.json-inspector-head :deep(.el-button){color:#93c5fd}
+.json-collapse{margin-top:0;min-height:0}
+.json-inspector .json-collapse{flex:1;display:flex;flex-direction:column}
+.json-inspector .json-collapse :deep(.el-collapse){border:0}
+.json-inspector .json-collapse :deep(.el-collapse-item__wrap){background:transparent;border:0}
+.json-inspector .json-collapse :deep(.el-collapse-item__content){padding-bottom:0}
+.json-inspector .json-collapse :deep(.el-collapse-item__header){background:#172033;color:#bfdbfe;border:1px solid rgba(148,163,184,.18);border-radius:8px;height:34px;padding:0 10px;font-size:12px;font-weight:800}
 .json-block{background:#1e293b;color:#a5b4c2;padding:14px;font-size:11px;font-family:Consolas,monospace;max-height:300px;overflow:auto;white-space:pre-wrap;border-radius:8px;margin:0;line-height:1.5}
+.json-inspector .json-block{height:calc(100vh - 190px);max-height:none;border:1px solid rgba(148,163,184,.18)}
+.json-line{display:block;min-height:16px;border-left:3px solid transparent;padding-left:6px;margin-left:-6px;transition:background .2s,border-color .2s,color .2s}
+.json-line.active{background:rgba(250,204,21,.18);border-left-color:#facc15;color:#fef9c3}
 
 .table-editor{display:flex;flex-direction:column;gap:12px}
 .table-editor-head{display:flex;align-items:center;gap:8px}
@@ -1706,5 +1799,8 @@ function confirmExport() {
   .hero-metrics{grid-template-columns:1fr}
   .upload-cols{flex-direction:column}
   .pane-fields{min-width:320px;flex-basis:46%}
+  .json-inspector{flex-basis:360px;min-width:300px}
+  .json-inspector.collapsed{flex-basis:38px;min-width:38px;max-width:38px}
+  .json-inspector-rail{width:38px}
 }
 </style>
