@@ -1,12 +1,10 @@
 """生成两种全新版式：报关单 + 仓库入库单 → bol_201~210"""
 import json, random, os, sys
 from playwright.sync_api import sync_playwright
+from dataset_organizer import write_dataset_index
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PDF_DIR = os.path.join(ROOT, "dataset", "pdf")
-JSON_DIR = os.path.join(ROOT, "dataset", "json")
-os.makedirs(PDF_DIR, exist_ok=True)
-os.makedirs(JSON_DIR, exist_ok=True)
+DATASET_DIR = os.path.join(ROOT, "dataset", "fewshot_samples")
 
 ports = ["上海海关", "深圳海关", "天津海关", "宁波海关"]
 transports = ["海运", "空运", "铁路", "公路"]
@@ -103,11 +101,14 @@ with sync_playwright() as p:
             }
             html = T_B % data
 
-        json_path = os.path.join(JSON_DIR, f"bol_{idx:03d}.json")
+        group_dir = "customs_declaration" if i < 5 else "warehouse_receipt"
+        out_dir = os.path.join(DATASET_DIR, group_dir)
+        os.makedirs(out_dir, exist_ok=True)
+        json_path = os.path.join(out_dir, f"bol_{idx:03d}.json")
         with open(json_path, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
 
-        pdf_path = os.path.join(PDF_DIR, f"bol_{idx:03d}.pdf")
+        pdf_path = os.path.join(out_dir, f"bol_{idx:03d}.pdf")
         page = browser.new_page()
         page.set_content(html)
         page.pdf(path=pdf_path, format="A4")
@@ -115,4 +116,5 @@ with sync_playwright() as p:
         print(f"  bol_{idx:03d} ← [{data['template']}]")
 
     browser.close()
+write_dataset_index(os.path.join(ROOT, "dataset"))
 print(f"\nDone: bol_201~{idx}")

@@ -1,12 +1,13 @@
 """
 将 real_data/images/ 中的20张真实照片转换为项目 dataset 格式
-- JPG→PDF 放入 dataset/pdf/  (编号 bol_181~bol_200)
-- 提取的字段写入 dataset/json/
+- 外卖小票写入 dataset/real_scans/food_delivery/
+- 快递面单写入 dataset/real_scans/express/
 """
 
 import json
 import os
 import random
+import sys
 from PIL import Image
 
 # 随机中文名字生成
@@ -67,11 +68,11 @@ def fix_record(rec):
 REAL_DIR = os.path.dirname(os.path.abspath(__file__))
 IMG_DIR = os.path.join(REAL_DIR, "images")
 PROJECT_ROOT = os.path.dirname(REAL_DIR)
-PDF_DIR = os.path.join(PROJECT_ROOT, "dataset", "pdf")
-JSON_DIR = os.path.join(PROJECT_ROOT, "dataset", "json")
+DATASET_DIR = os.path.join(PROJECT_ROOT, "dataset")
+sys.path.insert(0, os.path.join(PROJECT_ROOT, "backend"))
+from dataset_organizer import write_dataset_index
 
-os.makedirs(PDF_DIR, exist_ok=True)
-os.makedirs(JSON_DIR, exist_ok=True)
+os.makedirs(DATASET_DIR, exist_ok=True)
 
 records = [
     # 1: 古茗奶茶 外卖小票
@@ -124,8 +125,11 @@ def main():
         idx = 181 + i
         img_file = f"real_{i+1:02d}.jpg"
         img_path = os.path.join(IMG_DIR, img_file)
-        json_path = os.path.join(JSON_DIR, f"bol_{idx:03d}.json")
-        pdf_path = os.path.join(PDF_DIR, f"bol_{idx:03d}.pdf")
+        group = "food_delivery" if rec.get("category") == "food_delivery" else "express"
+        out_dir = os.path.join(DATASET_DIR, "real_scans", group)
+        os.makedirs(out_dir, exist_ok=True)
+        json_path = os.path.join(out_dir, f"bol_{idx:03d}.json")
+        pdf_path = os.path.join(out_dir, f"bol_{idx:03d}.pdf")
 
         with open(json_path, "w", encoding="utf-8") as f:
             json.dump(rec, f, ensure_ascii=False, indent=2)
@@ -139,6 +143,7 @@ def main():
         name = rec.get("shop") or rec.get("courier") or ""
         print(f"  bol_{idx:03d} ← [{cat}] {name}")
 
+    write_dataset_index(DATASET_DIR)
     print(f"\n完成！真实数据已写入 dataset/ (bol_181~{idx:03d})")
 
 

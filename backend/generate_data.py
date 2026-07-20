@@ -41,6 +41,7 @@ import random
 import string
 import os
 import json
+from dataset_organizer import write_dataset_index
 
 fake = Faker(["en_US", "zh_CN"])
 
@@ -372,10 +373,7 @@ def create_dataset(num=200):
     # 始终在项目根目录创建 dataset（不管从哪里运行脚本）
     script_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(script_dir)
-    pdf_dir = os.path.join(project_root, "dataset", "pdf")
-    json_dir = os.path.join(project_root, "dataset", "json")
-    os.makedirs(pdf_dir, exist_ok=True)
-    os.makedirs(json_dir, exist_ok=True)
+    dataset_dir = os.path.join(project_root, "dataset", "synthetic_bol")
 
     for i in range(num):
         rec = create_record()
@@ -384,8 +382,11 @@ def create_dataset(num=200):
         template_name, template_html = TEMPLATES[i % len(TEMPLATES)]
         html_content = template_html.format(**rec)
 
-        pdf_path = os.path.join(pdf_dir, f"bol_{i+1:03d}.pdf")
-        json_path = os.path.join(json_dir, f"bol_{i+1:03d}.json")
+        style_dir = ["maersk_style", "cosco_style", "simple_style"][i % len(TEMPLATES)]
+        out_dir = os.path.join(dataset_dir, style_dir)
+        os.makedirs(out_dir, exist_ok=True)
+        pdf_path = os.path.join(out_dir, f"bol_{i+1:03d}.pdf")
+        json_path = os.path.join(out_dir, f"bol_{i+1:03d}.json")
 
         # 用 Playwright (Chromium) 渲染 HTML 为 PDF
         with sync_playwright() as p:
@@ -403,6 +404,7 @@ def create_dataset(num=200):
         if (i + 1) % 20 == 0:
             print(f"  已生成 {i+1}/{num} 份...")
 
+    write_dataset_index(os.path.join(project_root, "dataset"))
     print(f"数据集生成完成！共 {num} 份单证（3种版式），保存在 dataset/ 目录下。")
 
 

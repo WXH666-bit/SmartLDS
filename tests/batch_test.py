@@ -23,6 +23,7 @@ from ocr_engine import OCREngine
 from preprocess import Preprocessor
 from layout_parser import LayoutParser
 from field_extractor import FieldExtractor
+from dataset_organizer import resolve_sample_paths
 
 # ============================================================
 # 测试样本
@@ -133,8 +134,9 @@ def evaluate_extracted_fields(fields, gt):
 
 def run_one(bol, desc, engine, parser, extractor):
     """运行一份样本的完整流水线"""
-    pdf_path = os.path.join(os.path.dirname(OUT_DIR), "dataset", "pdf", f"bol_{bol}.pdf")
-    json_path = os.path.join(os.path.dirname(OUT_DIR), "dataset", "json", f"bol_{bol}.json")
+    pdf_path, json_path = resolve_sample_paths(os.path.join(os.path.dirname(OUT_DIR), "dataset"), bol)
+    pdf_path = str(pdf_path)
+    json_path = str(json_path)
 
     # 加载 GT（FUNSD 的字段嵌套在 gt["fields"] 内，需要扁平化）
     with open(json_path, "r", encoding="utf-8") as f:

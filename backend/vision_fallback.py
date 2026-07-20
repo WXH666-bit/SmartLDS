@@ -557,6 +557,248 @@ def _extract_output_text(response_json: dict[str, Any]) -> str:
     return "\n".join(texts).strip()
 
 
+def _vision_field_entry(label: str, value: str, confidence: float) -> dict[str, Any]:
+    confidence = _clamp01(confidence)
+    return {
+        "label": label,
+        "value": value,
+        "cleaned": value,
+        "confidence": round(confidence, 4),
+        "status": "extracted",
+        "anchor": "",
+        "rect": [0, 0, 0, 0],
+        "canonical_key": None,
+        "source": "vision_fallback",
+    }
+
+
+def _add_vision_field(
+    fields: dict[str, dict[str, Any]],
+    seen: dict[str, int],
+    label: str,
+    value: str,
+    confidence: float,
+) -> None:
+    label = str(label or "").strip()
+    value = str(value or "").strip()
+    if not label or not value:
+        return
+    key = label
+    if key in fields:
+        seen[key] = seen.get(key, 1) + 1
+        key = f"{label}_{seen[label]}"
+    fields[key] = _vision_field_entry(label, value, confidence)
+
+
+def _looks_like_form_label(text: str) -> bool:
+    text = str(text or "").strip().strip(":\uff1a")
+    if not text:
+        return False
+    if len(text) > 32:
+        return False
+    if len(text.split()) > 5:
+        return False
+    if not re.search(r"[A-Za-z\u4e00-\u9fff]", text):
+        return False
+
+    compact = re.sub(r"\s+", "", text)
+    digit_count = sum(ch.isdigit() for ch in compact)
+    if digit_count and digit_count / max(len(compact), 1) > 0.15:
+        return False
+    if re.search(r"\d{2,4}[-/.]\d{1,2}[-/.]\d{1,4}", text):
+        return False
+    if re.search(r"\d", text) and re.search(r"[A-Z]{2,}|[A-Za-z]{1,4}\b", text):
+        return False
+    return True
+
+
+def _table_to_key_value_fields(item: dict[str, Any], headers: list[str], rows: list[list[str]]) -> list[dict[str, Any]]:
+    column_count = len(headers)
+    if column_count < 4 or column_count % 2 != 0:
+        return []
+
+    matrix = [headers] + rows
+    pairs: list[tuple[str, str]] = []
+    label_like = 0
+    complete_rows = 0
+    for row in matrix:
+        normalized = [str(cell or "").strip() for cell in row[:column_count]]
+        if len(normalized) < column_count:
+            normalized.extend([""] * (column_count - len(normalized)))
+
+        row_pairs: list[tuple[str, str]] = []
+        for index in range(0, column_count, 2):
+            label = normalized[index].strip()
+            value = normalized[index + 1].strip()
+            if not label and not value:
+                continue
+            if not label or not value:
+                return []
+            row_pairs.append((label, value))
+            if _looks_like_form_label(label):
+                label_like += 1
+
+        if row_pairs:
+            if len(row_pairs) < 2:
+                return []
+            complete_rows += 1
+            pairs.extend(row_pairs)
+
+    if complete_rows < 2 or len(pairs) < 4:
+        return []
+    if label_like / max(len(pairs), 1) < 0.85:
+        return []
+
+    confidence = round(_clamp01(_as_float(item.get("confidence"), 0.0)), 4)
+    return [
+        {"label": label, "value": value, "confidence": confidence}
+        for label, value in pairs
+    ]
+
+
+def _normalized_field_label(label: str) -> str:
+    return re.sub(r"\s+", "", str(label or "").strip().strip(":\uff1a")).lower()
+
+
+def _block_rect(block: dict[str, Any]) -> list[float] | None:
+    rect = block.get("rect")
+    if isinstance(rect, list) and len(rect) == 4:
+        try:
+            return [float(v) for v in rect]
+        except (TypeError, ValueError):
+            return None
+
+    bbox = block.get("bbox")
+    if isinstance(bbox, list) and bbox:
+        try:
+            xs = [float(point[0]) for point in bbox if isinstance(point, list) and len(point) >= 2]
+            ys = [float(point[1]) for point in bbox if isinstance(point, list) and len(point) >= 2]
+        except (TypeError, ValueError):
+            return None
+        if xs and ys:
+            return [min(xs), min(ys), max(xs), max(ys)]
+    return None
+
+
+def _ocr_rows(blocks: list[dict[str, Any]] | None) -> list[list[dict[str, Any]]]:
+    cells = []
+    heights = []
+    for block in blocks or []:
+        if not isinstance(block, dict):
+            continue
+        text = str(block.get("text") or "").strip()
+        rect = _block_rect(block)
+        if not text or not rect:
+            continue
+        left, top, right, bottom = rect
+        if right <= left or bottom <= top:
+            continue
+        cell = {
+            "text": text,
+            "rect": rect,
+            "center_y": (top + bottom) / 2,
+            "left": left,
+            "confidence": _clamp01(_as_float(block.get("confidence"), 0.85)),
+        }
+        cells.append(cell)
+        heights.append(bottom - top)
+
+    if not cells:
+        return []
+
+    heights.sort()
+    median_height = heights[len(heights) // 2]
+    row_tolerance = max(12.0, median_height * 0.65)
+    rows: list[dict[str, Any]] = []
+    for cell in sorted(cells, key=lambda item: item["center_y"]):
+        for row in rows:
+            if abs(cell["center_y"] - row["center_y"]) <= row_tolerance:
+                row["cells"].append(cell)
+                row["center_y"] = sum(c["center_y"] for c in row["cells"]) / len(row["cells"])
+                break
+        else:
+            rows.append({"center_y": cell["center_y"], "cells": [cell]})
+
+    return [
+        sorted(row["cells"], key=lambda item: item["left"])
+        for row in sorted(rows, key=lambda item: item["center_y"])
+    ]
+
+
+def _extract_key_value_grid_fields_from_blocks(blocks: list[dict[str, Any]] | None) -> list[dict[str, Any]]:
+    pairs = []
+    candidate_rows = 0
+    for row in _ocr_rows(blocks):
+        if len(row) != 4:
+            continue
+        left_label, left_value, right_label, right_value = row
+        if not (_looks_like_form_label(left_label["text"]) and _looks_like_form_label(right_label["text"])):
+            continue
+        if not left_value["text"].strip() or not right_value["text"].strip():
+            continue
+        candidate_rows += 1
+        pairs.append((left_label, left_value))
+        pairs.append((right_label, right_value))
+
+    if candidate_rows < 2 or len(pairs) < 4:
+        return []
+
+    fields = []
+    for label_cell, value_cell in pairs:
+        confidence = (label_cell["confidence"] + value_cell["confidence"]) / 2
+        fields.append({
+            "label": label_cell["text"],
+            "value": value_cell["text"],
+            "confidence": confidence,
+        })
+    return fields
+
+
+def supplement_vision_payload_from_ocr_blocks(
+    normalized: dict[str, Any],
+    blocks: list[dict[str, Any]] | None,
+) -> dict[str, Any]:
+    """Fill obvious OCR key-value grids that the vision model omitted entirely."""
+    if not isinstance(normalized, dict):
+        return normalized
+    fields = normalized.get("fields") if isinstance(normalized.get("fields"), dict) else {}
+    tables = normalized.get("tables") if isinstance(normalized.get("tables"), list) else []
+    if tables or len(fields) > 3:
+        return normalized
+
+    grid_fields = _extract_key_value_grid_fields_from_blocks(blocks)
+    if not grid_fields:
+        return normalized
+
+    updated = deepcopy(normalized)
+    updated_fields = dict(fields)
+    seen: dict[str, int] = {}
+    for key in updated_fields:
+        seen[key] = max(seen.get(key, 0), 1)
+
+    existing_labels = {
+        _normalized_field_label(info.get("label") or key)
+        for key, info in updated_fields.items()
+        if isinstance(info, dict)
+    }
+    for item in grid_fields:
+        label = str(item.get("label") or "").strip()
+        normalized_label = _normalized_field_label(label)
+        if not normalized_label or normalized_label in existing_labels:
+            continue
+        _add_vision_field(
+            updated_fields,
+            seen,
+            label,
+            item.get("value"),
+            _as_float(item.get("confidence"), 0.85),
+        )
+        existing_labels.add(normalized_label)
+
+    updated["fields"] = updated_fields
+    return updated
+
+
 def normalize_vision_payload(payload: dict[str, Any]) -> dict[str, Any]:
     """把模型返回的 JSON 转成 SmartLDS 的字段 + 表格结构。"""
     fields: dict[str, dict[str, Any]] = {}
@@ -567,24 +809,8 @@ def normalize_vision_payload(payload: dict[str, Any]) -> dict[str, Any]:
             continue
         label = str(item.get("label", "")).strip()
         value = str(item.get("value", "")).strip()
-        if not label or not value:
-            continue
-        key = label
-        if key in fields:
-            seen[key] = seen.get(key, 1) + 1
-            key = f"{label}_{seen[label]}"
         confidence = _clamp01(_as_float(item.get("confidence"), 0.0))
-        fields[key] = {
-            "label": label,
-            "value": value,
-            "cleaned": value,
-            "confidence": round(confidence, 4),
-            "status": "extracted",
-            "anchor": "",
-            "rect": [0, 0, 0, 0],
-            "canonical_key": None,
-            "source": "vision_fallback",
-        }
+        _add_vision_field(fields, seen, label, value, confidence)
 
     tables = []
     for item in payload.get("tables", []) or []:
@@ -602,6 +828,17 @@ def normalize_vision_payload(payload: dict[str, Any]) -> dict[str, Any]:
                 normalized_row.extend([""] * (len(headers) - len(normalized_row)))
             rows.append(normalized_row[:len(headers)])
         if not rows:
+            continue
+        key_value_fields = _table_to_key_value_fields(item, headers, rows)
+        if key_value_fields:
+            for field_item in key_value_fields:
+                _add_vision_field(
+                    fields,
+                    seen,
+                    field_item["label"],
+                    field_item["value"],
+                    field_item["confidence"],
+                )
             continue
         tables.append({
             "title": str(item.get("title") or "").strip(),
@@ -748,6 +985,7 @@ class VisionFallbackClient:
                 text = _extract_output_text(response_json)
                 parsed = json.loads(text)
                 normalized = normalize_vision_payload(parsed)
+                normalized = supplement_vision_payload_from_ocr_blocks(normalized, blocks)
                 if normalized.get("fields") or normalized.get("tables"):
                     return {"success": True, "result": normalized, "attempts": attempt + 1}
                 last_error = "模型未返回有效字段或表格"
@@ -926,8 +1164,10 @@ class VisionFallbackClient:
             "You are extracting fields from a logistics, customs, delivery, or generic form image.\n"
             "Return visible key-value fields and structured tables. Use the original printed label text as the field label; "
             "do not map it to a preset schema. If a form has question-answer pairs, use the question text as the label. "
+            "A bordered grid that alternates label/value/label/value is still key-value fields, not a table. "
             "If content is arranged in a grid with repeated headers and rows, put it in tables instead of repeating "
-            "the column header as many fields. Preserve each table section title when visible. "
+            "the column header as many fields; use tables only for repeated records under stable column headers. "
+            "Preserve each table section title when visible. "
             "Ignore decorative titles unless they have a value or name a table section. Keep values concise but complete.\n\n"
             f"Local extractor template: {local_result.get('template')}\n"
             f"Local quality: {json.dumps(quality, ensure_ascii=False)}\n"

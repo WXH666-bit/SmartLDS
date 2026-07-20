@@ -16,6 +16,15 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT_DIR / "backend"))
 from ocr_engine import OCREngine
 from preprocess import Preprocessor
+from dataset_organizer import resolve_sample_paths
+
+
+def sample_pdf_path(number):
+    return str(resolve_sample_paths(ROOT_DIR / "dataset", number)[0])
+
+
+def sample_json_path(number):
+    return str(resolve_sample_paths(ROOT_DIR / "dataset", number)[1])
 
 
 # ============================================================
@@ -37,7 +46,7 @@ def test_ocr_on_synthetic_pdf():
     print('=' * 60)
 
     engine = OCREngine()
-    results = engine.recognize_pdf('dataset/pdf/bol_001.pdf')
+    results = engine.recognize_pdf(sample_pdf_path("001"))
 
     for page in results:
         print(f'\n这一页找到了 {len(page["blocks"])} 个文字块:\n')
@@ -62,7 +71,7 @@ def test_ocr_on_cosco_pdf():
     print('=' * 60)
 
     engine = OCREngine()
-    results = engine.recognize_pdf('dataset/pdf/bol_003.pdf')
+    results = engine.recognize_pdf(sample_pdf_path("003"))
     page = results[0]
 
     print(f'\n这一页找到了 {len(page["blocks"])} 个文字块:\n')
@@ -87,7 +96,7 @@ def test_ocr_on_real_scan():
     print('=' * 60)
 
     engine = OCREngine()
-    results = engine.recognize_pdf('dataset/pdf/bol_185.pdf')
+    results = engine.recognize_pdf(sample_pdf_path("185"))
     page = results[0]
 
     print(f'\n这一页找到了 {len(page["blocks"])} 个文字块 (因为是真实照片，比清晰PDF少):\n')
@@ -113,7 +122,7 @@ def test_single_image():
     import fitz
 
     # 先把 bol_001.pdf 的第一页变成一张图片
-    doc = fitz.open('dataset/pdf/bol_001.pdf')
+    doc = fitz.open(sample_pdf_path("001"))
     pix = doc[0].get_pixmap(dpi=200)
     img = Image.frombytes('RGB', [pix.width, pix.height], pix.samples)
     doc.close()
@@ -147,7 +156,7 @@ def test_preprocess_before_after():
 
     engine = OCREngine()
     pp = Preprocessor()
-    pdf = 'dataset/pdf/bol_185.pdf'  # 申通快递面单（手机拍的）
+    pdf = sample_pdf_path("185")  # 申通快递面单（手机拍的）
 
     # 不处理，直接 OCR
     raw = engine.recognize_pdf(pdf)[0]
@@ -185,7 +194,7 @@ def test_preprocess_light_vs_hard():
 
     engine = OCREngine()
     pp = Preprocessor()
-    pdf = 'dataset/pdf/bol_001.pdf'  # 干净的合成 PDF
+    pdf = sample_pdf_path("001")  # 干净的合成 PDF
 
     for mode in ['light', 'hard']:
         results = pp.process_pdf(pdf, mode=mode)
@@ -220,7 +229,7 @@ def test_deskew_effect():
     pp = Preprocessor()
 
     # 取一张清晰的合成 PDF
-    doc = fitz.open('dataset/pdf/bol_001.pdf')
+    doc = fitz.open(sample_pdf_path("001"))
     pix = doc[0].get_pixmap(dpi=200)
     img = np.array(Image.frombytes('RGB', [pix.width, pix.height], pix.samples))
     doc.close()
@@ -281,7 +290,7 @@ def test_auto_orient():
     pp = Preprocessor()
 
     # 取一张清晰的合成 PDF 作为测试图
-    doc = fitz.open('dataset/pdf/bol_001.pdf')
+    doc = fitz.open(sample_pdf_path("001"))
     pix = doc[0].get_pixmap(dpi=200)
     img = np.array(Image.frombytes('RGB', [pix.width, pix.height], pix.samples))
     doc.close()
@@ -362,7 +371,7 @@ def test_batch_real_images():
 
     improved = 0
     for idx in range(181, 201):
-        pdf_path = f'dataset/pdf/bol_{idx:03d}.pdf'
+        pdf_path = sample_pdf_path(f"{idx:03d}")
 
         # 用 process_pdf 获取原图和预处理后图，确保相同 DPI
         pp_result = pp.process_pdf(pdf_path, mode='light')
@@ -435,7 +444,7 @@ def test_layout_parser():
     ]
 
     for bol, desc in test_cases:
-        result = engine.recognize_pdf(f'dataset/pdf/bol_{bol}.pdf')[0]
+        result = engine.recognize_pdf(sample_pdf_path(bol))[0]
         blocks = result['blocks']
         img_size = result['image_size']
         regions = parser.parse(blocks, img_size)
@@ -504,13 +513,13 @@ def test_field_extractor():
     total_fields = 0
 
     for bol, desc in test_cases:
-        result = engine.recognize_pdf(f'dataset/pdf/bol_{bol}.pdf')[0]
+        result = engine.recognize_pdf(sample_pdf_path(bol))[0]
         blocks = result['blocks']
         img_size = result['image_size']
         regions = parser.parse(blocks, img_size)
         extracted = extractor.extract(regions, img_size)
 
-        with open(f'dataset/json/bol_{bol}.json', 'r', encoding='utf-8') as f:
+        with open(sample_json_path(bol), 'r', encoding='utf-8') as f:
             gt = json.load(f)
 
         print(f'\n  bol_{bol} ({desc}):')

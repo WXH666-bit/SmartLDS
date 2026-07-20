@@ -174,7 +174,7 @@ For OCR algorithm changes:
 For Few-shot/template-signature changes:
 
 - Run the fast Python unit tests.
-- Run a real sample replay when possible for `dataset/unknown_templates/bol_201.pdf` through `bol_205.pdf`.
+- Run a real sample replay when possible for `dataset/fewshot_samples/customs_declaration/bol_201.pdf` through `bol_205.pdf`.
 - Confirm the customs declaration family learns 12 page fields and keeps `经营单位`/`收货单位` and `毛重`/`净重` distinct.
 
 ## Reporting
