@@ -9,7 +9,7 @@
 快速单元测试请放在 tests/test_*.py。
 """
 
-import sys, os, json, io, time
+import sys, os, json, io, time, shutil
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT_DIR, "backend"))
 
@@ -191,12 +191,32 @@ def _save_preview(image, path, attempts=3):
     return False
 
 
-def build_html(results, summary):
+def _should_keep_preview_artifacts(argv=None, environ=None):
+    """Return whether batch preview PNGs should remain after report PDF output."""
+    argv = sys.argv if argv is None else argv
+    environ = os.environ if environ is None else environ
+    keep_env = str(environ.get("SMARTLDS_KEEP_BATCH_PREVIEWS", "")).lower()
+    return "--keep-previews" in argv or keep_env in {"1", "true", "yes", "on"}
+
+
+def _cleanup_preview_artifacts(previews_dir, keep=False):
+    """Remove temporary preview images once the single PDF report has been built."""
+    if keep or not previews_dir or not os.path.isdir(previews_dir):
+        return
+    shutil.rmtree(previews_dir)
+
+
+def build_html(results, summary, include_preview_images=True):
     """生成 HTML 报告 — 按数据来源分组"""
     # 分组：合成数据 / FUNSD / 真实扫描
     synthetic = [r for r in results if r["desc"] in ("Maersk", "COSCO", "Simple")]
     funsd = [r for r in results if r["desc"] == "FUNSD"]
     real = [r for r in results if r["desc"] == "真扫"]
+
+    def render_preview_column(r):
+        if include_preview_images:
+            return f'<div class="col-img"><img src="previews/bol_{r["bol"]}.png"></div>'
+        return '<div class="col-img preview-note">Preview is included in report.pdf</div>'
 
     def render_sample(r):
         det = ""
@@ -215,7 +235,7 @@ def build_html(results, summary):
       <h3>bol_{r['bol']} &nbsp; <span class="badge">{r['template']}</span> &nbsp;
         <span class="acc">{r['acc']:.0f}% ({r['correct']}/{r['total']})</span></h3>
       <div class="cols">
-        <div class="col-img"><img src="previews/bol_{r['bol']}.png"></div>
+        {render_preview_column(r)}
         <div class="col-fields">
           <table class="fields"><tr><th>字段</th><th>提取值</th><th>GT</th><th></th></tr>{det}</table>
           {tbl}
@@ -234,7 +254,7 @@ def build_html(results, summary):
     <div class="sample">
       <h3>bol_{r['bol']} &nbsp; <span class="badge">{r['template']}</span></h3>
       <div class="cols">
-        <div class="col-img"><img src="previews/bol_{r['bol']}.png"></div>
+        {render_preview_column(r)}
         <div class="col-fields">
           <p style="font-size:13px;margin-bottom:8px;">OCR 块数: <b>{meta.get('ocr_blocks', '?')}</b> &nbsp;|&nbsp;
              图片尺寸: {meta.get('image_size', ['?','?'])} &nbsp;|&nbsp;
@@ -286,6 +306,7 @@ def build_html(results, summary):
   .cols {{ display:flex; gap:16px; }}
   .col-img {{ width:45%; }}
   .col-img img {{ width:100%; border:1px solid #e5e7eb; border-radius:4px; }}
+  .preview-note {{ display:flex; align-items:center; justify-content:center; min-height:120px; color:#64748b; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:4px; font-size:13px; }}
   .col-fields {{ flex:1; font-size:12px; }}
 
   table.fields {{ border-collapse:collapse; width:100%; margin-bottom:12px; }}
@@ -316,6 +337,14 @@ def build_html(results, summary):
 {sections}
 <div class="footer">SmartLDS — 物流单证智能识别系统 &nbsp;|&nbsp; 批量测试报告</div>
 </body></html>"""
+
+
+def _finalize_report_artifacts(html_path, results, summary, previews_dir, keep_previews=False):
+    if keep_previews:
+        return
+    _cleanup_preview_artifacts(previews_dir)
+    with open(html_path, "w", encoding="utf-8") as f:
+        f.write(build_html(results, summary, include_preview_images=False))
 
 
 def main():
@@ -403,6 +432,12 @@ def main():
             pdf_path = os.path.join(OUT_DIR, "report.pdf")
             page.pdf(path=pdf_path, format="A3", landscape=True, print_background=True)
             browser.close()
+        keep_previews = _should_keep_preview_artifacts()
+        _finalize_report_artifacts(html_path, results, summary, previews_dir, keep_previews)
+        if keep_previews:
+            print(f"  Preview images kept: {previews_dir}")
+        else:
+            print("  Preview images cleaned; HTML now points to the single PDF report")
         print(f"  PDF 报告: {pdf_path}")
     except Exception as e:
         print(f"  [!] PDF 生成失败 (Playwright): {e}")

@@ -1,6 +1,8 @@
 import os
+import tempfile
 import sys
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 
@@ -135,6 +137,34 @@ class BatchEvaluationTest(unittest.TestCase):
 
         self.assertIn('<tr class="miss">', html)
 
+    def test_compact_html_omits_preview_image_links(self):
+        result = {
+            "bol": "001",
+            "desc": "Maersk",
+            "template": "maersk_style",
+            "acc": 100.0,
+            "correct": 1,
+            "total": 1,
+            "details": [("B/L No. (bl_no)", "BL10398483", "BL10398483", "OK")],
+            "table": {},
+            "meta": {},
+        }
+        summary = {
+            "total": 1,
+            "synth_acc": 100.0,
+            "synth_count": 1,
+            "funsd_count": 0,
+            "real_count": 0,
+            "maersk_acc": 100.0,
+            "cosco_acc": 0.0,
+            "simple_acc": 0.0,
+        }
+
+        html = batch_test.build_html([result], summary, include_preview_images=False)
+
+        self.assertNotIn("previews/bol_001.png", html)
+        self.assertIn("Preview is included in report.pdf", html)
+
     def test_report_path_is_converted_to_a_file_uri(self):
         uri = batch_test._report_file_uri("batch_output/report.html")
 
@@ -157,6 +187,73 @@ class BatchEvaluationTest(unittest.TestCase):
 
         self.assertTrue(saved)
         self.assertEqual(image.calls, 2)
+
+    def test_preview_files_are_temporary_by_default(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            previews_dir = Path(tmpdir) / "previews"
+            previews_dir.mkdir()
+            (previews_dir / "bol_001.png").write_bytes(b"fake image")
+
+            batch_test._cleanup_preview_artifacts(str(previews_dir))
+
+            self.assertFalse(previews_dir.exists())
+
+    def test_preview_files_can_be_kept_for_debugging(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            previews_dir = Path(tmpdir) / "previews"
+            previews_dir.mkdir()
+            preview = previews_dir / "bol_001.png"
+            preview.write_bytes(b"fake image")
+
+            batch_test._cleanup_preview_artifacts(str(previews_dir), keep=True)
+
+            self.assertTrue(preview.exists())
+
+    def test_finalize_report_rewrites_compact_html_after_pdf_success(self):
+        result = {
+            "bol": "001",
+            "desc": "Maersk",
+            "template": "maersk_style",
+            "acc": 100.0,
+            "correct": 1,
+            "total": 1,
+            "details": [("B/L No. (bl_no)", "BL10398483", "BL10398483", "OK")],
+            "table": {},
+            "meta": {},
+        }
+        summary = {
+            "total": 1,
+            "synth_acc": 100.0,
+            "synth_count": 1,
+            "funsd_count": 0,
+            "real_count": 0,
+            "maersk_acc": 100.0,
+            "cosco_acc": 0.0,
+            "simple_acc": 0.0,
+        }
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            html_path = Path(tmpdir) / "report.html"
+            previews_dir = Path(tmpdir) / "previews"
+            previews_dir.mkdir()
+            (previews_dir / "bol_001.png").write_bytes(b"fake image")
+            html_path.write_text(
+                batch_test.build_html([result], summary),
+                encoding="utf-8",
+            )
+
+            batch_test._finalize_report_artifacts(
+                str(html_path),
+                [result],
+                summary,
+                str(previews_dir),
+                keep_previews=False,
+            )
+
+            html = html_path.read_text(encoding="utf-8")
+            self.assertFalse(previews_dir.exists())
+            self.assertNotIn("previews/bol_001.png", html)
+            self.assertIn("Preview is included in report.pdf", html)
 
 
 if __name__ == "__main__":
