@@ -45,6 +45,103 @@ export function finishFieldLabelEdit(row) {
   return row
 }
 
+function normalizeRect(rect) {
+  if (!Array.isArray(rect) || rect.length !== 4) return null
+  const values = rect.map(value => Number(value))
+  if (values.some(value => !Number.isFinite(value))) return null
+  const [x1, y1, x2, y2] = values
+  if (x2 <= x1 || y2 <= y1) return null
+  return values
+}
+
+function rectCenter(rect) {
+  return {
+    x: (rect[0] + rect[2]) / 2,
+    y: (rect[1] + rect[3]) / 2,
+  }
+}
+
+export function inferFieldPosition(anchorRect, valueRect) {
+  const anchor = normalizeRect(anchorRect)
+  const value = normalizeRect(valueRect)
+  if (!anchor || !value) return ''
+  const anchorHeight = Math.max(anchor[3] - anchor[1], 5)
+  const anchorCenterY = (anchor[1] + anchor[3]) / 2
+  const valueCenterY = (value[1] + value[3]) / 2
+  if (value[0] >= anchor[2] - 5 && Math.abs(valueCenterY - anchorCenterY) <= anchorHeight * 1.4) {
+    return 'right'
+  }
+  if (value[1] >= anchor[3] - 5) return 'below'
+  return 'right'
+}
+
+export function buildLearnedValueOffset(anchorRect, valueRect) {
+  const anchor = normalizeRect(anchorRect)
+  const value = normalizeRect(valueRect)
+  if (!anchor || !value) return null
+  const anchorCenter = rectCenter(anchor)
+  const valueCenter = rectCenter(value)
+  const valueWidth = Math.max(value[2] - value[0], 5)
+  const valueHeight = Math.max(value[3] - value[1], 5)
+  const anchorHeight = Math.max(anchor[3] - anchor[1], 5)
+  return {
+    dx: Number((valueCenter.x - anchorCenter.x).toFixed(2)),
+    dy: Number((valueCenter.y - anchorCenter.y).toFixed(2)),
+    tolerance_x: Number(Math.max(valueWidth * 1.8, 80).toFixed(2)),
+    tolerance_y: Number(Math.max(valueHeight * 1.8, anchorHeight * 1.8, 45).toFixed(2)),
+  }
+}
+
+export function inferManualFieldBinding(anchorBlock = null, valueBlock = null) {
+  const anchorRect = normalizeRect(anchorBlock?.rect)
+  const valueRect = normalizeRect(valueBlock?.rect)
+  const binding = {}
+  if (anchorBlock?.text) {
+    binding.anchorText = String(anchorBlock.text).trim()
+    binding.label = binding.anchorText
+  }
+  if (valueBlock?.text) binding.value = String(valueBlock.text).trim()
+  if (anchorRect) binding.anchorRect = anchorRect
+  if (valueRect) binding.valueRect = valueRect
+  const offset = buildLearnedValueOffset(anchorRect, valueRect)
+  if (offset) {
+    binding.position = inferFieldPosition(anchorRect, valueRect)
+    binding.learnedValueOffset = offset
+  }
+  return binding
+}
+
+export function buildManualFieldPayload(row = {}) {
+  const payload = {
+    key: row.name,
+    label: row.label,
+    value: String(row.display ?? ''),
+  }
+  if (row.anchorText) payload.anchor_text = String(row.anchorText).trim()
+  const anchorRect = normalizeRect(row.anchorRect)
+  const valueRect = normalizeRect(row.valueRect)
+  if (anchorRect) payload.anchor_rect = anchorRect
+  if (valueRect) payload.value_rect = valueRect
+  const offset = row.learnedValueOffset || buildLearnedValueOffset(anchorRect, valueRect)
+  if (offset) payload.learned_value_offset = offset
+  const position = row.position || inferFieldPosition(anchorRect, valueRect)
+  if (position) payload.position = position
+  return payload
+}
+
+export function buildVisibleFieldRows(fieldRows = []) {
+  return (fieldRows || []).filter(row => !row?.excluded)
+}
+
+export function buildExcludedFieldRows(fieldRows = []) {
+  return (fieldRows || []).filter(row => !!row?.excluded)
+}
+
+export function buildFeedbackFieldOptions(fieldRows = []) {
+  return buildVisibleFieldRows(fieldRows)
+    .filter(row => row?.found && String(row.display || '').trim())
+}
+
 function normalizeDisplayTable(table = {}) {
   const headers = Array.isArray(table.headers)
     ? table.headers.map(header => String(header ?? '').trim()).filter(Boolean)
@@ -80,6 +177,7 @@ export function buildResultPreview(result = {}, fieldRows = [], tableData = null
   const preview = JSON.parse(JSON.stringify(result || {}))
   const fields = preview.fields && typeof preview.fields === 'object' ? preview.fields : {}
   let hasUnsaved = false
+  const excludedFields = []
 
   for (const row of fieldRows || []) {
     const name = row?.name
@@ -104,6 +202,13 @@ export function buildResultPreview(result = {}, fieldRows = [], tableData = null
       corrected: valueChanged || existing.corrected !== undefined ? display : existing.corrected,
       status: nextStatus,
     }
+    if (row.excluded) {
+      fields[name].excluded = true
+      excludedFields.push(name)
+    } else {
+      delete fields[name].excluded
+    }
+    if (!!row.excluded !== !!row._originalExcluded) hasUnsaved = true
     if (row._originalLabel !== undefined && fields[name].label !== row._originalLabel) {
       fields[name].label_corrected = true
       hasUnsaved = true
@@ -112,10 +217,24 @@ export function buildResultPreview(result = {}, fieldRows = [], tableData = null
     if (row.manual) {
       fields[name].source = 'manual'
       fields[name].confidence = 1.0
+      const manualPayload = buildManualFieldPayload(row)
+      if (manualPayload.anchor_text) {
+        fields[name].anchor = manualPayload.anchor_text
+        fields[name].anchor_text = manualPayload.anchor_text
+      }
+      if (manualPayload.anchor_rect) fields[name].anchor_rect = manualPayload.anchor_rect
+      if (manualPayload.value_rect) {
+        fields[name].value_rect = manualPayload.value_rect
+        fields[name].rect = manualPayload.value_rect
+      }
+      if (manualPayload.position) fields[name].position = manualPayload.position
+      if (manualPayload.learned_value_offset) fields[name].learned_value_offset = manualPayload.learned_value_offset
     }
   }
 
   preview.fields = fields
+  if (excludedFields.length) preview.excluded_fields = excludedFields
+  else delete preview.excluded_fields
 
   if (tableData?.headers) {
     preview.table = preview.table && typeof preview.table === 'object' ? preview.table : {}
@@ -196,7 +315,7 @@ export function findJsonPreviewTargetLine(jsonText = '', target = {}) {
 
 export function buildFieldValueRows(fieldRows = []) {
   return (fieldRows || [])
-    .filter(row => row?.found && String(row.display ?? '').trim())
+    .filter(row => !row?.excluded && row?.found && String(row.display ?? '').trim())
     .map(row => ({
       label: row.label || row.name || '',
       value: String(row.display ?? ''),

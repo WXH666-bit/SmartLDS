@@ -41,6 +41,8 @@ The first two hardening phases have been completed:
 - Field schemas are now template-local: each template should output its own source document labels, while `canonical_key` is only metadata.
 - Low-confidence recognition can optionally route to `backend/vision_fallback.py`; this keeps local rules as the default path and uses a vision model only as a fallback.
 - Vision fallback output supports both `fields[]` and `tables[]`. Keep the compatibility `table` field for old single-table consumers, but use `tables` for the complete multi-table structure.
+- Vision fallback must distinguish data tables from bordered key-value form grids. Repeated-record regions with stable column headers belong in `tables`; grids that alternate `label/value/label/value` belong in `fields`.
+- Vision fallback has a conservative OCR-block supplement for cases where the model returns only a few fields and omits an obvious key-value grid. This supplement is structural, not keyword based, and should not replace normal local-rule extraction.
 - Model settings are configurable from the frontend by provider/API key/model. API keys are local-only and can be stored separately per provider/model; do not hardcode keys or model IDs into source code.
 - Test files have been consolidated under `tests/`. Fast unit tests are named `test_*.py`; heavy/manual OCR checks are not.
 - Result page JSON preview keeps the simple `JSON` collapse, but can live as a right-side inspection panel. Field name/value editing should update this preview in real time, auto-expand it if needed, scroll only the JSON container, and briefly highlight the relevant JSON line/block.
@@ -125,7 +127,7 @@ Optional vision fallback environment:
 $env:VISION_FALLBACK_ENABLED="true"
 $env:DASHSCOPE_API_KEY="..."
 $env:VISION_FALLBACK_THRESHOLD="0.55"
-$env:VISION_FALLBACK_MODEL="qwen-vl-plus"
+$env:VISION_FALLBACK_MODEL="qwen-3.6-flash"
 ```
 
 ## Engineering Rules
@@ -143,6 +145,7 @@ $env:VISION_FALLBACK_MODEL="qwen-vl-plus"
 - If changing manual field/table correction, verify `node tests\frontend_result_state_check.mjs` in addition to backend unit tests.
 - If changing frontend API calls, keep relative `/api` support.
 - If changing vision fallback behavior, preserve the failure policy: no API key, disabled fallback, timeout, or invalid JSON must return local rules output plus `meta.warnings`, not a failed recognition job.
+- If changing vision fallback table handling, keep the two regression classes separate: FUNSD/progress-report repeated records should stay in `tables`, while customs-style `label/value/label/value` grids should become fields, including when the model omits that grid and OCR blocks can recover it safely.
 - If changing template fields, preserve source-label output and keep `canonical_key` as metadata only.
 - If changing Few-shot learning or feedback, verify that learned templates do not depend on preset keywords, that repeated identical values can still learn distinct anchors, and that existing correct fields are not displaced.
 - When adding a form family, decide whether it belongs to:

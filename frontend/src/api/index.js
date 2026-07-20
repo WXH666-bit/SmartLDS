@@ -22,7 +22,7 @@ export default {
     return API.get(`/result/${jobId}`)
   },
   correct(jobId, payload) {
-    if (payload && (payload.fields || payload.field_labels || payload.manual_fields || payload.table_patch)) {
+    if (payload && (payload.fields || payload.field_labels || payload.manual_fields || payload.excluded_fields || payload.table_patch)) {
       return API.post(`/correct/${jobId}`, payload)
     }
     return API.post(`/correct/${jobId}`, { fields: payload || {} })

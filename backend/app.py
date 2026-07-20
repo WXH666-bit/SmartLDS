@@ -241,12 +241,37 @@ def _unique_key(base: str, used: set[str]) -> str:
     return unique
 
 
+def _normalize_rect_value(value) -> list[float] | None:
+    if not isinstance(value, list) or len(value) != 4:
+        return None
+    try:
+        rect = [float(item) for item in value]
+    except (TypeError, ValueError):
+        return None
+    x1, y1, x2, y2 = rect
+    if x2 <= x1 or y2 <= y1:
+        return None
+    return rect
+
+
+def _normalize_offset_value(value) -> dict | None:
+    if not isinstance(value, dict):
+        return None
+    normalized = {}
+    for key in ("dx", "dy", "tolerance_x", "tolerance_y"):
+        try:
+            normalized[key] = float(value.get(key))
+        except (TypeError, ValueError):
+            return None
+    return normalized
+
+
 def normalize_corrections_payload(raw) -> dict:
     """兼容旧 flat corrections，并归一化人工字段/表格补丁。"""
     if not isinstance(raw, dict):
-        return {"fields": {}, "field_labels": {}, "manual_fields": [], "table_patch": None}
+        return {"fields": {}, "field_labels": {}, "manual_fields": [], "excluded_fields": [], "table_patch": None}
 
-    is_new_shape = any(k in raw for k in ("fields", "field_labels", "manual_fields", "table_patch"))
+    is_new_shape = any(k in raw for k in ("fields", "field_labels", "manual_fields", "excluded_fields", "table_patch"))
     field_corrections = dict(raw.get("fields") or {}) if is_new_shape else dict(raw)
     field_labels = {}
     if is_new_shape and isinstance(raw.get("field_labels"), dict):
@@ -267,7 +292,31 @@ def normalize_corrections_payload(raw) -> dict:
             continue
         key = str(item.get("key") or label).strip()
         key = _unique_key(key, used_manual_keys)
-        manual_fields.append({"key": key, "label": label, "value": value})
+        manual = {"key": key, "label": label, "value": value}
+        anchor_text = str(item.get("anchor_text") or "").strip()
+        if anchor_text:
+            manual["anchor_text"] = anchor_text
+        anchor_rect = _normalize_rect_value(item.get("anchor_rect"))
+        value_rect = _normalize_rect_value(item.get("value_rect"))
+        if anchor_rect:
+            manual["anchor_rect"] = anchor_rect
+        if value_rect:
+            manual["value_rect"] = value_rect
+        position = str(item.get("position") or "").strip().lower()
+        if position in {"right", "below", "inline"}:
+            manual["position"] = position
+        learned_offset = _normalize_offset_value(item.get("learned_value_offset"))
+        if learned_offset:
+            manual["learned_value_offset"] = learned_offset
+        manual_fields.append(manual)
+
+    excluded_fields = []
+    seen_excluded = set()
+    for key in raw.get("excluded_fields") or []:
+        text = str(key or "").strip()
+        if text and text not in seen_excluded:
+            excluded_fields.append(text)
+            seen_excluded.add(text)
 
     table_patch = raw.get("table_patch") if is_new_shape else None
     normalized_table = None
@@ -292,6 +341,7 @@ def normalize_corrections_payload(raw) -> dict:
         "fields": field_corrections,
         "field_labels": field_labels,
         "manual_fields": manual_fields,
+        "excluded_fields": excluded_fields,
         "table_patch": normalized_table,
     }
 
@@ -322,6 +372,8 @@ def _field_feedback_anchors(field_name: str, info: dict) -> list[str]:
 
 
 def _field_has_reliable_anchor(field_name: str, info: dict) -> bool:
+    if _normalize_rect_value((info or {}).get("anchor_rect")) and _normalize_rect_value((info or {}).get("value_rect")):
+        return True
     anchors = _field_feedback_anchors(field_name, info)
     label_like = {str(field_name or "").strip(), str((info or {}).get("label") or "").strip()}
     explicit = [a for a in anchors if a and a not in label_like]
@@ -468,10 +520,14 @@ def apply_ocr_feedback_learning(
         anchors = _merge_unique_strings(entry.get("anchors", []), _field_feedback_anchors(field_name, info), limit=10)
         entry["anchors"] = anchors
 
-        anchor_block = _find_anchor_text_block(blocks, anchors)
-        value_block = _find_ocr_text_block(blocks, value)
-        anchor_rect = _block_rect(anchor_block)
-        value_rect = _block_rect(value_block)
+        anchor_rect = _normalize_rect_value(info.get("anchor_rect"))
+        value_rect = _normalize_rect_value(info.get("value_rect"))
+        if not anchor_rect:
+            anchor_block = _find_anchor_text_block(blocks, anchors)
+            anchor_rect = _block_rect(anchor_block)
+        if not value_rect:
+            value_block = _find_ocr_text_block(blocks, value)
+            value_rect = _block_rect(value_block)
         if not anchor_rect or not value_rect:
             warnings.append(f"字段 '{field_name}' 的人工值未能反查到可靠 OCR 坐标，已保留普通字段结构")
             continue
@@ -814,6 +870,7 @@ def apply_corrections(result: dict | None, corrections: dict | None) -> dict:
     result_copy["corrections"] = clean_corrections
     result_copy["field_labels"] = normalized["field_labels"]
     result_copy["manual_fields"] = normalized["manual_fields"]
+    result_copy["excluded_fields"] = normalized["excluded_fields"]
     result_copy["table_patch"] = normalized["table_patch"]
 
     fields = result_copy.get("fields", {})
@@ -848,6 +905,22 @@ def apply_corrections(result: dict | None, corrections: dict | None) -> dict:
                 "rect": [0, 0, 0, 0],
                 "canonical_key": None,
             }
+            if item.get("anchor_text"):
+                fields[key]["anchor"] = item["anchor_text"]
+                fields[key]["anchor_text"] = item["anchor_text"]
+            if item.get("anchor_rect"):
+                fields[key]["anchor_rect"] = item["anchor_rect"]
+            if item.get("value_rect"):
+                fields[key]["value_rect"] = item["value_rect"]
+                fields[key]["rect"] = item["value_rect"]
+            if item.get("position"):
+                fields[key]["position"] = item["position"]
+            if item.get("learned_value_offset"):
+                fields[key]["learned_value_offset"] = item["learned_value_offset"]
+
+        for fname in normalized["excluded_fields"]:
+            if fname in fields and isinstance(fields[fname], dict):
+                fields[fname]["excluded"] = True
 
     table_patch = normalized.get("table_patch")
     if table_patch:
@@ -880,6 +953,8 @@ def build_field_values(fields: dict | None) -> dict:
     values = {}
     for field_key, info in (fields or {}).items():
         if not isinstance(info, dict):
+            continue
+        if info.get("excluded"):
             continue
         value = _final_field_value(info)
         if not value and info.get("status") == "not_found":
@@ -924,6 +999,13 @@ def build_export_json_payload(result: dict, options: dict) -> dict:
 
     if options.get("field_details"):
         payload.update(copy.deepcopy(result))
+        if isinstance(payload.get("fields"), dict):
+            payload["fields"] = {
+                key: value
+                for key, value in payload["fields"].items()
+                if not (isinstance(value, dict) and value.get("excluded"))
+            }
+        payload.pop("excluded_fields", None)
 
     if options.get("field_values"):
         payload["field_values"] = build_field_values(fields)
@@ -1300,6 +1382,7 @@ def api_correct(job_id):
         "fields": dict(existing["fields"]),
         "field_labels": dict(existing["field_labels"]),
         "manual_fields": incoming["manual_fields"],
+        "excluded_fields": incoming["excluded_fields"],
         "table_patch": incoming["table_patch"],
     }
     corrections["fields"].update(incoming["fields"])
@@ -1316,6 +1399,7 @@ def api_correct(job_id):
         "status": "corrected",
         "corrected_fields": list(corrections["fields"].keys()),
         "manual_fields_count": len(corrections["manual_fields"]),
+        "excluded_fields_count": len(corrections["excluded_fields"]),
         "has_table_patch": bool(corrections["table_patch"]),
     })
 
@@ -1392,6 +1476,8 @@ def _export_excel(job_id, result, fields, options):
         style_header(ws1[1])
 
         for fname, info in fields.items():
+            if info.get("excluded"):
+                continue
             conf = info.get("confidence", 0)
             display_name = info.get("label") or fname
             ws1.append([

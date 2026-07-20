@@ -2,7 +2,12 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import {
   buildDisplayTables,
+  buildExcludedFieldRows,
+  buildFeedbackFieldOptions,
+  buildManualFieldPayload,
   buildResultPreviewJson,
+  buildVisibleFieldRows,
+  inferManualFieldBinding,
   findJsonPreviewTargetLine,
   finishFieldEdit,
   finishFieldLabelEdit,
@@ -180,6 +185,55 @@ assert.equal(findJsonPreviewTargetLine(specialKeyPreviewJson, {
   prop: 'value',
 }), -1, '找不到目标时应安全退化')
 
+const boundManualRow = {
+  name: 'gross_weight',
+  label: 'Gross Weight',
+  status: 'manual_added',
+  manual: true,
+  display: '4292 KG',
+  _original: '',
+  anchorText: 'Gross Weight',
+  anchorRect: [10, 20, 80, 45],
+  valueRect: [130, 20, 220, 45],
+}
+const boundManualPayload = buildManualFieldPayload(boundManualRow)
+assert.equal(boundManualPayload.anchor_text, 'Gross Weight', 'manual field payload keeps OCR anchor text')
+assert.deepEqual(boundManualPayload.anchor_rect, [10, 20, 80, 45], 'manual field payload keeps anchor rect')
+assert.deepEqual(boundManualPayload.value_rect, [130, 20, 220, 45], 'manual field payload keeps value rect')
+assert.equal(boundManualPayload.position, 'right', 'manual field payload infers relative position')
+assert.ok(boundManualPayload.learned_value_offset.dx > 0, 'manual field payload includes feedback-ready offset')
+
+const manualPreview = JSON.parse(buildResultPreviewJson({ fields: {}, meta: {} }, [boundManualRow]))
+assert.equal(manualPreview.fields.gross_weight.anchor_text, 'Gross Weight', 'JSON preview includes manual position metadata')
+assert.deepEqual(manualPreview.fields.gross_weight.value_rect, [130, 20, 220, 45])
+assert.ok(manualPreview.fields.gross_weight.learned_value_offset.dx > 0)
+
+const excludedRows = [
+  { name: 'keep', label: 'Keep', display: 'A', found: true, excluded: false },
+  { name: 'drop', label: 'Drop', display: 'B', found: true, excluded: true },
+]
+assert.deepEqual(buildVisibleFieldRows(excludedRows).map(row => row.name), ['keep'], 'field cards hide excluded fields')
+assert.deepEqual(buildExcludedFieldRows(excludedRows).map(row => row.name), ['drop'], 'excluded fields remain recoverable')
+assert.deepEqual(buildFeedbackFieldOptions(excludedRows).map(row => row.name), ['keep'], 'feedback options skip excluded fields')
+
+const excludedPreview = JSON.parse(buildResultPreviewJson({
+  fields: {
+    keep: { label: 'Keep', value: 'A', cleaned: 'A', status: 'extracted' },
+    drop: { label: 'Drop', value: 'B', cleaned: 'B', status: 'extracted' },
+  },
+  meta: {},
+}, excludedRows))
+assert.deepEqual(excludedPreview.excluded_fields, ['drop'], 'JSON preview preserves excluded field keys')
+assert.equal(excludedPreview.fields.drop.excluded, true, 'JSON preview marks excluded field object')
+
+const inferredBinding = inferManualFieldBinding(
+  { text: 'Total', rect: [10, 20, 60, 42] },
+  { text: '14991 USD', rect: [120, 20, 210, 42] },
+)
+assert.equal(inferredBinding.anchorText, 'Total')
+assert.equal(inferredBinding.value, '14991 USD')
+assert.equal(inferredBinding.position, 'right')
+
 const multiTableResult = {
   fields: {
     'TO:': {
@@ -234,6 +288,12 @@ assert.deepEqual(displayTables[1].rows, [{ 0: 'Kroger', 1: '21' }])
 
 const appVue = fs.readFileSync(new URL('../frontend/src/App.vue', import.meta.url), 'utf8')
 const apiSource = fs.readFileSync(new URL('../frontend/src/api/index.js', import.meta.url), 'utf8')
+assert.match(appVue, /选择字段名 OCR 块/, 'manual field dialog should select an OCR anchor block')
+assert.match(appVue, /选择字段值 OCR 块/, 'manual field dialog should select an OCR value block')
+assert.match(appVue, /buildManualFieldPayload\(row\)/, 'correction payload should include manual field position metadata')
+assert.match(appVue, /excluded_fields: excludedFields/, 'correction payload should include excluded_fields')
+assert.match(appVue, /已排除字段/, 'result page should show recoverable excluded fields')
+assert.match(apiSource, /payload\.excluded_fields/, 'correct API should treat excluded_fields as a structured payload')
 assert.match(appVue, /class="logo smartlds-logo"/, '顶部品牌应使用 SmartLDS 动态 SVG 图标')
 assert.match(appVue, /class="logo-scan"/, '动态图标应包含扫描光线')
 assert.match(appVue, /class="logo-node/, '动态图标应包含数据节点')

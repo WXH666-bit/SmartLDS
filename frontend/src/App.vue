@@ -255,7 +255,7 @@
 
           <div v-if="!(meta.template==='unknown' || unknownDetected)" class="section-title">字段提取</div>
           <div class="field-cards">
-            <div v-for="row in fieldRows" :key="row.name" class="field-card" :class="{ miss: !row.found, manual: row.manual }">
+            <div v-for="row in visibleFieldRows" :key="row.name" class="field-card" :class="{ miss: !row.found, manual: row.manual }">
               <div
                 v-if="!row.labelEditing"
                 class="fc-label"
@@ -279,8 +279,20 @@
               <el-input v-else v-model="row.editVal" size="small" @input="previewFieldValueInJson(row)" @blur="finishFieldEditAndSync(row)" @keyup.enter="finishFieldEditAndSync(row)" autofocus />
               <div class="fc-conf" v-if="row.confidence">{{ row.confidence }}</div>
               <el-button v-if="row.manual" size="small" text type="danger" @click="removeManualField(row.name)">删除</el-button>
+              <el-button v-else size="small" text type="danger" @click="excludeField(row)">排除</el-button>
             </div>
           </div>
+          <el-collapse v-if="excludedFieldRows.length" v-model="excludedCollapse" class="excluded-field-collapse">
+            <el-collapse-item title="已排除字段" name="excluded">
+              <div class="excluded-field-list">
+                <div v-for="row in excludedFieldRows" :key="row.name" class="excluded-field-row">
+                  <span class="excluded-label">{{ row.label }}</span>
+                  <span class="excluded-value">{{ row.display }}</span>
+                  <el-button size="small" text type="primary" @click="restoreField(row)">恢复</el-button>
+                </div>
+              </div>
+            </el-collapse-item>
+          </el-collapse>
           <div v-if="tableList.length" class="cargo-box">
             <div class="section-title">货物明细</div>
             <div class="table-tools">
@@ -338,6 +350,50 @@
       <el-form-item label="字段值">
         <el-input v-model="newField.value" type="textarea" :rows="3" placeholder="填写字段值" />
       </el-form-item>
+      <el-form-item label="字段位置">
+        <div class="optional-select-row">
+          <el-select
+            v-model="newField.anchorIndex"
+            class="optional-select"
+            filterable
+            clearable
+            placeholder="选择字段名 OCR 块"
+            @change="applyManualFieldBinding"
+          >
+            <el-option
+              v-for="option in ocrBlockOptions"
+              :key="'anchor-'+option.index"
+              :label="option.label"
+              :value="option.index"
+            />
+          </el-select>
+          <span class="optional-chip">可选</span>
+        </div>
+      </el-form-item>
+      <el-form-item label="值位置">
+        <div class="optional-select-row">
+          <el-select
+            v-model="newField.valueIndex"
+            class="optional-select"
+            filterable
+            clearable
+            placeholder="选择字段值 OCR 块"
+            @change="applyManualFieldBinding"
+          >
+            <el-option
+              v-for="option in ocrBlockOptions"
+              :key="'value-'+option.index"
+              :label="option.label"
+              :value="option.index"
+            />
+          </el-select>
+          <span class="optional-chip">可选</span>
+        </div>
+      </el-form-item>
+      <div v-if="newField.anchorText || newField.valueRect" class="manual-binding-summary">
+        <span v-if="newField.anchorText">锚点：{{ newField.anchorText }}</span>
+        <span v-if="newField.position">位置：{{ newField.position }}</span>
+      </div>
     </el-form>
     <template #footer>
       <el-button @click="showAddField=false">取消</el-button>
@@ -713,10 +769,15 @@ import { Loading, View, Hide } from '@element-plus/icons-vue'
 import api from './api/index.js'
 import {
   buildDisplayTables,
+  buildExcludedFieldRows,
+  buildFeedbackFieldOptions,
+  buildManualFieldPayload,
   findJsonPreviewTargetLine,
   buildResultPreviewJson,
+  buildVisibleFieldRows,
   finishFieldEdit,
   finishFieldLabelEdit,
+  inferManualFieldBinding,
   isFeedbackCreateConflict,
   isFieldRowFound,
   resolveFeedbackDefaults,
@@ -746,14 +807,26 @@ const jsonBlockRef = ref(null)
 const activeJsonLine = ref(-1)
 const imageUrl = ref('')
 const unknownDetected = ref(false)
+const ocrBlocks = ref([])
 const ocrPreview = ref([])  // OCR blocks for unknown template preview
 let progressTimer = null
 let jsonHighlightTimer = null
 
 // 识别后人工补充：字段、表格、反哺指定版式
 const showAddField = ref(false)
-const newField = reactive({ label: '', value: '' })
+const newField = reactive({
+  label: '',
+  value: '',
+  anchorIndex: null,
+  valueIndex: null,
+  anchorText: '',
+  anchorRect: null,
+  valueRect: null,
+  position: '',
+  learnedValueOffset: null,
+})
 const manualDirty = ref(false)
+const excludedCollapse = ref([])
 const showTableEditor = ref(false)
 const tableEditor = reactive({ headers: [], rows: [] })
 const showExportDialog = ref(false)
@@ -780,8 +853,16 @@ const feedbackProgressText = computed(() => (
     ? '正在调用视觉模型增强版式，可能需要几十秒'
     : '正在保存当前字段和表格结构'
 ))
-const feedbackFieldOptions = computed(() =>
-  fieldRows.value.filter(row => row.found && String(row.display || '').trim())
+const visibleFieldRows = computed(() => buildVisibleFieldRows(fieldRows.value))
+const excludedFieldRows = computed(() => buildExcludedFieldRows(fieldRows.value))
+const feedbackFieldOptions = computed(() => buildFeedbackFieldOptions(fieldRows.value))
+const ocrBlockOptions = computed(() =>
+  (ocrBlocks.value || []).map((block, index) => ({
+    index,
+    text: String(block?.text || '').trim(),
+    confidence: block?.confidence,
+    label: `${index + 1}. ${String(block?.text || '').trim() || '(empty)'}`,
+  })).filter(option => option.text)
 )
 
 // Config viewer
@@ -1211,6 +1292,7 @@ function showResult(data) {
   const table = data.table || {}
   const rawCorrections = data.corrections || {}
   const corrections = rawCorrections.fields || rawCorrections
+  const excluded = new Set(data.excluded_fields || rawCorrections.excluded_fields || [])
   Object.assign(meta, data.meta || {})
   fieldRows.value = Object.entries(fields).map(([name, info]) => {
     const display = corrections[name] ?? info.corrected ?? info.cleaned ?? info.value ?? ''
@@ -1227,6 +1309,13 @@ function showResult(data) {
       display,
       confidence: info.confidence ? Math.round(info.confidence*100)+'%' : '',
       manual,
+      excluded: !!info.excluded || excluded.has(name),
+      _originalExcluded: !!info.excluded || excluded.has(name),
+      anchorText: info.anchor_text || info.anchor || '',
+      anchorRect: info.anchor_rect || null,
+      valueRect: info.value_rect || null,
+      position: info.position || '',
+      learnedValueOffset: info.learned_value_offset || null,
       status: info.status || '',
       editing: false, _original: display,
       editVal: display
@@ -1249,6 +1338,7 @@ function showResult(data) {
   unknownDetected.value = (tpl === 'unknown')
   // If unknown, show OCR blocks as preview
   const blocks = data.blocks || []
+  ocrBlocks.value = blocks
   ocrPreview.value = tpl === 'unknown' ? blocks : []
 }
 
@@ -1519,7 +1609,33 @@ function makeUniqueFieldKey(label) {
 function openAddFieldDialog() {
   newField.label = ''
   newField.value = ''
+  newField.anchorIndex = null
+  newField.valueIndex = null
+  newField.anchorText = ''
+  newField.anchorRect = null
+  newField.valueRect = null
+  newField.position = ''
+  newField.learnedValueOffset = null
   showAddField.value = true
+}
+
+function ocrBlockByIndex(index) {
+  const numeric = Number(index)
+  if (!Number.isInteger(numeric)) return null
+  return ocrBlocks.value[numeric] || null
+}
+
+function applyManualFieldBinding() {
+  const anchorBlock = ocrBlockByIndex(newField.anchorIndex)
+  const valueBlock = ocrBlockByIndex(newField.valueIndex)
+  const binding = inferManualFieldBinding(anchorBlock, valueBlock)
+  if (binding.label) newField.label = binding.label
+  if (binding.value) newField.value = binding.value
+  newField.anchorText = binding.anchorText || ''
+  newField.anchorRect = binding.anchorRect || null
+  newField.valueRect = binding.valueRect || null
+  newField.position = binding.position || ''
+  newField.learnedValueOffset = binding.learnedValueOffset || null
 }
 
 function addManualField() {
@@ -1538,6 +1654,13 @@ function addManualField() {
     display: value,
     confidence: '100%',
     manual: true,
+    excluded: false,
+    _originalExcluded: false,
+    anchorText: newField.anchorText,
+    anchorRect: newField.anchorRect ? [...newField.anchorRect] : null,
+    valueRect: newField.valueRect ? [...newField.valueRect] : null,
+    position: newField.position,
+    learnedValueOffset: newField.learnedValueOffset ? { ...newField.learnedValueOffset } : null,
     status: 'manual_added',
     editing: false,
     _original: '',
@@ -1548,10 +1671,21 @@ function addManualField() {
   showAddField.value = false
 }
 
-function removeManualField(name) {
-  fieldRows.value = fieldRows.value.filter(row => row.name !== name)
+function excludeField(row) {
+  row.excluded = true
   manualDirty.value = true
-  syncJsonPreview()
+  syncJsonPreview({ type: 'field', fieldKey: row.name })
+}
+
+function restoreField(row) {
+  row.excluded = false
+  manualDirty.value = true
+  syncJsonPreview({ type: 'field', fieldKey: row.name })
+}
+
+function removeManualField(name) {
+  const row = fieldRows.value.find(item => item.name === name)
+  if (row) excludeField(row)
 }
 
 function tableRowsToArrays() {
@@ -1734,9 +1868,11 @@ async function doCorrect(options = {}) {
   const edits = {}
   const fieldLabels = {}
   const manualFields = []
+  const excludedFields = []
   fieldRows.value.forEach(row => {
+    if (row.excluded) excludedFields.push(row.name)
     if (row.manual || row.status === 'manual_added') {
-      manualFields.push({ key: row.name, label: row.label, value: row.display })
+      manualFields.push(buildManualFieldPayload(row))
     } else if (row.display !== row._original) {
       edits[row.name] = row.display
     }
@@ -1745,7 +1881,7 @@ async function doCorrect(options = {}) {
     }
   })
 
-  const payload = { fields: edits, field_labels: fieldLabels, manual_fields: manualFields }
+  const payload = { fields: edits, field_labels: fieldLabels, manual_fields: manualFields, excluded_fields: excludedFields }
   if (tableDirty.value) {
     payload.table_patch = {
       mode: 'replace',
@@ -1754,7 +1890,7 @@ async function doCorrect(options = {}) {
     }
   }
 
-  const hasChanges = Object.keys(edits).length || Object.keys(fieldLabels).length || manualFields.length || manualDirty.value || tableDirty.value
+  const hasChanges = Object.keys(edits).length || Object.keys(fieldLabels).length || manualFields.length || excludedFields.length || manualDirty.value || tableDirty.value
   if (!hasChanges) {
     if (!options.silent) ElMessage.info('\u6ca1\u6709\u4fee\u6539')
     return
@@ -1961,6 +2097,15 @@ function confirmExport() {
 .fc-label{min-width:110px;font-weight:600;flex-shrink:0;font-size:11px;white-space:nowrap;color:#64748b;letter-spacing:.4px}
 .fc-label:hover{color:#2563eb}
 .fc-label-input{width:130px;flex-shrink:0}
+.optional-select-row{display:flex;align-items:center;gap:8px;width:100%}
+.optional-select{flex:1;min-width:0}
+.optional-chip{flex-shrink:0;padding:2px 8px;border-radius:999px;background:#f1f5f9;color:#64748b;font-size:12px;line-height:18px}
+.manual-binding-summary{display:flex;gap:10px;margin:-4px 0 8px 80px;color:#64748b;font-size:12px;line-height:1.5}
+.excluded-field-collapse{margin-top:10px;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;background:#fff}
+.excluded-field-list{display:flex;flex-direction:column;gap:6px}
+.excluded-field-row{display:flex;align-items:center;gap:10px;padding:6px 4px;font-size:13px}
+.excluded-label{min-width:110px;color:#64748b;font-weight:600}
+.excluded-value{flex:1;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .fc-value{flex:1;cursor:pointer;word-break:break-all;border-radius:4px;padding:3px 6px;transition:.15s;color:#1e293b;font-weight:500}
 .fc-value:hover{background:#f0f9ff}
 .fc-value.empty{color:#cbd5e1;font-style:italic;font-weight:400}

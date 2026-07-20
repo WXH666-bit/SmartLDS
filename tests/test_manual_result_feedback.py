@@ -102,6 +102,92 @@ class ManualResultFeedbackTest(unittest.TestCase):
         self.assertEqual(manual["confidence"], 1.0)
         self.assertEqual(result["meta"]["manual_fields_count"], 1)
 
+    def test_manual_field_payload_preserves_ocr_position_metadata(self):
+        payload = normalize_corrections_payload({
+            "manual_fields": [{
+                "key": "gross_weight",
+                "label": "Gross Weight",
+                "value": "4292 KG",
+                "anchor_text": "Gross Weight",
+                "anchor_rect": [10, 20, 80, 45],
+                "value_rect": [130, 20, 220, 45],
+                "position": "right",
+                "learned_value_offset": {
+                    "dx": 130,
+                    "dy": 0,
+                    "tolerance_x": 90,
+                    "tolerance_y": 45,
+                },
+            }],
+            "excluded_fields": ["old_field"],
+        })
+
+        self.assertEqual(payload["excluded_fields"], ["old_field"])
+        manual = payload["manual_fields"][0]
+        self.assertEqual(manual["anchor_text"], "Gross Weight")
+        self.assertEqual(manual["anchor_rect"], [10.0, 20.0, 80.0, 45.0])
+        self.assertEqual(manual["value_rect"], [130.0, 20.0, 220.0, 45.0])
+        self.assertEqual(manual["position"], "right")
+        self.assertEqual(manual["learned_value_offset"]["dx"], 130.0)
+
+    def test_apply_corrections_marks_excluded_fields_and_keeps_manual_positions(self):
+        result = apply_corrections(
+            {
+                "fields": {
+                    "keep": {"label": "Keep", "value": "A", "cleaned": "A", "status": "extracted"},
+                    "drop": {"label": "Drop", "value": "B", "cleaned": "B", "status": "extracted"},
+                },
+                "meta": {},
+            },
+            {
+                "manual_fields": [{
+                    "key": "gross_weight",
+                    "label": "Gross Weight",
+                    "value": "4292 KG",
+                    "anchor_text": "Gross Weight",
+                    "anchor_rect": [10, 20, 80, 45],
+                    "value_rect": [130, 20, 220, 45],
+                    "position": "right",
+                }],
+                "excluded_fields": ["drop"],
+            },
+        )
+
+        self.assertTrue(result["fields"]["drop"]["excluded"])
+        self.assertEqual(result["excluded_fields"], ["drop"])
+        manual = result["fields"]["gross_weight"]
+        self.assertEqual(manual["anchor"], "Gross Weight")
+        self.assertEqual(manual["anchor_text"], "Gross Weight")
+        self.assertEqual(manual["anchor_rect"], [10.0, 20.0, 80.0, 45.0])
+        self.assertEqual(manual["value_rect"], [130.0, 20.0, 220.0, 45.0])
+        self.assertEqual(manual["position"], "right")
+
+    def test_build_field_values_skips_excluded_fields(self):
+        values = build_field_values({
+            "keep": {"label": "Keep", "value": "A", "cleaned": "A"},
+            "drop": {"label": "Drop", "value": "B", "cleaned": "B", "excluded": True},
+        })
+
+        self.assertEqual(values, {"Keep": "A"})
+
+    def test_export_json_field_details_skips_excluded_fields(self):
+        result = {
+            "fields": {
+                "keep": {"label": "Keep", "value": "A", "cleaned": "A"},
+                "drop": {"label": "Drop", "value": "B", "cleaned": "B", "excluded": True},
+            },
+            "excluded_fields": ["drop"],
+            "meta": {},
+        }
+
+        payload = build_export_json_payload(
+            result,
+            {"field_values": False, "field_details": True, "table": False, "meta": False},
+        )
+
+        self.assertEqual(set(payload["fields"].keys()), {"keep"})
+        self.assertNotIn("excluded_fields", payload)
+
     def test_table_patch_replaces_final_table_without_breaking_ocr_source(self):
         result = apply_corrections(
             self.make_result(),
@@ -199,6 +285,37 @@ class ManualResultFeedbackTest(unittest.TestCase):
         self.assertIn("learned_value_offset", field_cfg)
         self.assertGreater(field_cfg["learned_value_offset"]["dx"], 0)
         self.assertTrue(any("value_pattern" in item for item in warnings))
+
+    def test_ocr_feedback_learning_uses_bound_manual_field_rects_before_text_lookup(self):
+        target_template = {"fields": {}}
+        final_fields = {
+            "gross_weight": {
+                "label": "Gross Weight",
+                "value": "4292 KG",
+                "status": "manual_added",
+                "source": "manual",
+                "anchor_text": "Gross Weight",
+                "anchor_rect": [10, 20, 80, 45],
+                "value_rect": [130, 20, 220, 45],
+            }
+        }
+        warnings = []
+
+        changes = apply_ocr_feedback_learning(
+            target_template,
+            final_fields,
+            selected_fields=["gross_weight"],
+            blocks=[],
+            warnings=warnings,
+        )
+
+        field_cfg = target_template["fields"]["gross_weight"]
+        self.assertTrue(changes["applied"])
+        self.assertEqual(field_cfg["anchors"], ["Gross Weight", "gross_weight"])
+        self.assertEqual(field_cfg["position"], "right")
+        self.assertEqual(field_cfg["learned_sample_value"], "4292 KG")
+        self.assertGreater(field_cfg["learned_value_offset"]["dx"], 0)
+        self.assertEqual(warnings, [])
 
     def test_build_export_json_payload_can_export_values_only(self):
         result = apply_corrections(
