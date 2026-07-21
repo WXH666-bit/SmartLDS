@@ -15,6 +15,21 @@ validators:
     strip_suffix: CBM
   place_date:
     description: 签发地+日期合并 — 分离地点部分（去掉末尾的逗号+日期）
+  auto_document_no:
+    description: document_no auto-generated
+    pattern: ^DO\-EXP\-018\d$
+  auto_sender_phone:
+    description: sender_phone auto-generated
+    pattern: ^1\d\d\d\d\d\d\d\d\d\d$
+  auto_tracking_no:
+    description: tracking_no auto-generated
+    pattern: ^[A-Za-z\d][A-Za-z\d]\d\d\d\d\d\d\d\d\d\d\d.*$
+  auto_单证编号:
+    description: 单证编号 auto-generated
+    pattern: ^DO\-EXP\-018\d$
+  auto_发货方 SHIPPER 电话:
+    description: 发货方 SHIPPER 电话 auto-generated
+    pattern: ^1\d\d\d\d\d\d\d\d\d\d$
 field_defaults:
   value: ''
   cleaned: ''
@@ -637,3 +652,151 @@ templates:
     - 订单号
     - 合计金额
     - 快递公司
+  DO-EXP-0185_learned:
+    keywords: []
+    source: fewshot
+    has_table: false
+    fields:
+      单证编号:
+        label: 单证编号
+        anchors:
+        - 单证编号
+        position: below
+        canonical_key: 单证编号
+        validator: auto_单证编号
+        value_pattern: ^DO\-EXP\-018\d$
+        learned_value_offset:
+          dx: 64.0
+          dy: 39.0
+          tolerance_x: 415.8
+          tolerance_y: 61.2
+        learned_sample_value: DO-EXP-0185
+      名称:
+        label: 名称
+        anchors:
+        - 名称
+        position: right
+        canonical_key: 发货方 SHIPPER 名称
+        learned_value_offset:
+          dx: 824.5
+          dy: 1.0
+          tolerance_x: 108.0
+          tolerance_y: 70.2
+        learned_sample_value: 陈珊
+      地址:
+        label: 地址
+        anchors:
+        - 地址
+        position: right
+        canonical_key: 发货方 SHIPPER 地址
+        learned_value_offset:
+          dx: 1056.5
+          dy: 0.0
+          tolerance_x: 957.6
+          tolerance_y: 66.6
+        learned_sample_value: 辽宁省大连市金州区大连理工大学开发区校区融苑
+      承运商:
+        label: 承运商
+        anchors:
+        - 承运商
+        position: right
+        canonical_key: 承运商
+        learned_value_offset:
+          dx: 366.0
+          dy: -1.0
+          tolerance_x: 154.8
+          tolerance_y: 63.0
+        learned_sample_value: 运单编号
+      电话:
+        label: 电话
+        anchors:
+        - 电话
+        position: right
+        canonical_key: 发货方 SHIPPER 电话
+        validator: auto_发货方 SHIPPER 电话
+        value_pattern: ^1\d\d\d\d\d\d\d\d\d\d$
+        learned_value_offset:
+          dx: 162.0
+          dy: 0.0
+          tolerance_x: 261.0
+          tolerance_y: 66.6
+        learned_sample_value: '19333996009'
+      名称__2:
+        label: 名称__2
+        anchors:
+        - 名称
+        - 名称__2
+        position: right
+        learned_value_offset:
+          dx: 125.5
+          dy: 1.0
+          tolerance_x: 151.2
+          tolerance_y: 70.2
+        learned_sample_value: 张子硕
+    output:
+    - 单证编号
+    - 名称
+    - 地址
+    - 承运商
+    - 电话
+    - 名称__2
+    detection:
+      mode: anchor_layout
+      min_score: 0.55
+      min_matches: 4
+      features:
+      - text: 单证编号
+        x: 0.0982
+        y: 0.1377
+        weight: 1.0
+        role: field_anchor
+      - text: 承运商
+        x: 0.1043
+        y: 0.31
+        weight: 1.0
+        role: field_anchor
+      - text: 名称
+        x: 0.0982
+        y: 0.2251
+        weight: 1.0
+        role: field_anchor
+      - text: 电话
+        x: 0.0976
+        y: 0.2401
+        weight: 1.0
+        role: field_anchor
+      - text: 地址
+        x: 0.0976
+        y: 0.2546
+        weight: 1.0
+        role: field_anchor
+      - text: 本单证由原始扫描凭证数字化生成，作为物流交接核对之参考凭证
+        x: 0.2494
+        y: 0.9442
+        weight: 1.4
+        role: stable_text
+      - text: EXPRESSDELIVERYHANDOVERDOCU
+        x: 0.4852
+        y: 0.1139
+        weight: 1.4
+        role: stable_text
+      - text: 生成时间2026-07-2122:31:39
+        x: 0.8446
+        y: 0.9442
+        weight: 1.4
+        role: stable_text
+      - text: 单证编号 DO-EXP-0185
+        x: 0.14
+        y: 0.9277
+        weight: 1.4
+        role: stable_text
+      - text: 收货方 CONSIGNEE
+        x: 0.5768
+        y: 0.1979
+        weight: 1.4
+        role: stable_text
+      - text: 发货方SHIPPER
+        x: 0.136
+        y: 0.1986
+        weight: 1.4
+        role: stable_text
