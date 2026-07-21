@@ -244,6 +244,11 @@ class FewShotLearner:
     @staticmethod
     def _prepare_sample_fields(gt):
         """Return the safe page-level field candidates for one GT payload."""
+        # 兼容嵌套 GT（real_scans 风格：{"template":..., "fields":{...}, "tables":[...]}）。
+        # 仅把 fields 子 dict 摊到顶层，不改动任何下游 OCR / 锚点 / 评分逻辑；
+        # 扁平 GT（无 fields key）走原路径，零影响。
+        if isinstance(gt.get("fields"), dict):
+            gt = {**gt, **gt["fields"]}
         cargo_fields = {
             "container", "seal", "qty", "pkg", "package", "description", "desc",
             "gross", "weight", "measurement", "cbm", "marks", "no", "item",
