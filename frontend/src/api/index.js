@@ -69,8 +69,8 @@ export default {
   probeVisionModels(data) {
     return API.post('/vision-settings/probe', data, { timeout: 60000 })
   },
-  revealVisionApiKey() {
-    return API.get('/vision-settings/api-key')
+  revealVisionApiKey(params = {}) {
+    return API.get('/vision-settings/api-key', { params })
   },
   clearVisionSettings() {
     return API.delete('/vision-settings')

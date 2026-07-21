@@ -134,22 +134,106 @@ def vision_settings_path() -> str:
     return str(_ensure_under_root(root / "vision_settings.json", root))
 
 
+def _vision_provider_keys() -> set[str]:
+    return {str(item.get("key")) for item in vision_settings_options().get("providers", [])}
+
+
+def _normalize_vision_provider(provider: str | None, base_url: str | None = None) -> str:
+    provider = str(provider or "qwen").strip()
+    base = str(base_url or "").lower()
+    if provider == "custom" and "localhost:11434" in base:
+        return "ollama"
+    if provider not in _vision_provider_keys():
+        return "qwen"
+    return provider
+
+
+def _normalize_vision_base_url(provider: str, base_url: str | None = None) -> str:
+    provider_cfg = provider_defaults(provider)
+    base = str(base_url or provider_cfg["default_base_url"]).strip().rstrip("/")
+    if provider == "ollama":
+        for suffix in ("/v1/chat/completions", "/chat/completions", "/v1", "/api/chat", "/api/tags"):
+            if base.endswith(suffix):
+                base = base[: -len(suffix)]
+                break
+    return base or provider_cfg["default_base_url"]
+
+
+def _default_vision_profile(provider: str) -> dict:
+    provider_cfg = provider_defaults(provider)
+    return {
+        "model": provider_cfg["default_model"],
+        "base_url": provider_cfg["default_base_url"],
+        "api_key": "",
+        "model_api_keys": {},
+    }
+
+
+def _normalize_vision_profile(provider: str, profile: dict | None = None) -> dict:
+    data = profile or {}
+    normalized = _default_vision_profile(provider)
+    normalized.update({k: v for k, v in data.items() if v is not None})
+    normalized["model"] = normalize_vision_model(provider, normalized.get("model"))
+    normalized["base_url"] = _normalize_vision_base_url(provider, normalized.get("base_url"))
+    normalized["api_key"] = str(normalized.get("api_key") or "")
+    model_api_keys = normalized.get("model_api_keys") or {}
+    normalized["model_api_keys"] = {
+        str(model): str(api_key)
+        for model, api_key in model_api_keys.items()
+        if str(api_key or "")
+    } if isinstance(model_api_keys, dict) else {}
+    model_key = normalized["model_api_keys"].get(normalized["model"])
+    if model_key:
+        normalized["api_key"] = model_key
+    return normalized
+
+
+def _load_vision_profiles(saved: dict) -> dict:
+    profiles: dict[str, dict] = {}
+    raw_profiles = saved.get("profiles")
+    if isinstance(raw_profiles, dict):
+        for raw_provider, raw_profile in raw_profiles.items():
+            provider = _normalize_vision_provider(raw_provider, (raw_profile or {}).get("base_url") if isinstance(raw_profile, dict) else "")
+            if isinstance(raw_profile, dict):
+                profiles[provider] = _normalize_vision_profile(provider, raw_profile)
+
+    if not profiles:
+        provider = _normalize_vision_provider(saved.get("provider"), saved.get("base_url"))
+        profiles[provider] = _normalize_vision_profile(provider, {
+            "model": saved.get("model"),
+            "base_url": saved.get("base_url"),
+            "api_key": saved.get("api_key", ""),
+        })
+    return profiles
+
+
 def load_vision_settings(include_secret: bool = False) -> dict:
     settings = default_vision_settings()
     saved = read_json_file(vision_settings_path(), {}) or {}
-    if isinstance(saved, dict):
-        settings.update(saved)
+    profiles = _load_vision_profiles(saved if isinstance(saved, dict) else {})
+    provider = _normalize_vision_provider(
+        (saved or {}).get("provider") if isinstance(saved, dict) else None,
+        (saved or {}).get("base_url") if isinstance(saved, dict) else None,
+    )
+    if provider not in profiles:
+        profiles[provider] = _default_vision_profile(provider)
+    profile = _normalize_vision_profile(provider, profiles.get(provider))
 
-    provider_cfg = provider_defaults(settings.get("provider"))
-    settings["model"] = normalize_vision_model(settings.get("provider"), settings.get("model"))
-    if not settings.get("base_url"):
-        settings["base_url"] = provider_cfg["default_base_url"]
+    settings.update({
+        "enabled": bool((saved or {}).get("enabled", settings.get("enabled", False))) if isinstance(saved, dict) else False,
+        "provider": provider,
+        "model": profile["model"],
+        "base_url": profile["base_url"],
+        "api_key": profile["api_key"],
+        "profiles": profiles,
+    })
 
     try:
         settings["threshold"] = float(settings.get("threshold", 0.55))
+        if isinstance(saved, dict) and "threshold" in saved:
+            settings["threshold"] = float(saved.get("threshold", settings["threshold"]))
     except (TypeError, ValueError):
         settings["threshold"] = 0.55
-    settings["enabled"] = bool(settings.get("enabled"))
 
     if include_secret:
         return settings
@@ -159,22 +243,42 @@ def load_vision_settings(include_secret: bool = False) -> dict:
 def save_vision_settings(data: dict) -> dict:
     current = load_vision_settings(include_secret=True)
     current_provider = str(current.get("provider") or "qwen")
-    provider = str(data.get("provider") or current_provider)
+    provider = _normalize_vision_provider(data.get("provider") or current_provider, data.get("base_url"))
     provider_cfg = provider_defaults(provider)
-    preserved_api_key = current.get("api_key", "") if provider == current_provider else ""
+    profiles = {
+        key: _normalize_vision_profile(key, value)
+        for key, value in (current.get("profiles") or {}).items()
+        if key in _vision_provider_keys()
+    }
+    profile = _normalize_vision_profile(provider, profiles.get(provider))
+    model = normalize_vision_model(provider, data.get("model") or profile.get("model") or provider_cfg["default_model"])
+    model_api_keys = dict(profile.get("model_api_keys") or {})
+    api_key = str(model_api_keys.get(model) or profile.get("api_key") or "")
+
+    incoming_api_key = data.get("api_key", None)
+    if incoming_api_key is not None and str(incoming_api_key).strip():
+        api_key = str(incoming_api_key).strip()
+        model_api_keys[model] = api_key
+    if provider_cfg.get("requires_api_key") is False and incoming_api_key is None:
+        api_key = ""
+
+    profile.update({
+        "model": model,
+        "base_url": _normalize_vision_base_url(provider, data.get("base_url") or profile.get("base_url") or provider_cfg["default_base_url"]),
+        "api_key": api_key,
+        "model_api_keys": model_api_keys,
+    })
+    profiles[provider] = profile
 
     updated = {
         "enabled": bool(data.get("enabled", current.get("enabled", False))),
         "provider": provider,
-        "model": normalize_vision_model(provider, data.get("model") or provider_cfg["default_model"]),
-        "base_url": str(data.get("base_url") or provider_cfg["default_base_url"]).strip(),
-        "api_key": preserved_api_key,
+        "model": profile["model"],
+        "base_url": profile["base_url"],
+        "api_key": profile["api_key"],
+        "profiles": profiles,
         "threshold": data.get("threshold", current.get("threshold", 0.55)),
     }
-
-    api_key = data.get("api_key", None)
-    if api_key is not None and str(api_key).strip():
-        updated["api_key"] = str(api_key).strip()
 
     try:
         updated["threshold"] = max(0.0, min(1.0, float(updated["threshold"])))
@@ -1203,6 +1307,14 @@ def run_recognition_pipeline(job: dict):
         # 低置信度才尝试视觉兜底。未启用或失败时保留本地结果并写入 warning，
         # 不让外部 API 状态影响基础 OCR/规则识别流程。
         fallback = get_vision_fallback()
+        meta = dict(extracted.get("meta", {}))
+        meta.update({
+            "vision_attempted": True,
+            "vision_provider": fallback.provider,
+            "vision_model": fallback.model,
+            "vision_endpoint_type": getattr(fallback, "endpoint_type", ""),
+        })
+        extracted["meta"] = meta
         unavailable = fallback.unavailable_reason()
         if unavailable:
             fallback_result = {"success": False, "warning": unavailable}
@@ -1226,12 +1338,31 @@ def run_recognition_pipeline(job: dict):
                 fallback_result.get("result", {}),
                 quality,
             )
+            meta = dict(extracted.get("meta", {}))
+            meta.update({
+                "vision_attempted": True,
+                "vision_provider": fallback.provider,
+                "vision_model": fallback.model,
+                "vision_endpoint_type": getattr(fallback, "endpoint_type", ""),
+            })
+            extracted["meta"] = meta
         else:
             warning = fallback_result.get("warning") or "视觉兜底未执行，已保留本地规则结果"
             extracted = add_meta_warning(extracted, warning)
             meta = dict(extracted.get("meta", {}))
             meta["fallback_reason"] = ", ".join(quality.get("fallback_reasons", []))
+            meta.update({
+                "vision_attempted": True,
+                "vision_provider": fallback.provider,
+                "vision_model": fallback.model,
+                "vision_endpoint_type": getattr(fallback, "endpoint_type", ""),
+            })
             extracted["meta"] = meta
+    else:
+        meta = dict(extracted.get("meta", {}))
+        meta["vision_attempted"] = False
+        meta["vision_skipped_reason"] = "local_quality_above_threshold"
+        extracted["meta"] = meta
 
     result_data = {
         **extracted,
@@ -2315,7 +2446,11 @@ def api_vision_settings_probe():
 def api_vision_settings_api_key():
     """按需返回本地保存的 API Key 明文；仅用于本地设置弹窗的小眼睛查看。"""
     settings = load_vision_settings(include_secret=True)
-    api_key = str(settings.get("api_key") or "")
+    provider = _normalize_vision_provider(request.args.get("provider") or settings.get("provider"), request.args.get("base_url") or settings.get("base_url"))
+    model = normalize_vision_model(provider, request.args.get("model") or settings.get("model"))
+    profile = _normalize_vision_profile(provider, (settings.get("profiles") or {}).get(provider))
+    model_api_keys = profile.get("model_api_keys") or {}
+    api_key = str(model_api_keys.get(model) or profile.get("api_key") or "")
     return jsonify({
         "success": True,
         "has_api_key": bool(api_key),

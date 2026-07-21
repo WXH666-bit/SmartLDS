@@ -3,6 +3,7 @@ import sys
 import json
 import tempfile
 import unittest
+import base64
 
 # 低置信度分流与视觉兜底结果归一化的快速单元测试。
 
@@ -37,29 +38,70 @@ class VisionFallbackRoutingTest(unittest.TestCase):
         self.assertEqual(default_vision_settings()["model"], "qwen-3.6-flash")
         self.assertEqual(normalize_vision_model("qwen", "qwen-vl-plus"), "qwen-3.6-flash")
 
-    def test_custom_provider_defaults_to_local_openai_compatible_model(self):
+    def test_ollama_provider_defaults_to_native_local_model(self):
+        ollama = provider_defaults("ollama")
+        providers = {item["key"] for item in vision_settings_options()["providers"]}
+
+        self.assertIn("ollama", providers)
+        self.assertEqual(ollama["default_model"], "qwen3-vl:8b")
+        self.assertEqual(ollama["default_base_url"], "http://localhost:11434")
+        self.assertEqual(ollama["transport"], "ollama_chat")
+        self.assertFalse(ollama["requires_api_key"])
+
+    def test_custom_provider_defaults_to_openai_compatible_model(self):
         custom = provider_defaults("custom")
         providers = {item["key"] for item in vision_settings_options()["providers"]}
 
         self.assertIn("custom", providers)
-        self.assertEqual(custom["default_model"], "llama3.2-vision")
-        self.assertEqual(custom["default_base_url"], "http://localhost:11434/v1")
-        self.assertFalse(custom["requires_api_key"])
+        self.assertEqual(custom["default_model"], "custom-vision-model")
+        self.assertEqual(custom["default_base_url"], "http://localhost:9000/v1")
+        self.assertTrue(custom["requires_api_key"])
 
-    def test_custom_provider_uses_chat_completions_without_required_api_key(self):
+    def test_ollama_provider_uses_native_chat_without_required_api_key(self):
         client = VisionFallbackClient(
             enabled=True,
             settings={
-                "provider": "custom",
-                "model": "llama3.2-vision",
-                "base_url": "http://localhost:11434/v1",
+                "provider": "ollama",
+                "model": "qwen3-vl:8b",
+                "base_url": "http://localhost:11434",
                 "api_key": "",
             },
         )
 
         self.assertIsNone(client.unavailable_reason())
         self.assertEqual(client.api_key, "ollama")
-        self.assertEqual(client.endpoint, "http://localhost:11434/v1/chat/completions")
+        self.assertEqual(client.endpoint, "http://localhost:11434/api/chat")
+        self.assertEqual(client.endpoint_type, "ollama_chat")
+
+    def test_ollama_payload_uses_native_images_and_num_ctx(self):
+        fd, image_path = tempfile.mkstemp(suffix=".png")
+        os.close(fd)
+        with open(image_path, "wb") as fh:
+            fh.write(base64.b64decode(
+                "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII="
+            ))
+        try:
+            client = VisionFallbackClient(
+                enabled=True,
+                settings={
+                    "provider": "ollama",
+                    "model": "qwen3-vl:8b",
+                    "base_url": "http://localhost:11434",
+                    "api_key": "",
+                },
+            )
+
+            payload = client._build_payload("Return JSON", image_path)
+
+            self.assertEqual(payload["model"], "qwen3-vl:8b")
+            self.assertEqual(payload["format"], "json")
+            self.assertFalse(payload["stream"])
+            self.assertEqual(payload["options"]["num_ctx"], 8192)
+            self.assertIn("images", payload["messages"][0])
+            self.assertIsInstance(payload["messages"][0]["images"][0], str)
+            self.assertNotIn("response_format", payload)
+        finally:
+            os.remove(image_path)
 
     def test_custom_provider_accepts_full_chat_completions_endpoint(self):
         client = VisionFallbackClient(

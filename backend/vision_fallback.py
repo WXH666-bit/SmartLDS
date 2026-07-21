@@ -67,15 +67,28 @@ VISION_PROVIDER_OPTIONS = [
     },
     {
         "key": "custom",
-        "label": "自定义 / Ollama 本地模型",
-        "default_model": "llama3.2-vision",
-        "default_base_url": "http://localhost:11434/v1",
-        "api_key_hint": "API Key（Ollama 可留空）",
-        "requires_api_key": False,
+        "label": "自定义 OpenAI-compatible",
+        "default_model": "custom-vision-model",
+        "default_base_url": "http://localhost:9000/v1",
+        "api_key_hint": "API Key",
+        "requires_api_key": True,
         "transport": "chat_completions",
         "models": [
-            {"value": "llama3.2-vision", "label": "llama3.2-vision（Ollama）"},
-            {"value": "llava", "label": "llava（Ollama）"},
+            {"value": "custom-vision-model", "label": "custom-vision-model"},
+        ],
+    },
+    {
+        "key": "ollama",
+        "label": "Ollama 本地模型",
+        "default_model": "qwen3-vl:8b",
+        "default_base_url": "http://localhost:11434",
+        "api_key_hint": "不需要 API Key",
+        "requires_api_key": False,
+        "transport": "ollama_chat",
+        "models": [
+            {"value": "qwen3-vl:8b", "label": "qwen3-vl:8b"},
+            {"value": "llama3.2-vision", "label": "llama3.2-vision"},
+            {"value": "llava", "label": "llava"},
         ],
     },
 ]
@@ -122,6 +135,26 @@ def public_vision_settings(settings: dict[str, Any]) -> dict[str, Any]:
     api_key = str(public.pop("api_key", "") or "")
     public["has_api_key"] = bool(api_key)
     public["masked_api_key"] = mask_api_key(api_key)
+    profiles = {}
+    for key, profile in (settings.get("profiles") or {}).items():
+        if not isinstance(profile, dict):
+            continue
+        profile_public = dict(profile)
+        profile_api_key = str(profile_public.pop("api_key", "") or "")
+        profile_public["has_api_key"] = bool(profile_api_key)
+        profile_public["masked_api_key"] = mask_api_key(profile_api_key)
+        model_keys_public = {}
+        for model, model_api_key in (profile.get("model_api_keys") or {}).items():
+            model_api_key = str(model_api_key or "")
+            model_keys_public[model] = {
+                "has_api_key": bool(model_api_key),
+                "masked_api_key": mask_api_key(model_api_key),
+            }
+        if model_keys_public:
+            profile_public["model_api_keys"] = model_keys_public
+        profiles[key] = profile_public
+    if profiles:
+        public["profiles"] = profiles
     return public
 
 
@@ -143,7 +176,9 @@ def _provider_env_api_key(provider: str | None) -> str:
         return os.getenv("DASHSCOPE_API_KEY", "")
     if provider == "openai":
         return os.getenv("OPENAI_API_KEY", "")
-    return os.getenv("CUSTOM_VISION_API_KEY") or os.getenv("OLLAMA_API_KEY", "")
+    if provider == "ollama":
+        return os.getenv("OLLAMA_API_KEY", "")
+    return os.getenv("CUSTOM_VISION_API_KEY", "")
 
 
 def _provider_key_name(provider: str | None) -> str:
@@ -151,6 +186,8 @@ def _provider_key_name(provider: str | None) -> str:
         return "DASHSCOPE_API_KEY"
     if provider == "openai":
         return "OPENAI_API_KEY"
+    if provider == "ollama":
+        return "OLLAMA_API_KEY"
     return "CUSTOM_VISION_API_KEY"
 
 
@@ -162,6 +199,12 @@ def _default_api_key(provider: str | None) -> str:
 
 def _build_provider_endpoint(provider: str | None, base_url: str) -> str:
     base = str(base_url or provider_defaults(provider)["default_base_url"]).rstrip("/")
+    if provider == "ollama":
+        for suffix in ("/v1/chat/completions", "/chat/completions", "/v1", "/api/chat", "/api/tags"):
+            if base.endswith(suffix):
+                base = base[: -len(suffix)]
+                break
+        return f"{base}/api/chat"
     if base.endswith("/chat/completions") or base.endswith("/responses"):
         return base
     if provider == "openai":
@@ -171,6 +214,12 @@ def _build_provider_endpoint(provider: str | None, base_url: str) -> str:
 
 def _build_models_endpoint(provider: str | None, base_url: str) -> str:
     base = str(base_url or provider_defaults(provider)["default_base_url"]).rstrip("/")
+    if provider == "ollama":
+        for suffix in ("/v1/chat/completions", "/chat/completions", "/v1", "/api/chat", "/api/tags"):
+            if base.endswith(suffix):
+                base = base[: -len(suffix)]
+                break
+        return f"{base}/api/tags"
     for suffix in ("/chat/completions", "/responses", "/completions"):
         if base.endswith(suffix):
             base = base[: -len(suffix)]
@@ -210,15 +259,18 @@ def _normalize_probe_models(payload: dict[str, Any]) -> list[dict[str, Any]]:
             "vision_hint": _model_has_vision_hint(model_id),
         })
 
-    return sorted(models, key=lambda item: (not item["vision_hint"], item["value"].lower()))
+    return sorted(models, key=lambda item: not item["vision_hint"])
 
 
 def probe_vision_models(data: dict[str, Any], saved_settings: dict[str, Any] | None = None) -> dict[str, Any]:
     settings = dict(saved_settings or default_vision_settings())
     provider = str(data.get("provider") or settings.get("provider") or DEFAULT_VISION_PROVIDER)
     provider_cfg = provider_defaults(provider)
-    base_url = str(data.get("base_url") or settings.get("base_url") or provider_cfg["default_base_url"]).strip()
-    api_key = str(data.get("api_key") or settings.get("api_key") or _provider_env_api_key(provider) or _default_api_key(provider)).strip()
+    saved_profile = {}
+    if isinstance(settings.get("profiles"), dict):
+        saved_profile = settings["profiles"].get(provider) or {}
+    base_url = str(data.get("base_url") or saved_profile.get("base_url") or settings.get("base_url") or provider_cfg["default_base_url"]).strip()
+    api_key = str(data.get("api_key") or saved_profile.get("api_key") or settings.get("api_key") or _provider_env_api_key(provider) or _default_api_key(provider)).strip()
 
     if _provider_requires_api_key(provider) and not api_key:
         return {
@@ -230,7 +282,7 @@ def probe_vision_models(data: dict[str, Any], saved_settings: dict[str, Any] | N
 
     endpoint = _build_models_endpoint(provider, base_url)
     headers = {"Content-Type": "application/json"}
-    if api_key:
+    if api_key and provider != "ollama":
         headers["Authorization"] = f"Bearer {api_key}"
     req = urllib.request.Request(endpoint, method="GET", headers=headers)
 
@@ -535,6 +587,10 @@ def _data_url(image_path: str) -> str:
 def _extract_output_text(response_json: dict[str, Any]) -> str:
     if isinstance(response_json.get("output_text"), str):
         return response_json["output_text"]
+
+    message = response_json.get("message")
+    if isinstance(message, dict) and isinstance(message.get("content"), str):
+        return message["content"].strip()
 
     choices = response_json.get("choices")
     if isinstance(choices, list) and choices:
@@ -952,6 +1008,8 @@ class VisionFallbackClient:
         self.model = model or os.getenv("VISION_FALLBACK_MODEL") or merged.get("model") or defaults["default_model"]
         self.base_url = str(merged.get("base_url") or defaults["default_base_url"]).rstrip("/")
         self.timeout = timeout or _env_float("VISION_FALLBACK_TIMEOUT", 90.0)
+        self.endpoint_type = str(defaults.get("transport") or "chat_completions")
+        self.ollama_num_ctx = int(_as_float(merged.get("num_ctx"), 8192) or 8192)
         self.endpoint = endpoint or os.getenv("VISION_FALLBACK_ENDPOINT", "")
         if not self.endpoint:
             self.endpoint = _build_provider_endpoint(self.provider, self.base_url)
@@ -1045,17 +1103,21 @@ class VisionFallbackClient:
 
     def _post_json(self, payload: dict[str, Any]) -> dict[str, Any]:
         data = json.dumps(payload).encode("utf-8")
+        headers = {"Content-Type": "application/json"}
+        if self.provider != "ollama" and self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
         req = urllib.request.Request(
             self.endpoint,
             data=data,
             method="POST",
-            headers={
-                "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json",
-            },
+            headers=headers,
         )
-        with urllib.request.urlopen(req, timeout=self.timeout) as resp:
-            body = resp.read().decode("utf-8")
+        try:
+            with urllib.request.urlopen(req, timeout=self.timeout) as resp:
+                body = resp.read().decode("utf-8")
+        except urllib.error.HTTPError as exc:
+            body = exc.read().decode("utf-8", errors="replace")
+            raise ValueError(f"HTTP Error {exc.code}: {body[:1000]}") from exc
         return json.loads(body)
 
     def _build_payload(self, prompt: str, image_path: str) -> dict[str, Any]:
@@ -1081,6 +1143,24 @@ class VisionFallbackClient:
             }
 
         schema_hint = json.dumps(_field_schema(), ensure_ascii=False)
+        if self.provider == "ollama":
+            image_b64 = image_url.split(",", 1)[1] if "," in image_url else image_url
+            return {
+                "model": self.model,
+                "messages": [{
+                    "role": "user",
+                    "content": (
+                        prompt
+                        + "\n\n请只返回合法 JSON，不要输出解释文字。JSON 必须满足这个结构："
+                        + schema_hint
+                    ),
+                    "images": [image_b64],
+                }],
+                "format": "json",
+                "stream": False,
+                "options": {"num_ctx": self.ollama_num_ctx},
+            }
+
         return {
             "model": self.model,
             "messages": [{
@@ -1124,6 +1204,24 @@ class VisionFallbackClient:
             }
 
         schema_hint = json.dumps(schema, ensure_ascii=False)
+        if self.provider == "ollama":
+            image_b64 = image_url.split(",", 1)[1] if "," in image_url else image_url
+            return {
+                "model": self.model,
+                "messages": [{
+                    "role": "user",
+                    "content": (
+                        prompt
+                        + "\n\n请只返回合法 JSON，不要输出解释文字。JSON 必须满足这个结构："
+                        + schema_hint
+                    ),
+                    "images": [image_b64],
+                }],
+                "format": "json",
+                "stream": False,
+                "options": {"num_ctx": self.ollama_num_ctx},
+            }
+
         return {
             "model": self.model,
             "messages": [{

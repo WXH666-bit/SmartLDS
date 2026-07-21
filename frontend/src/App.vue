@@ -573,7 +573,7 @@
           <el-option v-for="p in visionOptions.providers" :key="p.key" :label="p.label" :value="p.key" />
         </el-select>
       </el-form-item>
-      <el-form-item label="API Key">
+      <el-form-item v-if="!visionUsesOllama" label="API Key">
         <el-input v-model="visionSettings.api_key" type="password" show-password clearable :placeholder="visionApiKeyPlaceholder" />
         <div class="form-hint">
           <span v-if="visionSettings.has_api_key" class="saved-api-key-line">
@@ -592,6 +592,9 @@
           </span>
           <span v-else>{{ visionApiKeyHint }}</span>
         </div>
+      </el-form-item>
+      <el-form-item v-else label="API Key">
+        <div class="form-hint">Ollama 本地模型不需要 API Key，系统会直接调用本机服务。</div>
       </el-form-item>
       <el-form-item label="接口地址">
         <el-input v-model="visionSettings.base_url" clearable />
@@ -878,6 +881,7 @@ const visionProbeLoading = ref(false)
 const visionProbeMessage = ref('')
 const visionProbeError = ref(false)
 const visionDetectedModels = ref([])
+const visionSavedProfiles = ref({})
 const visionSavedApiKeyVisible = ref(false)
 const visionSavedApiKeyLoading = ref(false)
 const visionSavedApiKey = ref('')
@@ -900,13 +904,14 @@ const currentVisionModels = computed(() => {
 const currentVisionProvider = computed(() =>
   visionOptions.providers.find(p => p.key === visionSettings.provider) || {}
 )
+const visionUsesOllama = computed(() => visionSettings.provider === 'ollama')
 const visionApiKeyPlaceholder = computed(() => {
   const hint = currentVisionProvider.value.api_key_hint || 'API Key'
   return `留空则保留已保存的 ${hint}`
 })
 const visionApiKeyHint = computed(() => {
   if (currentVisionProvider.value.requires_api_key === false) {
-    return '本地兼容服务可留空；Ollama 会使用 ollama 作为占位 key。'
+    return '当前供应商不需要 API Key。'
   }
   return `尚未保存 ${currentVisionProvider.value.api_key_hint || 'API Key'}`
 })
@@ -916,8 +921,11 @@ const visionSavedApiKeyDisplay = computed(() => (
     : visionSettings.masked_api_key
 ))
 const visionBaseUrlHint = computed(() => {
+  if (visionSettings.provider === 'ollama') {
+    return 'Ollama 默认使用 http://localhost:11434；系统会调用原生 /api/chat。'
+  }
   if (visionSettings.provider === 'custom') {
-    return '自定义模型使用 OpenAI-compatible chat/completions；Ollama 通常填 http://localhost:11434/v1。'
+    return '自定义模型使用 OpenAI-compatible chat/completions，例如 http://localhost:9000/v1。'
   }
   if (visionSettings.provider === 'openai') {
     return 'OpenAI 默认使用 Responses API；通常不用改。'
@@ -985,6 +993,7 @@ function applyVisionSettingsPayload(payload) {
   visionSavedApiKeyVisible.value = false
   visionSavedApiKey.value = ''
   const s = data.settings || {}
+  visionSavedProfiles.value = s.profiles || {}
   Object.assign(visionSettings, {
     enabled: !!s.enabled,
     provider: s.provider || 'qwen',
@@ -1012,13 +1021,17 @@ async function loadVisionSettings() {
 function onVisionProviderChange() {
   const provider = visionOptions.providers.find(p => p.key === visionSettings.provider)
   if (!provider) return
+  const savedProfile = visionSavedProfiles.value?.[provider.key] || null
   visionDetectedModels.value = []
   visionProbeMessage.value = ''
   visionProbeError.value = false
   visionSavedApiKeyVisible.value = false
   visionSavedApiKey.value = ''
-  visionSettings.model = provider.default_model || provider.models?.[0]?.value || visionSettings.model
-  visionSettings.base_url = provider.default_base_url || visionSettings.base_url
+  visionSettings.api_key = ''
+  visionSettings.model = savedProfile?.model || provider.default_model || provider.models?.[0]?.value || visionSettings.model
+  visionSettings.base_url = savedProfile?.base_url || provider.default_base_url || visionSettings.base_url
+  visionSettings.has_api_key = !!savedProfile?.has_api_key
+  visionSettings.masked_api_key = savedProfile?.masked_api_key || ''
 }
 
 async function probeVisionModels() {
@@ -1030,7 +1043,7 @@ async function probeVisionModels() {
       provider: visionSettings.provider,
       base_url: visionSettings.base_url,
     }
-    if (visionSettings.api_key.trim()) payload.api_key = visionSettings.api_key.trim()
+    if (!visionUsesOllama.value && visionSettings.api_key.trim()) payload.api_key = visionSettings.api_key.trim()
     const { data } = await api.probeVisionModels(payload)
     visionDetectedModels.value = data.models || []
     const preferred = visionDetectedModels.value.find(model => model.vision_hint) || visionDetectedModels.value[0]
@@ -1052,7 +1065,11 @@ async function probeVisionModels() {
 async function revealSavedVisionApiKey() {
   visionSavedApiKeyLoading.value = true
   try {
-    const { data } = await api.revealVisionApiKey()
+    const { data } = await api.revealVisionApiKey({
+      provider: visionSettings.provider,
+      model: visionSettings.model,
+      base_url: visionSettings.base_url,
+    })
     visionSavedApiKey.value = data.api_key || ''
     if (!data.has_api_key) {
       visionSavedApiKeyVisible.value = false
@@ -1089,7 +1106,7 @@ async function saveVisionSettings() {
       base_url: visionSettings.base_url,
       threshold: visionSettings.threshold
     }
-    if (visionSettings.api_key.trim()) payload.api_key = visionSettings.api_key.trim()
+    if (!visionUsesOllama.value && visionSettings.api_key.trim()) payload.api_key = visionSettings.api_key.trim()
     const { data } = await api.saveVisionSettings(payload)
     applyVisionSettingsPayload(data)
     ElMessage.success('模型设置已保存')

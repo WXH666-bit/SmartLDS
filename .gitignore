@@ -22,3 +22,7 @@ Thumbs.db
 # Temporary
 *.tmp
 *.log
+
+# Reports / generated documents
+final_report.md
+*.docx
