@@ -777,167 +777,216 @@ templates:
     - 订单号
     - 合计金额
     - 快递公司
-  bol_201_learned:
+  bol_188_template:
     keywords: []
-    source: fewshot
-    has_table: false
+    source: feedback
+    has_table: true
+    enabled: true
+    hidden: false
     fields:
-      净重:
-        label: 净重
+      单证编号:
+        label: 单证编号
         anchors:
-        - 净重
-        position: right
-        canonical_key: net_weight
-      原产国:
-        label: 原产国
+        - 单证编号
+        position: below
+        learned_value_offset:
+          dx: 64.0
+          dy: 39.0
+          tolerance_x: 415.8
+          tolerance_y: 61.2
+        learned_sample_value: DO-EXP-0185
+        canonical_key: 单证编号
+      发货方 SHIPPER名称:
+        label: 发货方 SHIPPER名称
         anchors:
-        - 原产国
+        - 发货方 SHIPPER名称
         position: right
-        canonical_key: origin
-      商品名称:
-        label: 商品名称
+        canonical_key: 发货方 SHIPPER名称
+      发货方SHIP地址:
+        label: 发货方SHIP地址
         anchors:
-        - 商品名称
+        - 发货方SHIP地址
         position: right
-        canonical_key: goods_name
-      总价:
-        label: 总价
+        canonical_key: 发货方SHIP地址
+      发货方SHIP电话:
+        label: 发货方SHIP电话
         anchors:
-        - 总价
+        - 发货方SHIP电话
         position: right
-        canonical_key: total_price
-      收货单位:
-        label: 收货单位
+        canonical_key: 发货方SHIP电话
+      备注NOTES:
+        label: 备注NOTES
         anchors:
-        - 收货单位
-        position: right
-        canonical_key: receiver
-      数量及单位:
-        label: 数量及单位
+        - 备注NOTES
+        position: below
+        learned_value_offset:
+          dx: 13.5
+          dy: 53.5
+          tolerance_x: 279.0
+          tolerance_y: 63.0
+        learned_sample_value: 支付方式:到付
+        canonical_key: 备注NOTES
+      打印时间:
+        label: 打印时间
         anchors:
-        - 数量及单位
-        position: right
-        canonical_key: quantity_unit
-      毛重:
-        label: 毛重
+        - 打印时间
+        position: below
+        learned_value_offset:
+          dx: 51.5
+          dy: 31.5
+          tolerance_x: 360.0
+          tolerance_y: 57.6
+        learned_sample_value: 2026/06/12 00:10
+        canonical_key: 打印时间
+      承运商:
+        label: 承运商
         anchors:
-        - 毛重
-        position: right
-        canonical_key: gross_weight
-      海关编号:
-        label: 海关编号
+        - 承运商
+        position: below
+        learned_value_offset:
+          dx: 15.0
+          dy: 31.5
+          tolerance_x: 187.2
+          tolerance_y: 63.0
+        learned_sample_value: 申通快递
+        canonical_key: 承运商
+      收货方 CONSIGNEE名称:
+        label: 收货方 CONSIGNEE名称
         anchors:
-        - 海关编号
+        - 收货方 CONSIGNEE名称
         position: right
-        canonical_key: customs_no
-        validator: bl_no
-        value_pattern: '[A-Z]{2,4}\d{6,10}'
-      申报日期:
-        label: 申报日期
+        canonical_key: 收货方 CONSIGNEE名称
+      收货方CONSIGN地址:
+        label: 收货方CONSIGN地址
         anchors:
-        - 申报日期
+        - 收货方CONSIGN地址
         position: right
-        canonical_key: declare_date
-        validator: date
-        value_pattern: \d{1,4}[/-]\d{1,2}[/-]\d{1,4}
-      经营单位:
-        label: 经营单位
+        canonical_key: 收货方CONSIGN地址
+      收货方CONSIG电话:
+        label: 收货方CONSIG电话
         anchors:
-        - 经营单位
+        - 收货方CONSIG电话
         position: right
-        canonical_key: company
-      运输方式:
-        label: 运输方式
+        canonical_key: 收货方CONSIG电话
+      服务热线:
+        label: 服务热线
         anchors:
-        - 运输方式
-        position: right
-        canonical_key: transport
-      进口口岸:
-        label: 进口口岸
+        - 服务热线
+        position: below
+        learned_value_offset:
+          dx: -10.5
+          dy: 31.5
+          tolerance_x: 145.8
+          tolerance_y: 64.8
+        learned_sample_value: '95543'
+        canonical_key: 服务热线
+      类别:
+        label: 类别
         anchors:
-        - 进口口岸
+        - 类别
         position: right
-        canonical_key: import_port
+        learned_value_offset:
+          dx: 0.0
+          dy: 0.0
+          tolerance_x: 266.4
+          tolerance_y: 61.2
+        learned_sample_value: 快递运单
+        canonical_key: 类别
+      运单编号:
+        label: 运单编号
+        anchors:
+        - 运单编号
+        position: right
+        learned_value_offset:
+          dx: 817.0
+          dy: -281.5
+          tolerance_x: 349.2
+          tolerance_y: 48.6
+        learned_sample_value: '770325800536124'
+        canonical_key: 运单编号
     output:
-    - 净重
-    - 原产国
-    - 商品名称
-    - 总价
-    - 收货单位
-    - 数量及单位
-    - 毛重
-    - 海关编号
-    - 申报日期
-    - 经营单位
-    - 运输方式
-    - 进口口岸
+    - 单证编号
+    - 发货方 SHIPPER名称
+    - 发货方SHIP地址
+    - 发货方SHIP电话
+    - 备注NOTES
+    - 打印时间
+    - 承运商
+    - 收货方 CONSIGNEE名称
+    - 收货方CONSIGN地址
+    - 收货方CONSIG电话
+    - 服务热线
+    - 类别
+    - 运单编号
+    table_headers:
+    - 序号
+    - 品名名称
+    - 规格
+    - 数量
+    - 单价
+    - 金额
     detection:
       mode: anchor_layout
       min_score: 0.55
       min_matches: 5
       features:
-      - text: 海关编号
-        x: 0.4115
-        y: 0.0551
+      - text: 单证编号
+        x: 0.0982
+        y: 0.1377
         weight: 1.0
         role: field_anchor
-      - text: 申报日期
-        x: 0.5936
-        y: 0.0551
+      - text: 备注NOTES
+        x: 0.1203
+        y: 0.3959
         weight: 1.0
         role: field_anchor
-      - text: 进口口岸
-        x: 0.0791
-        y: 0.0854
+      - text: 打印时间
+        x: 0.5396
+        y: 0.2944
         weight: 1.0
         role: field_anchor
-      - text: 运输方式
-        x: 0.5417
-        y: 0.0839
+      - text: 承运商
+        x: 0.104
+        y: 0.2948
         weight: 1.0
         role: field_anchor
-      - text: 经营单位
-        x: 0.0797
-        y: 0.1106
+      - text: 服务热线
+        x: 0.7539
+        y: 0.2944
         weight: 1.0
         role: field_anchor
-      - text: 收货单位
-        x: 0.5423
-        y: 0.1104
+      - text: 运单编号
+        x: 0.3253
+        y: 0.2944
         weight: 1.0
         role: field_anchor
-      - text: 商品名称
-        x: 0.0791
-        y: 0.1349
-        weight: 1.0
-        role: field_anchor
-      - text: 数量及单位
-        x: 0.5519
-        y: 0.1349
-        weight: 1.0
-        role: field_anchor
-      - text: 总价
-        x: 0.0619
-        y: 0.1599
-        weight: 1.0
-        role: field_anchor
-      - text: 原产国
-        x: 0.535
-        y: 0.1599
-        weight: 1.0
-        role: field_anchor
-      - text: 毛重
-        x: 0.0613
-        y: 0.1855
-        weight: 1.0
-        role: field_anchor
-      - text: 净重
-        x: 0.5251
-        y: 0.1855
-        weight: 1.0
-        role: field_anchor
-      - text: 中华人民共和国海关进口货物报关单
-        x: 0.5
-        y: 0.0325
+      - text: 本单证由原始扫描凭证数字化生成，作为物流交接核对之参考凭证
+        x: 0.2494
+        y: 0.9442
+        weight: 1.4
+        role: stable_text
+      - text: EXPRESSDELIVERYHANDOVERDOCU
+        x: 0.4852
+        y: 0.1139
+        weight: 1.4
+        role: stable_text
+      - text: 生成时间2026-07-2122:31:39
+        x: 0.8446
+        y: 0.9442
+        weight: 1.4
+        role: stable_text
+      - text: 泡面麻酱火鸡面定制141克10包
+        x: 0.2358
+        y: 0.3615
+        weight: 1.4
+        role: stable_text
+      - text: 单证编号 DO-EXP-0185
+        x: 0.14
+        y: 0.9277
+        weight: 1.4
+        role: stable_text
+      - text: 收货方 CONSIGNEE
+        x: 0.5768
+        y: 0.1979
         weight: 1.4
         role: stable_text

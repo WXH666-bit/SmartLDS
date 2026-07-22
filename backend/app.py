@@ -370,6 +370,77 @@ def _normalize_offset_value(value) -> dict | None:
     return normalized
 
 
+def _normalize_unit_float(value) -> float | None:
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    if number < 0 or number > 1:
+        return None
+    return number
+
+
+def _normalize_layout_region(value) -> dict | None:
+    if not isinstance(value, dict):
+        return None
+    region = {}
+    for key in ("x1", "y1", "x2", "y2"):
+        number = _normalize_unit_float(value.get(key))
+        if number is None:
+            return None
+        region[key] = number
+    if region["x2"] <= region["x1"] or region["y2"] <= region["y1"]:
+        return None
+    if region["y2"] - region["y1"] < 0.035:
+        return None
+    return region
+
+
+def normalize_table_layout_payload(raw, headers=None) -> dict | None:
+    if not isinstance(raw, dict):
+        return None
+    region = _normalize_layout_region(raw.get("region"))
+    if not region:
+        return None
+
+    layout_headers = [
+        str(item).strip()
+        for item in (raw.get("headers") or headers or [])
+        if str(item).strip()
+    ]
+
+    columns = []
+    for item in raw.get("columns") or []:
+        if not isinstance(item, dict):
+            continue
+        x1 = _normalize_unit_float(item.get("x1"))
+        x2 = _normalize_unit_float(item.get("x2"))
+        if x1 is None or x2 is None or x2 <= x1:
+            continue
+        header = str(item.get("header") or "").strip()
+        columns.append({"header": header, "x1": x1, "x2": x2})
+
+    anchors = []
+    for item in raw.get("anchors") or []:
+        if not isinstance(item, dict):
+            continue
+        text = str(item.get("text") or "").strip()
+        x = _normalize_unit_float(item.get("x"))
+        y = _normalize_unit_float(item.get("y"))
+        if text and x is not None and y is not None:
+            anchors.append({"text": text, "x": x, "y": y})
+
+    layout = {
+        "mode": "anchor_region",
+        "headers": layout_headers,
+        "region": region,
+        "columns": columns,
+    }
+    if anchors:
+        layout["anchors"] = anchors
+    return layout
+
+
 def normalize_corrections_payload(raw) -> dict:
     """兼容旧 flat corrections，并归一化人工字段/表格补丁。"""
     if not isinstance(raw, dict):
@@ -440,6 +511,9 @@ def normalize_corrections_payload(raw) -> dict:
                 "headers": headers,
                 "rows": rows,
             }
+            layout = normalize_table_layout_payload(table_patch.get("layout"), headers=headers)
+            if layout:
+                normalized_table["layout"] = layout
 
     return {
         "fields": field_corrections,
@@ -1181,6 +1255,9 @@ def apply_corrections(result: dict | None, corrections: dict | None) -> dict:
             "rows": table_patch.get("rows", []),
             "source": source,
         }
+        if table_patch.get("layout"):
+            result_copy["table"]["layout"] = copy.deepcopy(table_patch["layout"])
+            result_copy["table_layout"] = copy.deepcopy(table_patch["layout"])
         result_copy.setdefault("meta", {})["manual_table"] = True
 
     result_copy.setdefault("meta", {})["manual_fields_count"] = len(normalized["manual_fields"])
@@ -2342,6 +2419,9 @@ def api_fewshot_from_result():
                 headers,
             )
             table_updated = True
+            layout = normalize_table_layout_payload(final_result.get("table_layout"), headers=headers)
+            if layout:
+                target_template["table_layout"] = copy.deepcopy(layout)
         else:
             warnings.append("当前结果没有可保存的表头，未更新表格结构")
 

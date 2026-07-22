@@ -204,6 +204,54 @@ class ManualResultFeedbackTest(unittest.TestCase):
         self.assertEqual(result["table"]["source"], "ocr_with_manual_patch")
         self.assertTrue(result["meta"]["manual_table"])
 
+    def test_table_patch_preserves_learned_layout_metadata(self):
+        corrections = normalize_corrections_payload({
+            "table_patch": {
+                "headers": ["品名", "数量"],
+                "rows": [["玩具", "12"]],
+                "layout": {
+                    "mode": "anchor_region",
+                    "headers": ["品名", "数量"],
+                    "region": {"x1": 0.1, "y1": 0.4, "x2": 0.9, "y2": 0.8},
+                    "columns": [
+                        {"header": "品名", "x1": 0.1, "x2": 0.6},
+                        {"header": "数量", "x1": 0.6, "x2": 0.9},
+                    ],
+                    "anchors": [{"text": "品名", "x": 0.12, "y": 0.42}],
+                },
+            }
+        })
+
+        layout = corrections["table_patch"]["layout"]
+        self.assertEqual(layout["mode"], "anchor_region")
+        self.assertEqual(layout["headers"], ["品名", "数量"])
+        self.assertEqual(layout["region"], {"x1": 0.1, "y1": 0.4, "x2": 0.9, "y2": 0.8})
+        self.assertEqual(layout["columns"][0], {"header": "品名", "x1": 0.1, "x2": 0.6})
+
+        result = apply_corrections(self.make_result(), corrections)
+        self.assertEqual(result["table_layout"]["headers"], ["品名", "数量"])
+        self.assertEqual(result["table"]["layout"]["region"]["y1"], 0.4)
+
+    def test_table_patch_rejects_header_only_learned_layout(self):
+        corrections = normalize_corrections_payload({
+            "table_patch": {
+                "headers": ["序号", "品名名称", "数量"],
+                "rows": [["1", "电子产品", "1"]],
+                "layout": {
+                    "mode": "anchor_region",
+                    "headers": ["序号", "品名名称", "数量"],
+                    "region": {"x1": 0.0804, "y1": 0.3322, "x2": 0.6191, "y2": 0.348},
+                    "columns": [
+                        {"header": "序号", "x1": 0.0804, "x2": 0.1309},
+                        {"header": "品名名称", "x1": 0.1309, "x2": 0.3842},
+                        {"header": "数量", "x1": 0.3842, "x2": 0.6191},
+                    ],
+                },
+            }
+        })
+
+        self.assertNotIn("layout", corrections["table_patch"])
+
     def test_build_field_values_returns_human_readable_mapping(self):
         result = apply_corrections(
             {
@@ -603,7 +651,19 @@ class ManualResultFeedbackTest(unittest.TestCase):
                 "result": self.make_result(),
                 "corrections": {
                     "manual_fields": [{"label": "客户备注", "value": "需要冷藏"}],
-                    "table_patch": {"headers": ["品名", "数量"], "rows": [["玩具", "12"]]},
+                    "table_patch": {
+                        "headers": ["品名", "数量"],
+                        "rows": [["玩具", "12"]],
+                        "layout": {
+                            "mode": "anchor_region",
+                            "headers": ["品名", "数量"],
+                            "region": {"x1": 0.1, "y1": 0.4, "x2": 0.9, "y2": 0.8},
+                            "columns": [
+                                {"header": "品名", "x1": 0.1, "x2": 0.6},
+                                {"header": "数量", "x1": 0.6, "x2": 0.9},
+                            ],
+                        },
+                    },
                 },
             }
 
@@ -635,6 +695,8 @@ class ManualResultFeedbackTest(unittest.TestCase):
                 self.assertEqual(template["output"], ["提单号", "客户备注"])
                 self.assertTrue(template["has_table"])
                 self.assertEqual(template["table_headers"], ["品名", "数量"])
+                self.assertEqual(template["table_layout"]["region"]["y1"], 0.4)
+                self.assertEqual(template["table_layout"]["columns"][1]["header"], "数量")
             finally:
                 app_module._jobs.pop(job_id, None)
                 app_module.config_yaml_path = old_config_yaml_path

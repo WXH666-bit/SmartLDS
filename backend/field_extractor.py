@@ -654,6 +654,11 @@ class FieldExtractor:
 
         # 提取表格
         table_data = self._extract_table(table_blocks)
+        table_layout = tpl_config.get("table_layout")
+        if self._should_use_learned_table_layout(table_data, table_layout):
+            learned_table = self._extract_table_with_learned_layout(blocks, table_layout, image_size)
+            if learned_table:
+                table_data = learned_table
 
         # 清理内部字段
         for v in fields.values():
@@ -1499,6 +1504,131 @@ class FieldExtractor:
         return {
             "headers": headers,
             "rows": data_rows,
+        }
+
+    @staticmethod
+    def _should_use_learned_table_layout(table_data, layout):
+        if not isinstance(layout, dict) or layout.get("mode") != "anchor_region":
+            return False
+        learned_headers = [str(item).strip() for item in (layout.get("headers") or []) if str(item).strip()]
+        if not learned_headers:
+            return False
+        if not table_data or not table_data.get("headers") or not table_data.get("rows"):
+            return True
+        current = " ".join(str(item).upper() for item in table_data.get("headers", []))
+        matched = sum(1 for header in learned_headers if str(header).upper() in current)
+        return matched < max(1, len(learned_headers) // 2)
+
+    @staticmethod
+    def _layout_region_to_rect(region, image_size):
+        if not isinstance(region, dict) or not image_size or len(image_size) < 2:
+            return None
+        try:
+            width = float(image_size[0])
+            height = float(image_size[1])
+            x1 = float(region.get("x1")) * width
+            y1 = float(region.get("y1")) * height
+            x2 = float(region.get("x2")) * width
+            y2 = float(region.get("y2")) * height
+        except (TypeError, ValueError):
+            return None
+        if width <= 0 or height <= 0 or x2 <= x1 or y2 <= y1:
+            return None
+        return [x1, y1, x2, y2]
+
+    @staticmethod
+    def _layout_columns_to_ranges(layout, region_rect, image_size):
+        headers = [str(item).strip() for item in (layout.get("headers") or []) if str(item).strip()]
+        raw_columns = layout.get("columns") or []
+        columns = []
+        width = float(image_size[0])
+        for index, item in enumerate(raw_columns):
+            if not isinstance(item, dict):
+                continue
+            try:
+                x1 = float(item.get("x1")) * width
+                x2 = float(item.get("x2")) * width
+            except (TypeError, ValueError):
+                continue
+            if x2 <= x1:
+                continue
+            header = str(item.get("header") or (headers[index] if index < len(headers) else "")).strip()
+            columns.append({"header": header, "x1": x1, "x2": x2})
+        if columns:
+            return columns
+
+        if not headers:
+            return []
+        x1, _, x2, _ = region_rect
+        step = (x2 - x1) / len(headers)
+        return [
+            {"header": header, "x1": x1 + index * step, "x2": x1 + (index + 1) * step}
+            for index, header in enumerate(headers)
+        ]
+
+    @staticmethod
+    def _is_layout_header_row(cells, headers):
+        non_empty = [(idx, str(value).strip()) for idx, value in enumerate(cells) if str(value).strip()]
+        if not non_empty:
+            return False
+        matches = 0
+        for idx, value in non_empty:
+            header = str(headers[idx] if idx < len(headers) else "").strip()
+            if not header:
+                continue
+            header_norm = re.sub(r"\s+", "", header).upper()
+            value_norm = re.sub(r"\s+", "", value).upper()
+            if header_norm and (header_norm in value_norm or value_norm in header_norm):
+                matches += 1
+        return matches >= max(1, len(non_empty) - 1)
+
+    def _extract_table_with_learned_layout(self, blocks, layout, image_size=None):
+        region_rect = self._layout_region_to_rect((layout or {}).get("region"), image_size)
+        if not region_rect:
+            return {}
+        columns = self._layout_columns_to_ranges(layout, region_rect, image_size)
+        headers = [col["header"] for col in columns if col.get("header")]
+        if not columns or not headers:
+            return {}
+
+        rx1, ry1, rx2, ry2 = region_rect
+        region_blocks = []
+        for block in blocks or []:
+            text = str(block.get("text") or "").strip()
+            rect = block.get("rect")
+            if not text or not isinstance(rect, list) or len(rect) != 4:
+                continue
+            bx1, by1, bx2, by2 = rect
+            cx = (bx1 + bx2) / 2.0
+            cy = (by1 + by2) / 2.0
+            if rx1 <= cx <= rx2 and ry1 <= cy <= ry2:
+                region_blocks.append(block)
+        if len(region_blocks) < 2:
+            return {}
+
+        rows = []
+        for row_blocks in self._group_table_rows(region_blocks):
+            cells = [[] for _ in columns]
+            for block in sorted(row_blocks, key=lambda item: item["rect"][0]):
+                bx1, _, bx2, _ = block["rect"]
+                cx = (bx1 + bx2) / 2.0
+                for index, col in enumerate(columns):
+                    if col["x1"] <= cx <= col["x2"]:
+                        cells[index].append(str(block.get("text") or "").strip())
+                        break
+            row = [" ".join(parts).strip() for parts in cells]
+            if not any(row):
+                continue
+            if self._is_layout_header_row(row, headers):
+                continue
+            rows.append(row)
+
+        if not rows:
+            return {}
+        return {
+            "headers": headers,
+            "rows": rows,
+            "source": "learned_layout",
         }
 
     @staticmethod

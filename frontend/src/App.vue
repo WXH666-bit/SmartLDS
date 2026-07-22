@@ -410,6 +410,27 @@
         <el-button size="small" type="primary" plain @click="addTableColumn">新增列</el-button>
         <el-button size="small" type="success" plain @click="addTableRow">新增行</el-button>
       </div>
+      <div class="table-layout-bind">
+        <el-select
+          v-model="tableEditor.layoutBlockIndexes"
+          multiple
+          filterable
+          collapse-tags
+          collapse-tags-tooltip
+          size="small"
+          placeholder="选择表格 OCR 块"
+          class="table-layout-select"
+        >
+          <el-option
+            v-for="option in tableOcrBlockOptions"
+            :key="option.value"
+            :label="option.label"
+            :value="option.value"
+          />
+        </el-select>
+        <el-button size="small" type="primary" plain @click="bindTableLayoutFromOcr">绑定布局</el-button>
+        <el-tag v-if="tableEditor.layout" size="small" type="success" effect="plain">已绑定布局</el-tag>
+      </div>
       <div v-if="!tableEditor.headers.length" class="table-empty-tip">还没有表头，先新增一列即可创建人工表格。</div>
       <div v-else class="table-edit-grid">
         <div class="table-edit-header">
@@ -801,6 +822,7 @@ import {
   buildExcludedFieldRows,
   buildFeedbackFieldOptions,
   buildManualFieldPayload,
+  buildTableLayoutDraft,
   applyManualFieldBindingDraft,
   appendSessionLog,
   buildWarningLogEntries,
@@ -829,7 +851,7 @@ const viewingJobId = ref('')
 const viewingData = ref(null)        // cached result for current view
 const meta = reactive({})
 const fieldRows = ref([])
-const tableData = reactive({ title: '', headers: [], rows: [], source: '', confidence: undefined })
+const tableData = reactive({ title: '', headers: [], rows: [], source: '', confidence: undefined, layout: null })
 const tableList = ref([])
 const tableDirty = ref(false)
 const jsonText = ref('')
@@ -860,7 +882,7 @@ const newField = reactive({
 const manualDirty = ref(false)
 const excludedCollapse = ref([])
 const showTableEditor = ref(false)
-const tableEditor = reactive({ headers: [], rows: [] })
+const tableEditor = reactive({ headers: [], rows: [], layoutBlockIndexes: [], layout: null })
 const showExportDialog = ref(false)
 const exportFormat = ref('json')
 const exportOptions = reactive({
@@ -888,6 +910,10 @@ const feedbackProgressText = computed(() => (
 const visibleFieldRows = computed(() => buildVisibleFieldRows(fieldRows.value))
 const excludedFieldRows = computed(() => buildExcludedFieldRows(fieldRows.value))
 const feedbackFieldOptions = computed(() => buildFeedbackFieldOptions(fieldRows.value))
+const tableOcrBlockOptions = computed(() => (ocrBlocks.value || []).map((block, index) => ({
+  value: index,
+  label: `${index + 1}. ${String(block?.text || '').trim() || 'OCR 块'}`,
+})))
 const ocrBlockOptions = computed(() =>
   (ocrBlocks.value || []).map((block, index) => ({
     index,
@@ -1407,6 +1433,7 @@ function showResult(data) {
   tableData.rows = firstTable.rows || []
   tableData.source = firstTable.source || table.source || ''
   tableData.confidence = firstTable.confidence
+  tableData.layout = firstTable.layout || data.table_layout || table.layout || null
   tableDirty.value = false
   manualDirty.value = false
   syncJsonPreview()
@@ -1435,24 +1462,40 @@ function toggleJsonInspector() {
   jsonInspectorOpen.value = !jsonInspectorOpen.value
 }
 
+function waitForJsonRender() {
+  return new Promise(resolve => setTimeout(resolve, 0))
+}
+
+async function findRenderedJsonLine(lineIndex) {
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    await nextTick()
+    const block = jsonBlockRef.value
+    const lineEl = block?.querySelector?.(`[data-json-line="${lineIndex}"]`)
+    if (block && lineEl) return { block, lineEl }
+    await waitForJsonRender()
+  }
+  return { block: jsonBlockRef.value, lineEl: null }
+}
+
 async function revealJsonTarget(target) {
   if (!target) return
+  clearJsonHighlightTimer()
   jsonInspectorOpen.value = true
   if (!jsonCollapseActive.value.includes('json')) {
     jsonCollapseActive.value = ['json']
   }
   await nextTick()
   const lineIndex = findJsonPreviewTargetLine(jsonText.value, target)
-  if (lineIndex < 0) return
+  if (lineIndex < 0) {
+    activeJsonLine.value = -1
+    return
+  }
   activeJsonLine.value = lineIndex
-  await nextTick()
-  const block = jsonBlockRef.value
-  const lineEl = block?.querySelector?.(`[data-json-line="${lineIndex}"]`)
+  const { block, lineEl } = await findRenderedJsonLine(lineIndex)
   if (block && lineEl) {
     const targetTop = lineEl.offsetTop - (block.clientHeight * 0.35)
     block.scrollTop = Math.max(0, targetTop)
   }
-  clearJsonHighlightTimer()
   jsonHighlightTimer = setTimeout(() => {
     activeJsonLine.value = -1
     jsonHighlightTimer = null
@@ -1798,12 +1841,32 @@ function normalizeTableEditorRows() {
 function openTableEditor() {
   tableEditor.headers = [...(tableData.headers || [])]
   tableEditor.rows = tableRowsToArrays()
+  tableEditor.layout = tableData.layout || viewingData.value?.table_layout || viewingData.value?.table?.layout || null
+  tableEditor.layoutBlockIndexes = []
   if (!tableEditor.headers.length) {
     tableEditor.headers = ['列A']
     tableEditor.rows = [['']]
   }
   normalizeTableEditorRows()
   showTableEditor.value = true
+}
+
+function bindTableLayoutFromOcr() {
+  const selectedBlocks = (tableEditor.layoutBlockIndexes || [])
+    .map(index => ocrBlocks.value[index])
+    .filter(Boolean)
+  if (!selectedBlocks.length) {
+    ElMessage.warning('请先选择表格 OCR 块')
+    return
+  }
+  const imageSize = meta.image_size || viewingData.value?.meta?.image_size
+  const layout = buildTableLayoutDraft(tableEditor.headers, selectedBlocks, imageSize)
+  if (!layout) {
+    ElMessage.warning('无法从所选 OCR 块生成表格布局')
+    return
+  }
+  tableEditor.layout = layout
+  ElMessage.success('已绑定表格布局')
 }
 
 function addTableColumn() {
@@ -1826,6 +1889,12 @@ function removeTableRow(index) {
   tableEditor.rows.splice(index, 1)
 }
 
+function tableLayoutMatchesHeaders(layout, headers) {
+  const layoutHeaders = layout?.headers || []
+  return layoutHeaders.length === headers.length
+    && headers.every((header, index) => String(layoutHeaders[index] || '').trim() === header)
+}
+
 function saveTableEditor() {
   const headers = tableEditor.headers.map(h => String(h || '').trim()).filter(Boolean)
   if (!headers.length) {
@@ -1834,12 +1903,14 @@ function saveTableEditor() {
     tableData.rows = []
     tableData.source = 'manual_patch'
     tableData.confidence = undefined
+    tableData.layout = null
   } else {
     tableEditor.headers = headers
     normalizeTableEditorRows()
     tableData.headers = [...headers]
     tableData.rows = tableArraysToObjects(headers, tableEditor.rows)
     tableData.source = tableData.source || 'manual_patch'
+    tableData.layout = tableLayoutMatchesHeaders(tableEditor.layout, headers) ? tableEditor.layout : null
   }
   const firstTable = {
     title: tableData.title,
@@ -1847,6 +1918,7 @@ function saveTableEditor() {
     rows: [...tableData.rows],
     source: tableData.source,
     confidence: tableData.confidence,
+    layout: tableData.layout,
   }
   if (tableList.value.length) tableList.value[0] = firstTable
   else if (firstTable.headers.length || firstTable.rows.length) tableList.value = [firstTable]
@@ -1976,6 +2048,7 @@ async function doCorrect(options = {}) {
       headers: [...tableData.headers],
       rows: tableRowsToArrays()
     }
+    if (tableData.layout) payload.table_patch.layout = tableData.layout
   }
 
   const hasChanges = Object.keys(edits).length || Object.keys(fieldLabels).length || manualFields.length || excludedFields.length || manualDirty.value || tableDirty.value
@@ -2244,6 +2317,8 @@ function confirmExport() {
 .table-editor{display:flex;flex-direction:column;gap:12px}
 .table-editor-head{display:flex;align-items:center;gap:8px}
 .te-title{font-size:13px;font-weight:800;color:#1e293b;flex:1}
+.table-layout-bind{display:flex;align-items:center;gap:8px}
+.table-layout-select{flex:1;min-width:0}
 .table-empty-tip{padding:18px;border:1px dashed #cbd5e1;border-radius:10px;color:#64748b;background:#f8fafc;text-align:center}
 .table-edit-grid{overflow:auto;border:1px solid #e5e7eb;border-radius:10px}
 .table-edit-header,.table-edit-row{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(140px,1fr);align-items:stretch;min-width:max-content}

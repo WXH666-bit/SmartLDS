@@ -61,6 +61,91 @@ function rectCenter(rect) {
   }
 }
 
+function roundUnit(value) {
+  return Math.round(value * 10000) / 10000
+}
+
+function normalizeImageSize(imageSize) {
+  if (!Array.isArray(imageSize) || imageSize.length < 2) return null
+  const width = Number(imageSize[0])
+  const height = Number(imageSize[1])
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) return null
+  return { width, height }
+}
+
+const MIN_TABLE_LAYOUT_HEIGHT_RATIO = 0.035
+
+export function buildTableLayoutDraft(headers = [], blocks = [], imageSize = null) {
+  const cleanHeaders = (headers || []).map(header => String(header || '').trim()).filter(Boolean)
+  const size = normalizeImageSize(imageSize)
+  const usableBlocks = (blocks || [])
+    .map(block => ({ text: String(block?.text || '').trim(), rect: normalizeRect(block?.rect) }))
+    .filter(block => block.text && block.rect)
+  if (!cleanHeaders.length || !size || !usableBlocks.length) return null
+
+  const xs1 = usableBlocks.map(block => block.rect[0])
+  const ys1 = usableBlocks.map(block => block.rect[1])
+  const xs2 = usableBlocks.map(block => block.rect[2])
+  const ys2 = usableBlocks.map(block => block.rect[3])
+  const minX = Math.min(...xs1)
+  const minY = Math.min(...ys1)
+  const maxX = Math.max(...xs2)
+  const maxY = Math.max(...ys2)
+  if (maxX <= minX || maxY <= minY) return null
+  if ((maxY - minY) / size.height < MIN_TABLE_LAYOUT_HEIGHT_RATIO) return null
+
+  const headerBlocks = cleanHeaders.map(header => {
+    const needle = header.replace(/\s+/g, '').toUpperCase()
+    return usableBlocks.find(block => {
+      const haystack = block.text.replace(/\s+/g, '').toUpperCase()
+      return needle && (haystack.includes(needle) || needle.includes(haystack))
+    })
+  })
+
+  const allHeadersMatched = headerBlocks.length === cleanHeaders.length && headerBlocks.every(Boolean)
+  const headerCenters = allHeadersMatched
+    ? headerBlocks.map(block => rectCenter(block.rect).x)
+    : []
+  const columns = cleanHeaders.map((header, index) => {
+    if (allHeadersMatched) {
+      const left = index === 0 ? minX : (headerCenters[index - 1] + headerCenters[index]) / 2
+      const right = index === cleanHeaders.length - 1 ? maxX : (headerCenters[index] + headerCenters[index + 1]) / 2
+      return { header, x1: roundUnit(left / size.width), x2: roundUnit(right / size.width) }
+    }
+    const step = (maxX - minX) / cleanHeaders.length
+    return {
+      header,
+      x1: roundUnit((minX + index * step) / size.width),
+      x2: roundUnit((minX + (index + 1) * step) / size.width),
+    }
+  })
+
+  const anchors = headerBlocks
+    .filter(Boolean)
+    .map(block => {
+      const center = rectCenter(block.rect)
+      return {
+        text: block.text,
+        x: roundUnit(center.x / size.width),
+        y: roundUnit(center.y / size.height),
+      }
+    })
+
+  const layout = {
+    mode: 'anchor_region',
+    headers: cleanHeaders,
+    region: {
+      x1: roundUnit(minX / size.width),
+      y1: roundUnit(minY / size.height),
+      x2: roundUnit(maxX / size.width),
+      y2: roundUnit(maxY / size.height),
+    },
+    columns,
+  }
+  if (anchors.length) layout.anchors = anchors
+  return layout
+}
+
 export function inferFieldPosition(anchorRect, valueRect) {
   const anchor = normalizeRect(anchorRect)
   const value = normalizeRect(valueRect)
@@ -174,6 +259,7 @@ function normalizeDisplayTable(table = {}) {
     rows,
     source: table.source || '',
     confidence: table.confidence,
+    layout: table.layout || null,
   }
 }
 
@@ -257,6 +343,10 @@ export function buildResultPreview(result = {}, fieldRows = [], tableData = null
       preview.table.headers.map((_, index) => String(row?.[String(index)] ?? ''))
     )
     if (tableData.source) preview.table.source = tableData.source
+    if (tableData.layout) {
+      preview.table.layout = tableData.layout
+      preview.table_layout = tableData.layout
+    }
     if (Array.isArray(preview.tables) && preview.tables.length) {
       preview.tables[0] = { ...preview.tables[0], ...preview.table }
     } else if (preview.table.headers.length || preview.table.rows.length) {
@@ -282,9 +372,11 @@ export function splitJsonPreviewLines(jsonText = '') {
 
 function findPropertyLine(lines, startIndex, prop) {
   const propToken = `${JSON.stringify(String(prop))}:`
+  const fieldIndent = lines[startIndex]?.search(/\S/) ?? -1
   for (let index = startIndex + 1; index < lines.length; index += 1) {
     const trimmed = lines[index].trim()
-    if (trimmed === '},' || trimmed === '}') return -1
+    const indent = lines[index].search(/\S/)
+    if (indent >= 0 && indent <= fieldIndent && trimmed.startsWith('}')) return -1
     if (trimmed.startsWith(propToken)) return index
   }
   return -1

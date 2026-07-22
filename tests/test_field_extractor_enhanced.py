@@ -155,6 +155,39 @@ class EnhancedFieldExtractorTest(unittest.TestCase):
         self.assertIn("debug", result)
         self.assertIn("template_scores", result["debug"]["extraction"])
 
+    def test_learned_table_layout_rebuilds_table_when_normal_table_is_empty(self):
+        extractor = self.make_extractor()
+        extractor.config["templates"]["demo"]["has_table"] = True
+        extractor.config["templates"]["demo"]["table_headers"] = ["品名", "数量"]
+        extractor.config["templates"]["demo"]["table_layout"] = {
+            "mode": "anchor_region",
+            "headers": ["品名", "数量"],
+            "region": {"x1": 0.1, "y1": 0.3, "x2": 0.9, "y2": 0.8},
+            "columns": [
+                {"header": "品名", "x1": 0.1, "x2": 0.6},
+                {"header": "数量", "x1": 0.6, "x2": 0.9},
+            ],
+        }
+        blocks = [
+            block("DEMO FORM", 20, 20, 180, 45),
+            block("品名", 120, 320, 220, 345),
+            block("数量", 650, 320, 740, 345),
+            block("玩具", 120, 380, 230, 405),
+            block("12", 650, 380, 700, 405),
+            block("衣服", 120, 430, 230, 455),
+            block("8", 650, 430, 700, 455),
+        ]
+
+        result = extractor.extract(
+            {"header": [blocks[0]], "body": blocks[1:], "table": []},
+            [1000, 1000],
+            blocks=blocks,
+        )
+
+        self.assertEqual(result["table"]["headers"], ["品名", "数量"])
+        self.assertEqual(result["table"]["rows"], [["玩具", "12"], ["衣服", "8"]])
+        self.assertEqual(result["table"]["source"], "learned_layout")
+
     def test_weak_template_evidence_stays_unknown(self):
         extractor = self.make_extractor()
         extractor.config["templates"]["other"] = {
