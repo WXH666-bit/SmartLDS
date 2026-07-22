@@ -45,6 +45,40 @@ def _clean_text(value):
     return str(value).strip() if isinstance(value, str) else ""
 
 
+_PARTY_SCOPE_PREFIXES = (
+    "发货方 SHIPPER",
+    "收货方 CONSIGNEE",
+)
+_PARTY_CHILD_ANCHORS = ("名称", "电话", "地址")
+
+
+def _normalize_spacing(value):
+    return re.sub(r"\s+", " ", str(value or "").strip())
+
+
+def _party_scoped_field_spec(name, value):
+    """Split real-scan party fields into full label + local anchor + scope anchor."""
+    label = _normalize_spacing(name)
+    text = _clean_text(value)
+    if not label or not text:
+        return None
+
+    compact_label = re.sub(r"\s+", "", label).upper()
+    for scope in _PARTY_SCOPE_PREFIXES:
+        compact_scope = re.sub(r"\s+", "", scope).upper()
+        if not compact_label.startswith(compact_scope):
+            continue
+        compact_tail = compact_label[len(compact_scope):]
+        for anchor in _PARTY_CHILD_ANCHORS:
+            if compact_tail == anchor or compact_label.endswith(anchor):
+                return {
+                    "value": text,
+                    "anchor": anchor,
+                    "scope_anchor": scope,
+                }
+    return None
+
+
 def _first_table(raw):
     tables = raw.get("tables")
     if isinstance(tables, list) and tables:
@@ -109,7 +143,8 @@ def normalize_fewshot_gt(gt):
             continue
         if name in _GT_METADATA_KEYS or name in _GT_DISPLAY_ONLY_FIELDS:
             continue
-        normalized[name] = text
+        scoped_spec = _party_scoped_field_spec(name, value)
+        normalized[name] = scoped_spec if scoped_spec else text
 
     table_headers, table_rows = _normalize_fewshot_table(raw)
     if table_headers:
@@ -237,6 +272,11 @@ class FewShotLearner:
                     image_size=d["img_size"],
                 )
                 if anchor_result:
+                    preferred_anchor = sample_spec.get("preferred_anchor")
+                    if preferred_anchor:
+                        anchor_result["anchor_text"] = self._normalize_anchor(preferred_anchor)
+                    if sample_spec.get("scope_anchor"):
+                        anchor_result["scope_anchor"] = sample_spec["scope_anchor"]
                     anchor_result["sample_idx"] = sample_idx
                     anchor_observations.append(anchor_result)
                     positions_per_sample.append(anchor_result["position"])
@@ -251,10 +291,11 @@ class FewShotLearner:
             if not anchor_observations:
                 continue  # 所有样本中都没找到该字段
 
+            used_anchors_for_field = set() if field_spec.get("scope_anchor") else used_primary_anchors
             selected_observations = self._select_consistent_anchor(
                 anchor_observations,
                 required_observations,
-                used_primary_anchors,
+                used_anchors_for_field,
             )
             if not selected_observations:
                 continue
@@ -264,8 +305,9 @@ class FewShotLearner:
                 if anchor not in top_anchors:
                     top_anchors.append(anchor)
             top_anchors = top_anchors[:3]
-            used_primary_anchors.add(top_anchors[0])
-            field_label = self._display_label_from_anchors(
+            if not field_spec.get("scope_anchor"):
+                used_primary_anchors.add(top_anchors[0])
+            field_label = fname if field_spec.get("scope_anchor") else self._display_label_from_anchors(
                 top_anchors,
                 fname,
                 used_labels=used_schema_keys,
@@ -293,6 +335,8 @@ class FewShotLearner:
                 "anchors": top_anchors,
                 "position": best_position,
             }
+            if field_spec.get("scope_anchor"):
+                fields_config[schema_key]["scope_anchors"] = [field_spec["scope_anchor"]]
             if v_result:
                 v_name, v_pattern = v_result
                 fields_config[schema_key]["validator"] = v_name
@@ -366,7 +410,24 @@ class FewShotLearner:
         def as_text(value):
             return str(value).strip() if isinstance(value, str) else ""
 
-        def add(name, value, canonical_key=None, allow_suffix=None, composite=False):
+        def unpack_value_spec(value):
+            if not isinstance(value, dict):
+                return as_text(value), None, None
+            return (
+                as_text(value.get("value")),
+                as_text(value.get("anchor")),
+                as_text(value.get("scope_anchor")),
+            )
+
+        def add(
+            name,
+            value,
+            canonical_key=None,
+            allow_suffix=None,
+            composite=False,
+            preferred_anchor=None,
+            scope_anchor=None,
+        ):
             value = as_text(value)
             if len(value) < 2:
                 return
@@ -379,6 +440,10 @@ class FewShotLearner:
                 # that blocks otherwise valid future values.
                 "skip_validator": bool(composite or allow_suffix),
             }
+            if preferred_anchor:
+                prepared[name]["preferred_anchor"] = preferred_anchor
+            if scope_anchor:
+                prepared[name]["scope_anchor"] = scope_anchor
 
         quantity = as_text(gt.get("qty"))
         unit = as_text(gt.get("unit"))
@@ -386,7 +451,10 @@ class FewShotLearner:
         currency = as_text(gt.get("currency"))
 
         for key, value in gt.items():
-            if key in ignored_fields or isinstance(value, (list, dict)):
+            if key in ignored_fields or isinstance(value, list):
+                continue
+            text_value, preferred_anchor, scope_anchor = unpack_value_spec(value)
+            if isinstance(value, dict) and not text_value:
                 continue
 
             base_name = key.rstrip("0123456789_")
@@ -408,7 +476,13 @@ class FewShotLearner:
                 continue
 
             suffix_kind = "weight" if key in ("gross_weight", "net_weight") else None
-            add(key, value, allow_suffix=suffix_kind)
+            add(
+                key,
+                text_value,
+                allow_suffix=suffix_kind,
+                preferred_anchor=preferred_anchor,
+                scope_anchor=scope_anchor,
+            )
 
         return prepared
 
@@ -860,6 +934,10 @@ class FewShotLearner:
                 lines.append(f"          canonical_key: {self._yaml_scalar(cfg['canonical_key'])}")
             anchors_str = ", ".join(self._yaml_scalar(a) for a in cfg.get("anchors", []))
             lines.append(f"          anchors: [{anchors_str}]")
+            scope_anchors = cfg.get("scope_anchors") or []
+            if scope_anchors:
+                scope_str = ", ".join(self._yaml_scalar(a) for a in scope_anchors)
+                lines.append(f"          scope_anchors: [{scope_str}]")
             lines.append(f"          position: {cfg.get('position', 'right')}")
             validator = cfg.get("validator")
             if validator:

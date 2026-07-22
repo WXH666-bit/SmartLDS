@@ -31,6 +31,10 @@ try:
 except ImportError:
     _HAS_YAML = False
 
+_SCOPE_ANCHOR_FAMILIES = (
+    ("发货方 SHIPPER", "收货方 CONSIGNEE"),
+)
+
 
 def _is_short_ascii_anchor(anchor):
     """Return whether an anchor must match as a complete ASCII token."""
@@ -881,6 +885,14 @@ class FieldExtractor:
 
         # Step 1: 找锚点块（按匹配分数排序）
         anchor_matches = self._find_anchor_blocks(search_pool, anchors)
+        scope_anchors = cfg.get("scope_anchors") or []
+        if scope_anchors:
+            anchor_matches = self._filter_anchor_matches_by_scope(
+                search_pool,
+                anchor_matches,
+                scope_anchors,
+            )
+            field_debug["scope_anchors"] = scope_anchors
         if not anchor_matches:
             field_debug["rejected"].append({"reason": "no_anchor_match"})
             return None
@@ -1229,6 +1241,67 @@ class FieldExtractor:
         result = [(b, s, a) for _, (s, b, a) in
                   sorted(best.items(), key=lambda x: x[1][0], reverse=True)]
         return result
+
+    def _filter_anchor_matches_by_scope(self, blocks, anchor_matches, scope_anchors):
+        """Keep repeated child anchors only when their nearest preceding section matches."""
+        if not anchor_matches or not scope_anchors:
+            return anchor_matches
+
+        desired_scopes = {self._normalize_scope_anchor(scope) for scope in scope_anchors}
+        family_scopes = self._scope_anchor_family(scope_anchors)
+        scope_matches = self._find_anchor_blocks(blocks, family_scopes)
+        if not scope_matches:
+            return []
+
+        filtered = []
+        for anchor_block, score, matched_anchor in anchor_matches:
+            best_scope = self._nearest_preceding_scope(anchor_block, scope_matches)
+            if not best_scope:
+                continue
+            _, scope_score, matched_scope = best_scope
+            if self._normalize_scope_anchor(matched_scope) not in desired_scopes:
+                continue
+            filtered.append((anchor_block, min(1.0, score * 0.88 + scope_score * 0.12), matched_anchor))
+        return filtered
+
+    @staticmethod
+    def _scope_anchor_family(scope_anchors):
+        wanted = {FieldExtractor._normalize_scope_anchor(scope) for scope in scope_anchors}
+        expanded = list(scope_anchors)
+        for family in _SCOPE_ANCHOR_FAMILIES:
+            normalized_family = {FieldExtractor._normalize_scope_anchor(scope) for scope in family}
+            if wanted & normalized_family:
+                for scope in family:
+                    if scope not in expanded:
+                        expanded.append(scope)
+        return expanded
+
+    @staticmethod
+    def _normalize_scope_anchor(scope):
+        return re.sub(r"\s+", "", str(scope or "")).upper()
+
+    @staticmethod
+    def _nearest_preceding_scope(anchor_block, scope_matches):
+        ax1, ay1, ax2, ay2 = anchor_block["rect"]
+        anchor_cx = (ax1 + ax2) / 2.0
+        anchor_cy = (ay1 + ay2) / 2.0
+        best = None
+        best_distance = None
+        for scope_block, score, matched_scope in scope_matches:
+            sx1, sy1, sx2, sy2 = scope_block["rect"]
+            scope_cx = (sx1 + sx2) / 2.0
+            scope_cy = (sy1 + sy2) / 2.0
+            if scope_cy > anchor_cy + 4:
+                continue
+            vertical_gap = max(0.0, ay1 - sy2)
+            if vertical_gap > max(320.0, (ay2 - ay1) * 12.0):
+                continue
+            horizontal_gap = abs(anchor_cx - scope_cx)
+            distance = vertical_gap + horizontal_gap * 0.45
+            if best_distance is None or distance < best_distance:
+                best = (scope_block, score, matched_scope)
+                best_distance = distance
+        return best
 
     @staticmethod
     def _text_similarity(text, anchor):

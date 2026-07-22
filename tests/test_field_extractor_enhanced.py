@@ -804,6 +804,102 @@ class EnhancedFieldExtractorTest(unittest.TestCase):
         self.assertEqual(normalized["table_headers"], ["序号", "品名名称", "数量"])
         self.assertEqual(normalized["table_rows"], [["1", "狗牙儿不凡滋脆玉米片88g", "1"]])
 
+    def test_normalize_fewshot_gt_adds_scope_anchor_for_party_fields(self):
+        raw = {
+            "fields": {
+                "发货方 SHIPPER 名称": "张三",
+                "发货方 SHIPPER 电话": "111111",
+                "收货方 CONSIGNEE 名称": "李四",
+                "收货方 CONSIGNEE 电话": "222222",
+            }
+        }
+
+        normalized = normalize_fewshot_gt(raw)
+
+        self.assertEqual(normalized["发货方 SHIPPER 名称"]["value"], "张三")
+        self.assertEqual(normalized["发货方 SHIPPER 名称"]["anchor"], "名称")
+        self.assertEqual(normalized["发货方 SHIPPER 名称"]["scope_anchor"], "发货方 SHIPPER")
+        self.assertEqual(normalized["收货方 CONSIGNEE 电话"]["value"], "222222")
+        self.assertEqual(normalized["收货方 CONSIGNEE 电话"]["anchor"], "电话")
+        self.assertEqual(normalized["收货方 CONSIGNEE 电话"]["scope_anchor"], "收货方 CONSIGNEE")
+
+    def test_fewshot_learns_scoped_duplicate_party_fields(self):
+        first_gt = {
+            "fields": {
+                "发货方 SHIPPER 名称": "张三",
+                "收货方 CONSIGNEE 名称": "李四",
+            }
+        }
+        second_gt = {
+            "fields": {
+                "发货方 SHIPPER 名称": "王五",
+                "收货方 CONSIGNEE 名称": "赵六",
+            }
+        }
+        learner = object.__new__(FewShotLearner)
+        learner.engine = _FewShotFixtureEngine({
+            "first.pdf": {
+                "blocks": [
+                    block("发货方 SHIPPER", 20, 80, 150, 105),
+                    block("名称", 20, 130, 65, 150),
+                    block("张三", 95, 130, 155, 150),
+                    block("收货方 CONSIGNEE", 230, 80, 380, 105),
+                    block("名称", 230, 130, 275, 150),
+                    block("李四", 305, 130, 365, 150),
+                ],
+                "image_size": [500, 300],
+            },
+            "second.pdf": {
+                "blocks": [
+                    block("发货方 SHIPPER", 20, 80, 150, 105),
+                    block("名称", 20, 130, 65, 150),
+                    block("王五", 95, 130, 155, 150),
+                    block("收货方 CONSIGNEE", 230, 80, 380, 105),
+                    block("名称", 230, 130, 275, 150),
+                    block("赵六", 305, 130, 365, 150),
+                ],
+                "image_size": [500, 300],
+            },
+        })
+
+        learned = learner.learn([("first.pdf", first_gt), ("second.pdf", second_gt)])
+
+        self.assertIn("发货方 SHIPPER 名称", learned["fields"])
+        self.assertIn("收货方 CONSIGNEE 名称", learned["fields"])
+        self.assertEqual(learned["fields"]["发货方 SHIPPER 名称"]["anchors"], ["名称"])
+        self.assertEqual(learned["fields"]["发货方 SHIPPER 名称"]["scope_anchors"], ["发货方 SHIPPER"])
+        self.assertEqual(learned["fields"]["收货方 CONSIGNEE 名称"]["anchors"], ["名称"])
+        self.assertEqual(learned["fields"]["收货方 CONSIGNEE 名称"]["scope_anchors"], ["收货方 CONSIGNEE"])
+
+    def test_field_extractor_uses_scope_anchor_to_resolve_duplicate_child_anchors(self):
+        extractor = FieldExtractor()
+        extractor.config = {"validators": {}}
+        extractor._last_extraction_debug = {"fields": {}}
+        blocks = [
+            block("发货方 SHIPPER", 20, 80, 150, 105),
+            block("名称", 20, 130, 65, 150),
+            block("张三", 95, 130, 155, 150),
+            block("收货方 CONSIGNEE", 230, 80, 380, 105),
+            block("名称", 230, 130, 275, 150),
+            block("李四", 305, 130, 365, 150),
+        ]
+
+        shipper = extractor._extract_field(
+            "发货方 SHIPPER 名称",
+            {"anchors": ["名称"], "scope_anchors": ["发货方 SHIPPER"], "position": "right"},
+            blocks,
+            set(),
+        )
+        consignee = extractor._extract_field(
+            "收货方 CONSIGNEE 名称",
+            {"anchors": ["名称"], "scope_anchors": ["收货方 CONSIGNEE"], "position": "right"},
+            blocks,
+            set(),
+        )
+
+        self.assertEqual(shipper["value"], "张三")
+        self.assertEqual(consignee["value"], "李四")
+
     def test_fewshot_learn_uses_normalized_real_scan_table_headers(self):
         first = {
             "template": "logistics_document",

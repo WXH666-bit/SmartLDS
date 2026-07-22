@@ -2292,6 +2292,9 @@ def api_config_apply():
             entry["multi_line"] = True
         if fcfg.get("allow_shared"):
             entry["allow_shared"] = True
+        scope_anchors = [str(a).strip() for a in (fcfg.get("scope_anchors") or []) if str(a).strip()]
+        if scope_anchors:
+            entry["scope_anchors"] = scope_anchors
         if fcfg.get("search_in"):
             entry["search_in"] = fcfg["search_in"]
         template_fields[fname] = entry
