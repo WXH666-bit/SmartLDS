@@ -164,6 +164,30 @@ export function relabelTableLayout(layout, headers = []) {
   return next
 }
 
+export function fillTableEditorTextDraft(tableEditor, target, text) {
+  const value = String(text || '').trim()
+  if (!value || !tableEditor || !target) return false
+  const colIndex = Number(target.colIndex)
+  if (!Number.isInteger(colIndex)) return false
+
+  if (target.type === 'header') {
+    if (!Array.isArray(tableEditor.headers) || colIndex < 0 || colIndex >= tableEditor.headers.length) return false
+    tableEditor.headers[colIndex] = value
+    return true
+  }
+
+  if (target.type === 'cell') {
+    const rowIndex = Number(target.rowIndex)
+    if (!Number.isInteger(rowIndex) || !Array.isArray(tableEditor.rows)) return false
+    const row = tableEditor.rows[rowIndex]
+    if (!Array.isArray(row) || colIndex < 0 || colIndex >= row.length) return false
+    row[colIndex] = value
+    return true
+  }
+
+  return false
+}
+
 export function inferFieldPosition(anchorRect, valueRect) {
   const anchor = normalizeRect(anchorRect)
   const value = normalizeRect(valueRect)

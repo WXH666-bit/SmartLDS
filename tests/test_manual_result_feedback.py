@@ -237,6 +237,20 @@ class ManualResultFeedbackTest(unittest.TestCase):
         self.assertEqual(result["table_layout"]["headers"], ["品名", "数量"])
         self.assertEqual(result["table"]["layout"]["region"]["y1"], 0.4)
 
+    def test_table_patch_clear_removes_final_table_and_layout(self):
+        result = apply_corrections(
+            {
+                **self.make_result(),
+                "table_layout": {"mode": "anchor_region", "headers": ["箱号"]},
+            },
+            {"table_patch": {"mode": "clear"}},
+        )
+
+        self.assertEqual(result["table"], {})
+        self.assertEqual(result["table_patch"], {"mode": "clear"})
+        self.assertNotIn("table_layout", result)
+        self.assertTrue(result["meta"]["manual_table_cleared"])
+
     def test_table_patch_rejects_header_only_learned_layout(self):
         corrections = normalize_corrections_payload({
             "table_patch": {
@@ -730,6 +744,80 @@ class ManualResultFeedbackTest(unittest.TestCase):
                     saved = yaml.safe_load(f)
                 template = saved["templates"]["target_tpl"]
                 self.assertTrue(template["has_table"])
+                self.assertNotIn("table_layout", template)
+            finally:
+                app_module._jobs.pop(job_id, None)
+                app_module.config_yaml_path = old_config_yaml_path
+                app_module.get_extractor = old_get_extractor
+
+    def test_fewshot_from_result_can_clear_existing_table_template(self):
+        job_id = "abcdef456780"
+        old_config_yaml_path = app_module.config_yaml_path
+        old_get_extractor = app_module.get_extractor
+
+        class FakeExtractor:
+            def reload_config(self):
+                self.reloaded = True
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            config_path = os.path.join(tmp_dir, "config.yaml")
+            with open(config_path, "w", encoding="utf-8") as f:
+                yaml.safe_dump(
+                    {
+                        "templates": {
+                            "target_tpl": {
+                                "keywords": ["TARGET"],
+                                "has_table": True,
+                                "table_headers": ["Item", "Qty"],
+                                "table_layout": {
+                                    "mode": "anchor_region",
+                                    "headers": ["Item", "Qty"],
+                                    "region": {"x1": 0.1, "y1": 0.4, "x2": 0.9, "y2": 0.8},
+                                    "columns": [
+                                        {"header": "Item", "x1": 0.1, "x2": 0.6},
+                                        {"header": "Qty", "x1": 0.6, "x2": 0.9},
+                                    ],
+                                },
+                                "fields": {},
+                                "output": [],
+                            }
+                        }
+                    },
+                    f,
+                    allow_unicode=True,
+                    sort_keys=False,
+                )
+
+            app_module.config_yaml_path = lambda: config_path
+            app_module.get_extractor = lambda: FakeExtractor()
+            app_module._jobs[job_id] = {
+                "id": job_id,
+                "status": "corrected",
+                "result": self.make_result(),
+                "corrections": {"table_patch": {"mode": "clear"}},
+            }
+
+            try:
+                client = app_module.app.test_client()
+                response = client.post(
+                    "/api/fewshot/from-result",
+                    json={
+                        "job_id": job_id,
+                        "template_name": "target_tpl",
+                        "field_names": [],
+                        "include_table": True,
+                        "mode": "merge",
+                    },
+                )
+
+                self.assertEqual(response.status_code, 200, response.get_json())
+                data = response.get_json()
+                self.assertTrue(data["table_updated"])
+                with open(config_path, "r", encoding="utf-8") as f:
+                    saved = yaml.safe_load(f)
+                template = saved["templates"]["target_tpl"]
+                self.assertFalse(template["has_table"])
+                self.assertNotIn("table_headers", template)
                 self.assertNotIn("table_layout", template)
             finally:
                 app_module._jobs.pop(job_id, None)

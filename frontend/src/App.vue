@@ -368,6 +368,7 @@
               :value="option.index"
             />
           </el-select>
+          <el-button size="small" plain @click="fillNewFieldLabelFromOcr">填入字段名</el-button>
           <span class="optional-chip">可选</span>
         </div>
       </el-form-item>
@@ -388,6 +389,7 @@
               :value="option.index"
             />
           </el-select>
+          <el-button size="small" plain @click="fillNewFieldValueFromOcr">填入字段值</el-button>
           <span class="optional-chip">可选</span>
         </div>
       </el-form-item>
@@ -409,6 +411,7 @@
         <span class="te-title">表头列</span>
         <el-button size="small" type="primary" plain @click="addTableColumn">新增列</el-button>
         <el-button size="small" type="success" plain @click="addTableRow">新增行</el-button>
+        <el-button size="small" type="danger" plain @click="clearTableEditor">清空表格</el-button>
       </div>
       <div class="table-layout-bind">
         <el-select
@@ -426,7 +429,12 @@
             :key="option.value"
             :label="option.label"
             :value="option.value"
-          />
+          >
+            <div class="ocr-option-row">
+              <span>{{ option.label }}</span>
+              <el-button size="small" text type="primary" @click.stop.prevent="fillTableEditorFromOcr(option)">填入</el-button>
+            </div>
+          </el-option>
         </el-select>
         <el-button size="small" type="primary" plain @click="bindTableLayoutFromOcr">绑定布局</el-button>
         <el-tag v-if="tableEditor.layout" size="small" type="success" effect="plain">已绑定布局</el-tag>
@@ -435,14 +443,23 @@
       <div v-else class="table-edit-grid">
         <div class="table-edit-header">
           <div v-for="(h, colIndex) in tableEditor.headers" :key="'h'+colIndex" class="table-edit-cell table-edit-head-cell">
-            <el-input v-model="tableEditor.headers[colIndex]" size="small" placeholder="列名" />
+            <el-input
+              v-model="tableEditor.headers[colIndex]"
+              size="small"
+              placeholder="列名"
+              @focus="setTableTextTarget({ type: 'header', colIndex })"
+            />
             <el-button size="small" text type="danger" @click="removeTableColumn(colIndex)">删列</el-button>
           </div>
           <div class="table-row-actions">操作</div>
         </div>
         <div v-for="(row, rowIndex) in tableEditor.rows" :key="'r'+rowIndex" class="table-edit-row">
           <div v-for="(_, colIndex) in tableEditor.headers" :key="'c'+rowIndex+'_'+colIndex" class="table-edit-cell">
-            <el-input v-model="tableEditor.rows[rowIndex][colIndex]" size="small" />
+            <el-input
+              v-model="tableEditor.rows[rowIndex][colIndex]"
+              size="small"
+              @focus="setTableTextTarget({ type: 'cell', rowIndex, colIndex })"
+            />
           </div>
           <div class="table-row-actions">
             <el-button size="small" text type="danger" @click="removeTableRow(rowIndex)">删行</el-button>
@@ -515,7 +532,9 @@
         </el-checkbox-group>
       </el-form-item>
       <el-form-item label="表格">
-        <el-checkbox v-model="feedback.include_table" :disabled="!tableData.headers.length">保存当前最终表头结构</el-checkbox>
+        <el-checkbox v-model="feedback.include_table" :disabled="!tableData.headers.length && !tableClearForFeedback">
+          {{ tableClearForFeedback ? '反哺为无表格' : '保存当前最终表头结构' }}
+        </el-checkbox>
       </el-form-item>
       <el-form-item label="AI 增强">
         <el-switch
@@ -841,6 +860,7 @@ import {
   buildDisplayTables,
   buildExcludedFieldRows,
   buildFeedbackFieldOptions,
+  fillTableEditorTextDraft,
   buildManualFieldPayload,
   buildTableLayoutDraft,
   relabelTableLayout,
@@ -905,6 +925,7 @@ const manualDirty = ref(false)
 const excludedCollapse = ref([])
 const showTableEditor = ref(false)
 const tableEditor = reactive({ headers: [], rows: [], layoutBlockIndexes: [], layout: null })
+const activeTableTextTarget = ref(null)
 const showExportDialog = ref(false)
 const exportFormat = ref('json')
 const exportOptions = reactive({
@@ -932,8 +953,14 @@ const feedbackProgressText = computed(() => (
 const visibleFieldRows = computed(() => buildVisibleFieldRows(fieldRows.value))
 const excludedFieldRows = computed(() => buildExcludedFieldRows(fieldRows.value))
 const feedbackFieldOptions = computed(() => buildFeedbackFieldOptions(fieldRows.value))
+const tableClearForFeedback = computed(() => {
+  const savedPatch = viewingData.value?.corrections_payload?.table_patch || viewingData.value?.table_patch
+  return (tableDirty.value && !tableData.headers.length)
+    || (savedPatch && savedPatch.mode === 'clear')
+})
 const tableOcrBlockOptions = computed(() => (ocrBlocks.value || []).map((block, index) => ({
   value: index,
+  text: String(block?.text || '').trim(),
   label: `${index + 1}. ${String(block?.text || '').trim() || 'OCR 块'}`,
 })))
 const ocrBlockOptions = computed(() =>
@@ -1809,6 +1836,22 @@ function ocrBlockByIndex(index) {
   return ocrBlocks.value[numeric] || null
 }
 
+function ocrTextByIndex(index) {
+  return String(ocrBlockByIndex(index)?.text || '').trim()
+}
+
+function fillNewFieldLabelFromOcr() {
+  const text = ocrTextByIndex(newField.anchorIndex)
+  if (!text) return ElMessage.warning('请先选择字段名 OCR 块')
+  newField.label = text
+}
+
+function fillNewFieldValueFromOcr() {
+  const text = ocrTextByIndex(newField.valueIndex)
+  if (!text) return ElMessage.warning('请先选择字段值 OCR 块')
+  newField.value = text
+}
+
 function applyManualFieldBinding() {
   const anchorBlock = ocrBlockByIndex(newField.anchorIndex)
   const valueBlock = ocrBlockByIndex(newField.valueIndex)
@@ -1890,11 +1933,22 @@ function normalizeTableEditorRows() {
   })
 }
 
+function setTableTextTarget(target) {
+  activeTableTextTarget.value = target
+}
+
+function fillTableEditorFromOcr(option) {
+  const ok = fillTableEditorTextDraft(tableEditor, activeTableTextTarget.value, option?.text)
+  if (!ok) return ElMessage.warning('请先点一下要填入的表头或单元格')
+  ElMessage.success('已填入 OCR 文本')
+}
+
 function openTableEditor() {
   tableEditor.headers = [...(tableData.headers || [])]
   tableEditor.rows = tableRowsToArrays()
   tableEditor.layout = tableData.layout || viewingData.value?.table_layout || viewingData.value?.table?.layout || null
   tableEditor.layoutBlockIndexes = []
+  activeTableTextTarget.value = null
   if (!tableEditor.headers.length) {
     tableEditor.headers = ['列A']
     tableEditor.rows = [['']]
@@ -1939,6 +1993,14 @@ function addTableRow() {
 
 function removeTableRow(index) {
   tableEditor.rows.splice(index, 1)
+}
+
+function clearTableEditor() {
+  tableEditor.headers = []
+  tableEditor.rows = []
+  tableEditor.layout = null
+  tableEditor.layoutBlockIndexes = []
+  activeTableTextTarget.value = null
 }
 
 function saveTableEditor() {
@@ -1996,7 +2058,7 @@ async function openFeedbackDialog() {
   feedback.mode = defaults.mode
   feedback.template_name = defaults.templateName
   feedback.field_names = feedbackFieldOptions.value.map(row => row.name)
-  feedback.include_table = !!tableData.headers.length
+  feedback.include_table = !!tableData.headers.length || !!tableClearForFeedback.value
   feedback.ai_enhance = false
   showFeedback.value = true
 }
@@ -2093,12 +2155,16 @@ async function doCorrect(options = {}) {
 
   const payload = { fields: edits, field_labels: fieldLabels, manual_fields: manualFields, excluded_fields: excludedFields }
   if (tableDirty.value) {
-    payload.table_patch = {
-      mode: 'replace',
-      headers: [...tableData.headers],
-      rows: tableRowsToArrays()
+    if (!tableData.headers.length) {
+      payload.table_patch = { mode: 'clear' }
+    } else {
+      payload.table_patch = {
+        mode: 'replace',
+        headers: [...tableData.headers],
+        rows: tableRowsToArrays()
+      }
+      if (tableData.layout) payload.table_patch.layout = tableData.layout
     }
-    if (tableData.layout) payload.table_patch.layout = tableData.layout
   }
 
   const hasChanges = Object.keys(edits).length || Object.keys(fieldLabels).length || manualFields.length || excludedFields.length || manualDirty.value || tableDirty.value
@@ -2329,6 +2395,8 @@ function confirmExport() {
 .optional-select-row{display:flex;align-items:center;gap:8px;width:100%}
 .optional-select{flex:1;min-width:0}
 .optional-chip{flex-shrink:0;padding:2px 8px;border-radius:999px;background:#f1f5f9;color:#64748b;font-size:12px;line-height:18px}
+.ocr-option-row{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%}
+.ocr-option-row span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .manual-binding-summary{display:flex;gap:10px;margin:-4px 0 8px 80px;color:#64748b;font-size:12px;line-height:1.5}
 .excluded-field-collapse{margin-top:10px;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;background:#fff}
 .excluded-field-list{display:flex;flex-direction:column;gap:6px}

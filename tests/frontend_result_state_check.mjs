@@ -4,6 +4,7 @@ import {
   buildDisplayTables,
   buildExcludedFieldRows,
   buildFeedbackFieldOptions,
+  fillTableEditorTextDraft,
   buildManualFieldPayload,
   buildTableLayoutDraft,
   relabelTableLayout,
@@ -398,6 +399,15 @@ assert.equal(relabeledTableLayout.region.y1, tableLayoutDraft.region.y1)
 assert.equal(relabeledTableLayout.columns[0].x1, tableLayoutDraft.columns[0].x1)
 assert.equal(relabeledTableLayout.columns[0].header, 'No.')
 assert.equal(relabelTableLayout(tableLayoutDraft, ['No.', 'Item', 'Qty']), null)
+const tableEditorDraft = {
+  headers: ['Col A', 'Col B'],
+  rows: [['', '']],
+}
+assert.equal(fillTableEditorTextDraft(tableEditorDraft, { type: 'header', colIndex: 1 }, '品名名称'), true)
+assert.equal(tableEditorDraft.headers[1], '品名名称')
+assert.equal(fillTableEditorTextDraft(tableEditorDraft, { type: 'cell', rowIndex: 0, colIndex: 0 }, '文件资料'), true)
+assert.equal(tableEditorDraft.rows[0][0], '文件资料')
+assert.equal(fillTableEditorTextDraft(tableEditorDraft, { type: 'cell', rowIndex: 9, colIndex: 0 }, 'oops'), false)
 assert.equal(
   buildTableLayoutDraft(
     ['序号', '品名名称', '数量'],
@@ -550,6 +560,13 @@ assert.match(appVue, /高性能电脑或服务器/, 'Ollama mode should explain 
 assert.match(appVue, /响应超时/, 'model settings dialog should expose response timeout')
 assert.match(appVue, /timeout: visionSettings\.timeout/, 'model settings save payload should include timeout')
 assert.match(appVue, /api\.recognize\(f\.job_id, visionSettings\.timeout\)/, 'recognition should use configured model timeout')
+assert.match(appVue, /fillTableEditorFromOcr/, 'table OCR block options should be able to fill the focused table input')
+assert.match(appVue, /activeTableTextTarget/, 'table editor should remember the currently focused header or cell')
+assert.match(appVue, /填入字段名/, 'manual field binding should let OCR text fill the field label')
+assert.match(appVue, /填入字段值/, 'manual field binding should let OCR text fill the field value')
+assert.match(appVue, /clearTableEditor/, 'table editor should expose an explicit clear-table action')
+assert.match(appVue, /mode: 'clear'/, 'saving an empty table should send a clear table patch')
+assert.match(appVue, /tableDirty\.value && !tableData\.headers\.length/, 'feedback should allow table clearing to be learned')
 assert.doesNotMatch(appVue, /result-preview-collapse/, '不应再显示导出预览增强面板')
 assert.doesNotMatch(appVue, /resultPreviewTab/, '不应再保留字段键值预览的切换状态')
 assert.doesNotMatch(appVue, /导出预览 \/ JSON/, '不应再显示导出预览标题')

@@ -510,24 +510,28 @@ def normalize_corrections_payload(raw) -> dict:
     table_patch = raw.get("table_patch") if is_new_shape else None
     normalized_table = None
     if isinstance(table_patch, dict):
-        headers = [str(h).strip() for h in (table_patch.get("headers") or []) if str(h).strip()]
-        rows = []
-        for row in (table_patch.get("rows") or []):
-            if not isinstance(row, list):
-                continue
-            normalized = [str(cell) for cell in row]
-            if len(normalized) < len(headers):
-                normalized.extend([""] * (len(headers) - len(normalized)))
-            rows.append(normalized[:len(headers)] if headers else normalized)
-        if headers or rows:
-            normalized_table = {
-                "mode": "replace",
-                "headers": headers,
-                "rows": rows,
-            }
-            layout = normalize_table_layout_payload(table_patch.get("layout"), headers=headers)
-            if layout:
-                normalized_table["layout"] = layout
+        mode = str(table_patch.get("mode") or "").strip().lower()
+        if mode == "clear":
+            normalized_table = {"mode": "clear"}
+        else:
+            headers = [str(h).strip() for h in (table_patch.get("headers") or []) if str(h).strip()]
+            rows = []
+            for row in (table_patch.get("rows") or []):
+                if not isinstance(row, list):
+                    continue
+                normalized = [str(cell) for cell in row]
+                if len(normalized) < len(headers):
+                    normalized.extend([""] * (len(headers) - len(normalized)))
+                rows.append(normalized[:len(headers)] if headers else normalized)
+            if headers or rows:
+                normalized_table = {
+                    "mode": "replace",
+                    "headers": headers,
+                    "rows": rows,
+                }
+                layout = normalize_table_layout_payload(table_patch.get("layout"), headers=headers)
+                if layout:
+                    normalized_table["layout"] = layout
 
     return {
         "fields": field_corrections,
@@ -1271,18 +1275,23 @@ def apply_corrections(result: dict | None, corrections: dict | None) -> dict:
 
     table_patch = normalized.get("table_patch")
     if table_patch:
-        source = "manual_patch"
-        if result_copy.get("table", {}).get("headers") or result_copy.get("table", {}).get("rows"):
-            source = "ocr_with_manual_patch"
-        result_copy["table"] = {
-            "headers": table_patch.get("headers", []),
-            "rows": table_patch.get("rows", []),
-            "source": source,
-        }
-        if table_patch.get("layout"):
-            result_copy["table"]["layout"] = copy.deepcopy(table_patch["layout"])
-            result_copy["table_layout"] = copy.deepcopy(table_patch["layout"])
-        result_copy.setdefault("meta", {})["manual_table"] = True
+        if table_patch.get("mode") == "clear":
+            result_copy["table"] = {}
+            result_copy.pop("table_layout", None)
+            result_copy.setdefault("meta", {})["manual_table_cleared"] = True
+        else:
+            source = "manual_patch"
+            if result_copy.get("table", {}).get("headers") or result_copy.get("table", {}).get("rows"):
+                source = "ocr_with_manual_patch"
+            result_copy["table"] = {
+                "headers": table_patch.get("headers", []),
+                "rows": table_patch.get("rows", []),
+                "source": source,
+            }
+            if table_patch.get("layout"):
+                result_copy["table"]["layout"] = copy.deepcopy(table_patch["layout"])
+                result_copy["table_layout"] = copy.deepcopy(table_patch["layout"])
+            result_copy.setdefault("meta", {})["manual_table"] = True
 
     result_copy.setdefault("meta", {})["manual_fields_count"] = len(normalized["manual_fields"])
     return result_copy
@@ -2443,25 +2452,33 @@ def api_fewshot_from_result():
 
     table_updated = False
     if include_table:
-        table = final_result.get("table", {}) or {}
-        headers = [str(h).strip() for h in table.get("headers", []) if str(h).strip()]
-        if headers:
-            target_template["has_table"] = True
-            target_template["table_headers"] = _merge_unique_strings(
-                target_template.get("table_headers", []),
-                headers,
-            )
+        table_patch = final_result.get("table_patch") or {}
+        if isinstance(table_patch, dict) and table_patch.get("mode") == "clear":
+            target_template["has_table"] = False
+            target_template.pop("table_headers", None)
+            target_template.pop("table_layout", None)
             table_updated = True
-            layout = normalize_table_layout_payload(final_result.get("table_layout"), headers=headers)
-            if layout:
-                target_template["table_layout"] = copy.deepcopy(layout)
-            else:
-                warnings.append(
-                    "\u5f53\u524d\u8868\u683c\u6ca1\u6709\u6709\u6548 OCR \u533a\u57df\u5e03\u5c40\uff0c\u4ec5\u4fdd\u5b58\u4e86\u8868\u5934\uff1b"
-                    "\u4e0b\u6b21\u53ea\u80fd\u6309\u666e\u901a\u8868\u683c\u89c4\u5219\u8bc6\u522b\uff0c\u5efa\u8bae\u5728\u8868\u683c\u7f16\u8f91\u91cc\u9009\u62e9\u5b8c\u6574\u8868\u5934\u548c\u6570\u636e\u884c OCR \u5757\u540e\u91cd\u65b0\u53cd\u54fa"
-                )
+            warnings.append("已将目标版式标记为无表格，后续识别不再套用表格布局")
         else:
-            warnings.append("当前结果没有可保存的表头，未更新表格结构")
+            table = final_result.get("table", {}) or {}
+            headers = [str(h).strip() for h in table.get("headers", []) if str(h).strip()]
+            if headers:
+                target_template["has_table"] = True
+                target_template["table_headers"] = _merge_unique_strings(
+                    target_template.get("table_headers", []),
+                    headers,
+                )
+                table_updated = True
+                layout = normalize_table_layout_payload(final_result.get("table_layout"), headers=headers)
+                if layout:
+                    target_template["table_layout"] = copy.deepcopy(layout)
+                else:
+                    warnings.append(
+                        "\u5f53\u524d\u8868\u683c\u6ca1\u6709\u6709\u6548 OCR \u533a\u57df\u5e03\u5c40\uff0c\u4ec5\u4fdd\u5b58\u4e86\u8868\u5934\uff1b"
+                        "\u4e0b\u6b21\u53ea\u80fd\u6309\u666e\u901a\u8868\u683c\u89c4\u5219\u8bc6\u522b\uff0c\u5efa\u8bae\u5728\u8868\u683c\u7f16\u8f91\u91cc\u9009\u62e9\u5b8c\u6574\u8868\u5934\u548c\u6570\u636e\u884c OCR \u5757\u540e\u91cd\u65b0\u53cd\u54fa"
+                    )
+            else:
+                warnings.append("当前结果没有可保存的表头，未更新表格结构")
 
     ocr_learning = apply_ocr_feedback_learning(
         target_template,
