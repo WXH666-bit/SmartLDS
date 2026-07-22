@@ -74,6 +74,8 @@ function normalizeImageSize(imageSize) {
 }
 
 const MIN_TABLE_LAYOUT_HEIGHT_RATIO = 0.035
+const TABLE_LAYOUT_X_PADDING_RATIO = 0.03
+const TABLE_LAYOUT_Y_PADDING_RATIO = 0.025
 
 export function buildTableLayoutDraft(headers = [], blocks = [], imageSize = null) {
   const cleanHeaders = (headers || []).map(header => String(header || '').trim()).filter(Boolean)
@@ -93,6 +95,10 @@ export function buildTableLayoutDraft(headers = [], blocks = [], imageSize = nul
   const maxY = Math.max(...ys2)
   if (maxX <= minX || maxY <= minY) return null
   if ((maxY - minY) / size.height < MIN_TABLE_LAYOUT_HEIGHT_RATIO) return null
+  const regionMinX = Math.max(0, minX - size.width * TABLE_LAYOUT_X_PADDING_RATIO)
+  const regionMinY = Math.max(0, minY - size.height * TABLE_LAYOUT_Y_PADDING_RATIO)
+  const regionMaxX = Math.min(size.width, maxX + size.width * TABLE_LAYOUT_X_PADDING_RATIO)
+  const regionMaxY = Math.min(size.height, maxY + size.height * TABLE_LAYOUT_Y_PADDING_RATIO)
 
   const headerBlocks = cleanHeaders.map(header => {
     const needle = header.replace(/\s+/g, '').toUpperCase()
@@ -108,15 +114,15 @@ export function buildTableLayoutDraft(headers = [], blocks = [], imageSize = nul
     : []
   const columns = cleanHeaders.map((header, index) => {
     if (allHeadersMatched) {
-      const left = index === 0 ? minX : (headerCenters[index - 1] + headerCenters[index]) / 2
-      const right = index === cleanHeaders.length - 1 ? maxX : (headerCenters[index] + headerCenters[index + 1]) / 2
+      const left = index === 0 ? regionMinX : (headerCenters[index - 1] + headerCenters[index]) / 2
+      const right = index === cleanHeaders.length - 1 ? regionMaxX : (headerCenters[index] + headerCenters[index + 1]) / 2
       return { header, x1: roundUnit(left / size.width), x2: roundUnit(right / size.width) }
     }
-    const step = (maxX - minX) / cleanHeaders.length
+    const step = (regionMaxX - regionMinX) / cleanHeaders.length
     return {
       header,
-      x1: roundUnit((minX + index * step) / size.width),
-      x2: roundUnit((minX + (index + 1) * step) / size.width),
+      x1: roundUnit((regionMinX + index * step) / size.width),
+      x2: roundUnit((regionMinX + (index + 1) * step) / size.width),
     }
   })
 
@@ -135,10 +141,10 @@ export function buildTableLayoutDraft(headers = [], blocks = [], imageSize = nul
     mode: 'anchor_region',
     headers: cleanHeaders,
     region: {
-      x1: roundUnit(minX / size.width),
-      y1: roundUnit(minY / size.height),
-      x2: roundUnit(maxX / size.width),
-      y2: roundUnit(maxY / size.height),
+      x1: roundUnit(regionMinX / size.width),
+      y1: roundUnit(regionMinY / size.height),
+      x2: roundUnit(regionMaxX / size.width),
+      y2: roundUnit(regionMaxY / size.height),
     },
     columns,
   }

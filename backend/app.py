@@ -417,11 +417,18 @@ def normalize_table_layout_payload(raw, headers=None) -> dict | None:
     if not region:
         return None
 
-    layout_headers = [
+    expected_headers = [
         str(item).strip()
-        for item in (raw.get("headers") or headers or [])
+        for item in (headers or [])
         if str(item).strip()
     ]
+    layout_headers = [
+        str(item).strip()
+        for item in (expected_headers or raw.get("headers") or [])
+        if str(item).strip()
+    ]
+    if expected_headers and len(layout_headers) != len(expected_headers):
+        return None
 
     columns = []
     for item in raw.get("columns") or []:
@@ -433,6 +440,11 @@ def normalize_table_layout_payload(raw, headers=None) -> dict | None:
             continue
         header = str(item.get("header") or "").strip()
         columns.append({"header": header, "x1": x1, "x2": x2})
+    if layout_headers and columns and len(columns) != len(layout_headers):
+        return None
+    if expected_headers and columns:
+        for index, header in enumerate(expected_headers):
+            columns[index]["header"] = header
 
     anchors = []
     for item in raw.get("anchors") or []:
@@ -2464,10 +2476,7 @@ def api_fewshot_from_result():
             headers = [str(h).strip() for h in table.get("headers", []) if str(h).strip()]
             if headers:
                 target_template["has_table"] = True
-                target_template["table_headers"] = _merge_unique_strings(
-                    target_template.get("table_headers", []),
-                    headers,
-                )
+                target_template["table_headers"] = headers
                 table_updated = True
                 layout = normalize_table_layout_payload(final_result.get("table_layout"), headers=headers)
                 if layout:

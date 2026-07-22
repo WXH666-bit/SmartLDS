@@ -389,9 +389,15 @@ const tableLayoutDraft = buildTableLayoutDraft(
 )
 assert.equal(tableLayoutDraft.mode, 'anchor_region')
 assert.deepEqual(tableLayoutDraft.headers, ['品名', '数量'])
-assert.deepEqual(tableLayoutDraft.region, { x1: 0.1, y1: 0.3, x2: 0.68, y2: 0.39 })
+assert.deepEqual(
+  tableLayoutDraft.region,
+  { x1: 0.07, y1: 0.275, x2: 0.71, y2: 0.415 },
+  'learned table layout should pad the selected OCR region for similar pages'
+)
 assert.equal(tableLayoutDraft.columns[0].header, '品名')
 assert.equal(tableLayoutDraft.columns[1].x1, 0.39)
+assert.equal(tableLayoutDraft.columns[0].x1, 0.07)
+assert.equal(tableLayoutDraft.columns[1].x2, 0.71)
 assert.equal(tableLayoutDraft.anchors[0].text, '品名')
 const relabeledTableLayout = relabelTableLayout(tableLayoutDraft, ['No.', 'Item'])
 assert.deepEqual(relabeledTableLayout.headers, ['No.', 'Item'])
@@ -562,8 +568,8 @@ assert.match(appVue, /timeout: visionSettings\.timeout/, 'model settings save pa
 assert.match(appVue, /api\.recognize\(f\.job_id, visionSettings\.timeout\)/, 'recognition should use configured model timeout')
 assert.match(appVue, /fillTableEditorFromOcr/, 'table OCR block options should be able to fill the focused table input')
 assert.match(appVue, /activeTableTextTarget/, 'table editor should remember the currently focused header or cell')
-assert.match(appVue, /填入字段名/, 'manual field binding should let OCR text fill the field label')
-assert.match(appVue, /填入字段值/, 'manual field binding should let OCR text fill the field value')
+assert.doesNotMatch(appVue, /填入字段名/, 'OCR text fill buttons should stay inside the table editor, not manual field binding')
+assert.doesNotMatch(appVue, /填入字段值/, 'OCR text fill buttons should stay inside the table editor, not manual field binding')
 assert.match(appVue, /clearTableEditor/, 'table editor should expose an explicit clear-table action')
 assert.match(appVue, /mode: 'clear'/, 'saving an empty table should send a clear table patch')
 assert.match(appVue, /tableDirty\.value && !tableData\.headers\.length/, 'feedback should allow table clearing to be learned')

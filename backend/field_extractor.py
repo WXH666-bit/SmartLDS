@@ -46,6 +46,10 @@ def _contains_direct_anchor(text, anchor):
     return anchor in text
 
 
+TABLE_LAYOUT_X_PADDING_RATIO = 0.03
+TABLE_LAYOUT_Y_PADDING_RATIO = 0.025
+
+
 # ================================================================
 # 内置默认配置（config.yaml 不存在时的回退）
 # ================================================================
@@ -656,7 +660,12 @@ class FieldExtractor:
         table_data = self._extract_table(table_blocks)
         table_layout = tpl_config.get("table_layout")
         if self._should_use_learned_table_layout(table_data, table_layout):
-            learned_table = self._extract_table_with_learned_layout(blocks, table_layout, image_size)
+            learned_table = self._extract_table_with_learned_layout(
+                blocks,
+                table_layout,
+                image_size,
+                table_headers=tpl_config.get("table_headers"),
+            )
             if learned_table:
                 table_data = learned_table
 
@@ -1534,7 +1543,12 @@ class FieldExtractor:
             return None
         if width <= 0 or height <= 0 or x2 <= x1 or y2 <= y1:
             return None
-        return [x1, y1, x2, y2]
+        return [
+            max(0, x1 - width * TABLE_LAYOUT_X_PADDING_RATIO),
+            max(0, y1 - height * TABLE_LAYOUT_Y_PADDING_RATIO),
+            min(width, x2 + width * TABLE_LAYOUT_X_PADDING_RATIO),
+            min(height, y2 + height * TABLE_LAYOUT_Y_PADDING_RATIO),
+        ]
 
     @staticmethod
     def _layout_columns_to_ranges(layout, region_rect, image_size):
@@ -1555,6 +1569,8 @@ class FieldExtractor:
             header = str(item.get("header") or (headers[index] if index < len(headers) else "")).strip()
             columns.append({"header": header, "x1": x1, "x2": x2})
         if columns:
+            columns[0]["x1"] = min(columns[0]["x1"], region_rect[0])
+            columns[-1]["x2"] = max(columns[-1]["x2"], region_rect[2])
             return columns
 
         if not headers:
@@ -1565,6 +1581,49 @@ class FieldExtractor:
             {"header": header, "x1": x1 + index * step, "x2": x1 + (index + 1) * step}
             for index, header in enumerate(headers)
         ]
+
+    @staticmethod
+    def _match_layout_header_block(blocks, header, y1, y2):
+        needle = re.sub(r"\s+", "", str(header or "")).upper()
+        if not needle:
+            return None
+        for block in blocks or []:
+            text = str(block.get("text") or "").strip()
+            rect = block.get("rect")
+            if not text or not isinstance(rect, list) or len(rect) != 4:
+                continue
+            haystack = re.sub(r"\s+", "", text).upper()
+            if not (haystack and (needle in haystack or haystack in needle)):
+                continue
+            cy = (rect[1] + rect[3]) / 2.0
+            if y1 <= cy <= y2:
+                return block
+        return None
+
+    def _repair_layout_columns_from_template_headers(self, blocks, layout, region_rect, image_size, table_headers=None):
+        headers = [str(item).strip() for item in (table_headers or []) if str(item).strip()]
+        layout_headers = [str(item).strip() for item in ((layout or {}).get("headers") or []) if str(item).strip()]
+        if len(headers) <= len(layout_headers):
+            return region_rect, None
+
+        matched_blocks = [
+            self._match_layout_header_block(blocks, header, region_rect[1], region_rect[3])
+            for header in headers
+        ]
+        if len(matched_blocks) != len(headers) or not all(matched_blocks):
+            return region_rect, None
+
+        width = float(image_size[0])
+        header_centers = [((block["rect"][0] + block["rect"][2]) / 2.0) for block in matched_blocks]
+        min_x = max(0, min(block["rect"][0] for block in matched_blocks) - width * TABLE_LAYOUT_X_PADDING_RATIO)
+        max_x = min(width, max(block["rect"][2] for block in matched_blocks) + width * TABLE_LAYOUT_X_PADDING_RATIO)
+        next_region = [min(region_rect[0], min_x), region_rect[1], max(region_rect[2], max_x), region_rect[3]]
+        columns = []
+        for index, header in enumerate(headers):
+            left = next_region[0] if index == 0 else (header_centers[index - 1] + header_centers[index]) / 2.0
+            right = next_region[2] if index == len(headers) - 1 else (header_centers[index] + header_centers[index + 1]) / 2.0
+            columns.append({"header": header, "x1": left, "x2": right})
+        return next_region, columns
 
     @staticmethod
     def _is_layout_header_row(cells, headers):
@@ -1582,11 +1641,20 @@ class FieldExtractor:
                 matches += 1
         return matches >= max(1, len(non_empty) - 1)
 
-    def _extract_table_with_learned_layout(self, blocks, layout, image_size=None):
+    def _extract_table_with_learned_layout(self, blocks, layout, image_size=None, table_headers=None):
         region_rect = self._layout_region_to_rect((layout or {}).get("region"), image_size)
         if not region_rect:
             return {}
         columns = self._layout_columns_to_ranges(layout, region_rect, image_size)
+        region_rect, repaired_columns = self._repair_layout_columns_from_template_headers(
+            blocks,
+            layout,
+            region_rect,
+            image_size,
+            table_headers=table_headers,
+        )
+        if repaired_columns:
+            columns = repaired_columns
         headers = [col["header"] for col in columns if col.get("header")]
         if not columns or not headers:
             return {}
@@ -1606,8 +1674,10 @@ class FieldExtractor:
         if len(region_blocks) < 2:
             return {}
 
-        rows = []
-        for row_blocks in self._group_table_rows(region_blocks):
+        grouped_rows = self._group_table_rows(region_blocks)
+        row_items = []
+        has_header_row = False
+        for row_blocks in grouped_rows:
             cells = [[] for _ in columns]
             for block in sorted(row_blocks, key=lambda item: item["rect"][0]):
                 bx1, _, bx2, _ = block["rect"]
@@ -1620,6 +1690,19 @@ class FieldExtractor:
             if not any(row):
                 continue
             if self._is_layout_header_row(row, headers):
+                has_header_row = True
+            row_cy = sum((block["rect"][1] + block["rect"][3]) / 2.0 for block in row_blocks) / len(row_blocks)
+            row_items.append((row_cy, row))
+
+        rows = []
+        header_seen = not has_header_row
+        for _, row in sorted(row_items, key=lambda item: item[0]):
+            if self._is_layout_header_row(row, headers):
+                header_seen = True
+                continue
+            if not header_seen:
+                continue
+            if len(headers) > 1 and sum(1 for cell in row if str(cell).strip()) < 2:
                 continue
             rows.append(row)
 

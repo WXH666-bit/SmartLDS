@@ -368,7 +368,6 @@
               :value="option.index"
             />
           </el-select>
-          <el-button size="small" plain @click="fillNewFieldLabelFromOcr">填入字段名</el-button>
           <span class="optional-chip">可选</span>
         </div>
       </el-form-item>
@@ -389,7 +388,6 @@
               :value="option.index"
             />
           </el-select>
-          <el-button size="small" plain @click="fillNewFieldValueFromOcr">填入字段值</el-button>
           <span class="optional-chip">可选</span>
         </div>
       </el-form-item>
@@ -1834,22 +1832,6 @@ function ocrBlockByIndex(index) {
   const numeric = Number(index)
   if (!Number.isInteger(numeric)) return null
   return ocrBlocks.value[numeric] || null
-}
-
-function ocrTextByIndex(index) {
-  return String(ocrBlockByIndex(index)?.text || '').trim()
-}
-
-function fillNewFieldLabelFromOcr() {
-  const text = ocrTextByIndex(newField.anchorIndex)
-  if (!text) return ElMessage.warning('请先选择字段名 OCR 块')
-  newField.label = text
-}
-
-function fillNewFieldValueFromOcr() {
-  const text = ocrTextByIndex(newField.valueIndex)
-  if (!text) return ElMessage.warning('请先选择字段值 OCR 块')
-  newField.value = text
 }
 
 function applyManualFieldBinding() {

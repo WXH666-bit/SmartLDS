@@ -824,6 +824,82 @@ class ManualResultFeedbackTest(unittest.TestCase):
                 app_module.config_yaml_path = old_config_yaml_path
                 app_module.get_extractor = old_get_extractor
 
+    def test_fewshot_from_result_replaces_existing_table_headers(self):
+        job_id = "abcdef456781"
+        old_config_yaml_path = app_module.config_yaml_path
+        old_get_extractor = app_module.get_extractor
+
+        class FakeExtractor:
+            def reload_config(self):
+                self.reloaded = True
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            config_path = os.path.join(tmp_dir, "config.yaml")
+            with open(config_path, "w", encoding="utf-8") as f:
+                yaml.safe_dump(
+                    {
+                        "templates": {
+                            "target_tpl": {
+                                "keywords": ["TARGET"],
+                                "has_table": True,
+                                "table_headers": ["序号", "品名名称", "数量"],
+                                "fields": {},
+                                "output": [],
+                            }
+                        }
+                    },
+                    f,
+                    allow_unicode=True,
+                    sort_keys=False,
+                )
+
+            app_module.config_yaml_path = lambda: config_path
+            app_module.get_extractor = lambda: FakeExtractor()
+            app_module._jobs[job_id] = {
+                "id": job_id,
+                "status": "done",
+                "result": self.make_result(),
+                "corrections": {
+                    "table_patch": {
+                        "headers": ["序号", "品名名称"],
+                        "rows": [["1", "电子产品"]],
+                        "layout": {
+                            "mode": "anchor_region",
+                            "headers": ["序号", "品名名称"],
+                            "region": {"x1": 0.05, "y1": 0.3, "x2": 0.35, "y2": 0.42},
+                            "columns": [
+                                {"header": "序号", "x1": 0.05, "x2": 0.13},
+                                {"header": "品名名称", "x1": 0.13, "x2": 0.35},
+                            ],
+                        },
+                    },
+                },
+            }
+
+            try:
+                client = app_module.app.test_client()
+                response = client.post(
+                    "/api/fewshot/from-result",
+                    json={
+                        "job_id": job_id,
+                        "template_name": "target_tpl",
+                        "field_names": [],
+                        "include_table": True,
+                        "mode": "merge",
+                    },
+                )
+
+                self.assertEqual(response.status_code, 200, response.get_json())
+                with open(config_path, "r", encoding="utf-8") as f:
+                    saved = yaml.safe_load(f)
+                template = saved["templates"]["target_tpl"]
+                self.assertEqual(template["table_headers"], ["序号", "品名名称"])
+                self.assertEqual(template["table_layout"]["headers"], ["序号", "品名名称"])
+            finally:
+                app_module._jobs.pop(job_id, None)
+                app_module.config_yaml_path = old_config_yaml_path
+                app_module.get_extractor = old_get_extractor
+
     def test_fewshot_from_result_merges_fields_and_table_into_existing_template(self):
         job_id = "abcdef123456"
         old_config_yaml_path = app_module.config_yaml_path

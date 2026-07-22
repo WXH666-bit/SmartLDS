@@ -188,6 +188,102 @@ class EnhancedFieldExtractorTest(unittest.TestCase):
         self.assertEqual(result["table"]["rows"], [["玩具", "12"], ["衣服", "8"]])
         self.assertEqual(result["table"]["source"], "learned_layout")
 
+    def test_learned_table_layout_tolerates_tight_saved_region(self):
+        extractor = self.make_extractor()
+        extractor.config["templates"]["demo"]["has_table"] = True
+        extractor.config["templates"]["demo"]["table_headers"] = ["品名", "数量"]
+        extractor.config["templates"]["demo"]["table_layout"] = {
+            "mode": "anchor_region",
+            "headers": ["品名", "数量"],
+            "region": {"x1": 0.1, "y1": 0.3, "x2": 0.68, "y2": 0.39},
+            "columns": [
+                {"header": "品名", "x1": 0.1, "x2": 0.39},
+                {"header": "数量", "x1": 0.39, "x2": 0.68},
+            ],
+        }
+        blocks = [
+            block("DEMO FORM", 20, 20, 180, 45),
+            block("承运商", 100, 280, 180, 300),
+            block("品名", 100, 300, 180, 330),
+            block("数量", 600, 300, 680, 330),
+            block("玩具", 100, 398, 180, 425),
+            block("12", 675, 398, 705, 425),
+        ]
+
+        result = extractor.extract(
+            {"header": [blocks[0]], "body": blocks[1:], "table": []},
+            [1000, 1000],
+            blocks=blocks,
+        )
+
+        self.assertEqual(result["table"]["rows"], [["玩具", "12"]])
+        self.assertEqual(result["table"]["source"], "learned_layout")
+
+    def test_learned_table_layout_ignores_single_column_footer_rows(self):
+        extractor = self.make_extractor()
+        extractor.config["templates"]["demo"]["has_table"] = True
+        extractor.config["templates"]["demo"]["table_headers"] = ["品名名称", "数量"]
+        extractor.config["templates"]["demo"]["table_layout"] = {
+            "mode": "anchor_region",
+            "headers": ["品名名称", "数量"],
+            "region": {"x1": 0.08, "y1": 0.34, "x2": 0.65, "y2": 0.55},
+            "columns": [
+                {"header": "品名名称", "x1": 0.08, "x2": 0.42},
+                {"header": "数量", "x1": 0.42, "x2": 0.65},
+            ],
+        }
+        blocks = [
+            block("DEMO FORM", 20, 20, 180, 45),
+            block("品名名称", 100, 340, 190, 370),
+            block("数量", 500, 340, 560, 370),
+            block("1 泡面麻酱火鸡面定制141克10包", 100, 405, 330, 435),
+            block("2", 500, 405, 530, 435),
+            block("备注NOTES", 100, 455, 220, 485),
+            block("支付方式:到付", 100, 505, 260, 535),
+        ]
+
+        result = extractor.extract(
+            {"header": [blocks[0]], "body": blocks[1:], "table": []},
+            [1000, 1000],
+            blocks=blocks,
+        )
+
+        self.assertEqual(result["table"]["rows"], [["1 泡面麻酱火鸡面定制141克10包", "2"]])
+        self.assertEqual(result["table"]["source"], "learned_layout")
+
+    def test_learned_table_layout_repairs_missing_columns_from_template_headers(self):
+        extractor = self.make_extractor()
+        extractor.config["templates"]["demo"]["has_table"] = True
+        extractor.config["templates"]["demo"]["table_headers"] = ["序号", "品名名称", "数量"]
+        extractor.config["templates"]["demo"]["table_layout"] = {
+            "mode": "anchor_region",
+            "headers": ["序号", "品名名称"],
+            "region": {"x1": 0.0804, "y1": 0.3343, "x2": 0.1995, "y2": 0.3698},
+            "columns": [
+                {"header": "序号", "x1": 0.0804, "x2": 0.14},
+                {"header": "品名名称", "x1": 0.14, "x2": 0.1995},
+            ],
+        }
+        blocks = [
+            block("DEMO FORM", 20, 20, 180, 45),
+            block("序号", 133, 814, 182, 843),
+            block("品名名称", 226, 811, 325, 845),
+            block("数量", 967, 811, 1024, 848),
+            block("文件资料", 226, 867, 330, 901),
+            block("3", 1007, 870, 1036, 904),
+            block("1", 158, 880, 175, 897),
+        ]
+
+        result = extractor.extract(
+            {"header": [blocks[0]], "body": blocks[1:], "table": []},
+            [1654, 2339],
+            blocks=blocks,
+        )
+
+        self.assertEqual(result["table"]["headers"], ["序号", "品名名称", "数量"])
+        self.assertEqual(result["table"]["rows"], [["1", "文件资料", "3"]])
+        self.assertEqual(result["table"]["source"], "learned_layout")
+
     def test_weak_template_evidence_stays_unknown(self):
         extractor = self.make_extractor()
         extractor.config["templates"]["other"] = {
