@@ -111,6 +111,7 @@ def default_vision_settings() -> dict[str, Any]:
         "base_url": qwen["default_base_url"],
         "api_key": "",
         "threshold": DEFAULT_FALLBACK_THRESHOLD,
+        "timeout": 90.0,
     }
 
 
@@ -1007,7 +1008,7 @@ class VisionFallbackClient:
         self.enabled = _env_bool("VISION_FALLBACK_ENABLED", bool(merged.get("enabled"))) if enabled is None else enabled
         self.model = model or os.getenv("VISION_FALLBACK_MODEL") or merged.get("model") or defaults["default_model"]
         self.base_url = str(merged.get("base_url") or defaults["default_base_url"]).rstrip("/")
-        self.timeout = timeout or _env_float("VISION_FALLBACK_TIMEOUT", 90.0)
+        self.timeout = timeout or _env_float("VISION_FALLBACK_TIMEOUT", _as_float(merged.get("timeout"), 90.0))
         self.endpoint_type = str(defaults.get("transport") or "chat_completions")
         self.ollama_num_ctx = int(_as_float(merged.get("num_ctx"), 8192) or 8192)
         self.endpoint = endpoint or os.getenv("VISION_FALLBACK_ENDPOINT", "")

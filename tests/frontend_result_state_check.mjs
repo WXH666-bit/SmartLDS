@@ -6,6 +6,7 @@ import {
   buildFeedbackFieldOptions,
   buildManualFieldPayload,
   buildTableLayoutDraft,
+  relabelTableLayout,
   applyManualFieldBindingDraft,
   appendSessionLog,
   buildWarningLogEntries,
@@ -391,6 +392,12 @@ assert.deepEqual(tableLayoutDraft.region, { x1: 0.1, y1: 0.3, x2: 0.68, y2: 0.39
 assert.equal(tableLayoutDraft.columns[0].header, '品名')
 assert.equal(tableLayoutDraft.columns[1].x1, 0.39)
 assert.equal(tableLayoutDraft.anchors[0].text, '品名')
+const relabeledTableLayout = relabelTableLayout(tableLayoutDraft, ['No.', 'Item'])
+assert.deepEqual(relabeledTableLayout.headers, ['No.', 'Item'])
+assert.equal(relabeledTableLayout.region.y1, tableLayoutDraft.region.y1)
+assert.equal(relabeledTableLayout.columns[0].x1, tableLayoutDraft.columns[0].x1)
+assert.equal(relabeledTableLayout.columns[0].header, 'No.')
+assert.equal(relabelTableLayout(tableLayoutDraft, ['No.', 'Item', 'Qty']), null)
 assert.equal(
   buildTableLayoutDraft(
     ['序号', '品名名称', '数量'],
@@ -514,8 +521,10 @@ assert.match(appVue, /addWarningLogs\(data\.result\?\.warnings \|\| \[\], 'Few-s
 assert.match(appVue, /addWarningLogs\(data\.warnings \|\| \[\], '反哺'/, 'feedback warnings should be copied into the session log')
 assert.match(appVue, /addLog\(\{ level: 'error', source: '识别'/, 'recognition errors should be copied into the session log')
 assert.match(apiSource, /const AI_OPERATION_TIMEOUT_MS = 600000/, 'AI 增强相关长任务不应使用默认 120 秒超时')
-assert.match(apiSource, /API\.post\('\/fewshot\/from-result', data, \{ timeout: AI_OPERATION_TIMEOUT_MS \}\)/, '结果页 AI 反哺接口应使用长超时')
-assert.match(apiSource, /API\.post\('\/fewshot\/learn', formData, \{ timeout: AI_OPERATION_TIMEOUT_MS \}\)/, 'Few-shot AI 学习接口应使用长超时')
+assert.match(apiSource, /function modelOperationTimeoutMs/, 'front-end API should derive long request timeouts from model settings')
+assert.match(apiSource, /recognize\(jobId, timeoutSeconds/, 'recognition requests should accept configurable model timeout')
+assert.match(apiSource, /API\.post\('\/fewshot\/from-result', data, \{ timeout: modelOperationTimeoutMs\(timeoutSeconds\) \}\)/, '结果页 AI 反哺接口应使用模型设置超时')
+assert.match(apiSource, /API\.post\('\/fewshot\/learn', formData, \{ timeout: modelOperationTimeoutMs\(timeoutSeconds\) \}\)/, 'Few-shot AI 学习接口应使用模型设置超时')
 assert.match(apiSource, /probeVisionModels\(data\)/, '前端 API 应提供模型检测接口')
 assert.match(apiSource, /API\.post\('\/vision-settings\/probe', data, \{ timeout: 60000 \}\)/, '模型检测应调用后端 probe 接口并使用独立超时')
 assert.match(apiSource, /revealVisionApiKey\(params = \{\}\)/, '前端 API 应提供按当前配置查看已保存 API Key 的接口')
@@ -538,6 +547,9 @@ assert.match(appVue, /模型响应超时/, 'AI 长任务超时时应提示模型
 assert.match(appVue, /反哺失败: ' \+ formatApiError\(e\)/, '反哺失败提示应使用友好错误文案')
 assert.match(appVue, /请求失败: ' \+ formatApiError\(e\)/, 'Few-shot 学习失败提示应使用友好错误文案')
 assert.match(appVue, /高性能电脑或服务器/, 'Ollama mode should explain local vision extraction needs a powerful computer or server')
+assert.match(appVue, /响应超时/, 'model settings dialog should expose response timeout')
+assert.match(appVue, /timeout: visionSettings\.timeout/, 'model settings save payload should include timeout')
+assert.match(appVue, /api\.recognize\(f\.job_id, visionSettings\.timeout\)/, 'recognition should use configured model timeout')
 assert.doesNotMatch(appVue, /result-preview-collapse/, '不应再显示导出预览增强面板')
 assert.doesNotMatch(appVue, /resultPreviewTab/, '不应再保留字段键值预览的切换状态')
 assert.doesNotMatch(appVue, /导出预览 \/ JSON/, '不应再显示导出预览标题')

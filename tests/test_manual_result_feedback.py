@@ -620,6 +620,122 @@ class ManualResultFeedbackTest(unittest.TestCase):
         self.assertEqual(payload["manual_fields"], [{"key": "remark", "label": "备注", "value": "加急"}])
         self.assertEqual(payload["table_patch"]["rows"], [["1", ""]])
 
+    def test_correct_preserves_existing_table_patch_when_saving_fields_only(self):
+        job_id = "abcdef789abc"
+        old_upload_folder = app_module.app.config["UPLOAD_FOLDER"]
+        layout = {
+            "mode": "anchor_region",
+            "headers": ["Item", "Qty"],
+            "region": {"x1": 0.1, "y1": 0.4, "x2": 0.9, "y2": 0.8},
+            "columns": [
+                {"header": "Item", "x1": 0.1, "x2": 0.6},
+                {"header": "Qty", "x1": 0.6, "x2": 0.9},
+            ],
+        }
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            app_module.app.config["UPLOAD_FOLDER"] = tmp_dir
+            app_module._jobs[job_id] = {
+                "id": job_id,
+                "status": "corrected",
+                "result": self.make_result(),
+                "corrections": {
+                    "fields": {},
+                    "field_labels": {},
+                    "manual_fields": [],
+                    "excluded_fields": [],
+                    "table_patch": {
+                        "headers": ["Item", "Qty"],
+                        "rows": [["Toy", "12"]],
+                        "layout": layout,
+                    },
+                },
+            }
+
+            try:
+                client = app_module.app.test_client()
+                response = client.post(
+                    f"/api/correct/{job_id}",
+                    json={"fields": {"BL No.": "BL002"}},
+                )
+
+                self.assertEqual(response.status_code, 200, response.get_json())
+                saved = app_module._jobs[job_id]["corrections"]
+                self.assertEqual(saved["fields"], {"BL No.": "BL002"})
+                self.assertEqual(saved["table_patch"]["layout"]["region"], layout["region"])
+                self.assertTrue(response.get_json()["has_table_patch"])
+            finally:
+                app_module._jobs.pop(job_id, None)
+                app_module.app.config["UPLOAD_FOLDER"] = old_upload_folder
+
+    def test_fewshot_from_result_warns_when_table_layout_is_missing(self):
+        job_id = "abcdef456789"
+        old_config_yaml_path = app_module.config_yaml_path
+        old_get_extractor = app_module.get_extractor
+
+        class FakeExtractor:
+            def reload_config(self):
+                self.reloaded = True
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            config_path = os.path.join(tmp_dir, "config.yaml")
+            with open(config_path, "w", encoding="utf-8") as f:
+                yaml.safe_dump(
+                    {
+                        "templates": {
+                            "target_tpl": {
+                                "keywords": ["TARGET"],
+                                "has_table": False,
+                                "fields": {},
+                                "output": [],
+                            }
+                        }
+                    },
+                    f,
+                    allow_unicode=True,
+                    sort_keys=False,
+                )
+
+            app_module.config_yaml_path = lambda: config_path
+            app_module.get_extractor = lambda: FakeExtractor()
+            app_module._jobs[job_id] = {
+                "id": job_id,
+                "status": "done",
+                "result": {
+                    "template": "demo",
+                    "fields": {},
+                    "table": {"headers": ["Item", "Qty"], "rows": [["Toy", "12"]]},
+                    "meta": {},
+                },
+                "corrections": {},
+            }
+
+            try:
+                client = app_module.app.test_client()
+                response = client.post(
+                    "/api/fewshot/from-result",
+                    json={
+                        "job_id": job_id,
+                        "template_name": "target_tpl",
+                        "field_names": [],
+                        "include_table": True,
+                        "mode": "merge",
+                    },
+                )
+
+                self.assertEqual(response.status_code, 200, response.get_json())
+                warnings = response.get_json()["warnings"]
+                self.assertTrue(any("OCR 区域布局" in item for item in warnings))
+                with open(config_path, "r", encoding="utf-8") as f:
+                    saved = yaml.safe_load(f)
+                template = saved["templates"]["target_tpl"]
+                self.assertTrue(template["has_table"])
+                self.assertNotIn("table_layout", template)
+            finally:
+                app_module._jobs.pop(job_id, None)
+                app_module.config_yaml_path = old_config_yaml_path
+                app_module.get_extractor = old_get_extractor
+
     def test_fewshot_from_result_merges_fields_and_table_into_existing_template(self):
         job_id = "abcdef123456"
         old_config_yaml_path = app_module.config_yaml_path

@@ -673,6 +673,18 @@
       <el-form-item label="触发阈值">
         <el-slider v-model="visionSettings.threshold" :min="0.1" :max="0.95" :step="0.01" show-input />
       </el-form-item>
+      <el-form-item label="响应超时">
+        <el-input-number
+          v-model="visionSettings.timeout"
+          :min="30"
+          :max="900"
+          :step="30"
+          controls-position="right"
+          style="width:180px"
+        />
+        <span class="form-inline-unit">秒</span>
+        <div class="form-hint">较慢模型可调高，例如 plus、本地模型或私有化服务器；系统仍会在失败时回退本地规则结果。</div>
+      </el-form-item>
       <div class="vision-actions">
         <el-button type="danger" plain @click="clearVisionSettings">清除保存</el-button>
         <div class="spacer"></div>
@@ -831,6 +843,7 @@ import {
   buildFeedbackFieldOptions,
   buildManualFieldPayload,
   buildTableLayoutDraft,
+  relabelTableLayout,
   applyManualFieldBindingDraft,
   appendSessionLog,
   buildWarningLogEntries,
@@ -979,6 +992,7 @@ const visionSettings = reactive({
   base_url: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
   api_key: '',
   threshold: 0.55,
+  timeout: 90,
   has_api_key: false,
   masked_api_key: ''
 })
@@ -1087,6 +1101,7 @@ function applyVisionSettingsPayload(payload) {
     base_url: s.base_url || 'https://dashscope.aliyuncs.com/compatible-mode/v1',
     api_key: '',
     threshold: Number(s.threshold ?? 0.55),
+    timeout: Number(s.timeout ?? 90),
     has_api_key: !!s.has_api_key,
     masked_api_key: s.masked_api_key || ''
   })
@@ -1192,7 +1207,8 @@ async function saveVisionSettings() {
       provider: visionSettings.provider,
       model: visionSettings.model,
       base_url: visionSettings.base_url,
-      threshold: visionSettings.threshold
+      threshold: visionSettings.threshold,
+      timeout: visionSettings.timeout
     }
     if (!visionUsesOllama.value && visionSettings.api_key.trim()) payload.api_key = visionSettings.api_key.trim()
     const { data } = await api.saveVisionSettings(payload)
@@ -1368,7 +1384,7 @@ async function viewJob(f) {
   if (f.status==='ready') {
     f.status='processing'; f.progress = 35; phase.value='recognizing'; startProgressTicker()
     try {
-      await api.recognize(f.job_id)
+      await api.recognize(f.job_id, visionSettings.timeout)
       const {data} = await api.result(f.job_id)
       const m = data.meta || {}
       Object.assign(f, { status: 'done', template: m.template || '?',
@@ -1657,7 +1673,7 @@ async function doFewshotLearn() {
     const fd = new FormData()
     valid.forEach(s => { fd.append('files', s.pdf); fd.append('gts', s.jsonContent) })
     fd.append('ai_enhance', fsAiEnhance.value ? '1' : '0')
-    const { data } = await api.fewshotLearn(fd)
+    const { data } = await api.fewshotLearn(fd, visionSettings.timeout)
     if (data.success) {
       fsResult.value = data.result
       // Auto-fill template name if user hasn't named it
@@ -1726,7 +1742,7 @@ async function recognizeAll() {
   ready.forEach(f=>{ f.status='processing'; f.progress=35 })
   startProgressTicker()
   try {
-    const {data} = await api.recognizeBatch(jids)
+    const {data} = await api.recognizeBatch(jids, visionSettings.timeout)
     data.results.forEach(r => {
       const f = fileList.value.find(x=>x.job_id===r.job_id)
       if (f) Object.assign(f, {
@@ -1925,12 +1941,6 @@ function removeTableRow(index) {
   tableEditor.rows.splice(index, 1)
 }
 
-function tableLayoutMatchesHeaders(layout, headers) {
-  const layoutHeaders = layout?.headers || []
-  return layoutHeaders.length === headers.length
-    && headers.every((header, index) => String(layoutHeaders[index] || '').trim() === header)
-}
-
 function saveTableEditor() {
   const headers = tableEditor.headers.map(h => String(h || '').trim()).filter(Boolean)
   if (!headers.length) {
@@ -1946,7 +1956,11 @@ function saveTableEditor() {
     tableData.headers = [...headers]
     tableData.rows = tableArraysToObjects(headers, tableEditor.rows)
     tableData.source = tableData.source || 'manual_patch'
-    tableData.layout = tableLayoutMatchesHeaders(tableEditor.layout, headers) ? tableEditor.layout : null
+    const relabeledLayout = relabelTableLayout(tableEditor.layout, headers)
+    if (tableEditor.layout && !relabeledLayout) {
+      ElMessage.warning('表格列数已变化，请重新绑定布局')
+    }
+    tableData.layout = relabeledLayout
   }
   const firstTable = {
     title: tableData.title,
@@ -2009,7 +2023,7 @@ async function submitFeedback() {
       include_table: feedback.include_table,
       ai_enhance: feedback.ai_enhance,
       mode: feedback.mode
-    })
+    }, visionSettings.timeout)
     const warn = data.warnings?.length ? `，${data.warnings.length} 条警告` : ''
     addWarningLogs(data.warnings || [], '反哺', {
       jobId: viewingJobId.value,
@@ -2421,6 +2435,7 @@ function confirmExport() {
 /* Vision settings */
 .vision-form{padding-top:4px}
 .form-hint{font-size:12px;color:#94a3b8;line-height:1.6;margin-top:6px}
+.form-inline-unit{margin-left:8px;color:#64748b;font-size:13px}
 .vision-probe-row{display:flex;align-items:center;gap:10px;min-height:32px}
 .vision-probe-message{font-size:12px;color:#2563eb;line-height:1.4}
 .vision-probe-message.error{color:#dc2626}

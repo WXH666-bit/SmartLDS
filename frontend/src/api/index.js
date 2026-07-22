@@ -2,11 +2,18 @@ import axios from 'axios'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api'
 const AI_OPERATION_TIMEOUT_MS = 600000
+const MODEL_OPERATION_RETRY_OVERHEAD_MS = 30000
 
 const API = axios.create({
   baseURL: API_BASE,
   timeout: 120000
 })
+
+function modelOperationTimeoutMs(timeoutSeconds, fallbackMs = AI_OPERATION_TIMEOUT_MS) {
+  const seconds = Number(timeoutSeconds)
+  if (!Number.isFinite(seconds) || seconds <= 0) return fallbackMs
+  return Math.max(fallbackMs, Math.ceil(seconds) * 2 * 1000 + MODEL_OPERATION_RETRY_OVERHEAD_MS)
+}
 
 export default {
   // 单文件
@@ -15,8 +22,8 @@ export default {
     fd.append('file', file)
     return API.post('/upload', fd)
   },
-  recognize(jobId) {
-    return API.post(`/recognize/${jobId}`)
+  recognize(jobId, timeoutSeconds) {
+    return API.post(`/recognize/${jobId}`, null, { timeout: modelOperationTimeoutMs(timeoutSeconds) })
   },
   result(jobId) {
     return API.get(`/result/${jobId}`)
@@ -44,8 +51,8 @@ export default {
     fd.append('file', file)
     return API.post('/upload/zip', fd)
   },
-  recognizeBatch(jobIds) {
-    return API.post('/recognize/batch', { job_ids: jobIds }, { timeout: 300000 })
+  recognizeBatch(jobIds, timeoutSeconds) {
+    return API.post('/recognize/batch', { job_ids: jobIds }, { timeout: modelOperationTimeoutMs(timeoutSeconds) })
   },
 
   getConfig() {
@@ -57,8 +64,8 @@ export default {
   applyConfig(data) {
     return API.post('/config/apply', data)
   },
-  fewshotFromResult(data) {
-    return API.post('/fewshot/from-result', data, { timeout: AI_OPERATION_TIMEOUT_MS })
+  fewshotFromResult(data, timeoutSeconds) {
+    return API.post('/fewshot/from-result', data, { timeout: modelOperationTimeoutMs(timeoutSeconds) })
   },
   getVisionSettings() {
     return API.get('/vision-settings')
@@ -75,8 +82,8 @@ export default {
   clearVisionSettings() {
     return API.delete('/vision-settings')
   },
-  fewshotLearn(formData) {
-    return API.post('/fewshot/learn', formData, { timeout: AI_OPERATION_TIMEOUT_MS })
+  fewshotLearn(formData, timeoutSeconds) {
+    return API.post('/fewshot/learn', formData, { timeout: modelOperationTimeoutMs(timeoutSeconds) })
   },
   getHistory() {
     return API.get('/history')

@@ -76,6 +76,28 @@ class VisionSettingsTest(unittest.TestCase):
         self.assertEqual(secret["base_url"], "http://localhost:11434")
         self.assertIn("ollama", secret["profiles"])
 
+    def test_vision_settings_save_and_clamp_model_timeout(self):
+        public = backend_app.save_vision_settings({
+            "enabled": True,
+            "provider": "qwen",
+            "model": "qwen-vl-max",
+            "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+            "api_key": "dashscope-secret",
+            "timeout": 300,
+        })
+        secret = backend_app.load_vision_settings(include_secret=True)
+
+        self.assertEqual(public["timeout"], 300.0)
+        self.assertEqual(secret["timeout"], 300.0)
+
+        public = backend_app.save_vision_settings({
+            "enabled": True,
+            "provider": "qwen",
+            "timeout": 9999,
+        })
+
+        self.assertEqual(public["timeout"], 900.0)
+
     def test_probe_vision_models_lists_openai_compatible_models(self):
         old_urlopen = vision_module.urllib.request.urlopen
         seen = {}

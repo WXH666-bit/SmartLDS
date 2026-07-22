@@ -73,6 +73,20 @@ class VisionFallbackRoutingTest(unittest.TestCase):
         self.assertEqual(client.endpoint, "http://localhost:11434/api/chat")
         self.assertEqual(client.endpoint_type, "ollama_chat")
 
+    def test_client_uses_saved_model_timeout(self):
+        client = VisionFallbackClient(
+            enabled=True,
+            settings={
+                "provider": "qwen",
+                "model": "qwen-vl-max",
+                "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+                "api_key": "dashscope-secret",
+                "timeout": 300,
+            },
+        )
+
+        self.assertEqual(client.timeout, 300)
+
     def test_ollama_payload_uses_native_images_and_num_ctx(self):
         fd, image_path = tempfile.mkstemp(suffix=".png")
         os.close(fd)

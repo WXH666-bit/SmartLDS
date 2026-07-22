@@ -146,6 +146,24 @@ export function buildTableLayoutDraft(headers = [], blocks = [], imageSize = nul
   return layout
 }
 
+export function relabelTableLayout(layout, headers = []) {
+  if (!layout || typeof layout !== 'object') return null
+  const cleanHeaders = (headers || []).map(header => String(header || '').trim()).filter(Boolean)
+  const layoutHeaders = (layout.headers || []).map(header => String(header || '').trim()).filter(Boolean)
+  if (!cleanHeaders.length || layoutHeaders.length !== cleanHeaders.length) return null
+
+  const next = {
+    ...layout,
+    headers: cleanHeaders,
+    columns: (layout.columns || []).map((column, index) => ({
+      ...column,
+      header: cleanHeaders[index] || String(column?.header || '').trim(),
+    })),
+  }
+  if (next.columns.length && next.columns.length !== cleanHeaders.length) return null
+  return next
+}
+
 export function inferFieldPosition(anchorRect, valueRect) {
   const anchor = normalizeRect(anchorRect)
   const value = normalizeRect(valueRect)

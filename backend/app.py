@@ -159,6 +159,14 @@ def _normalize_vision_base_url(provider: str, base_url: str | None = None) -> st
     return base or provider_cfg["default_base_url"]
 
 
+def _normalize_vision_timeout(value, default: float = 90.0) -> float:
+    try:
+        timeout = float(value)
+    except (TypeError, ValueError):
+        timeout = default
+    return max(30.0, min(900.0, timeout))
+
+
 def _default_vision_profile(provider: str) -> dict:
     provider_cfg = provider_defaults(provider)
     return {
@@ -234,6 +242,10 @@ def load_vision_settings(include_secret: bool = False) -> dict:
             settings["threshold"] = float(saved.get("threshold", settings["threshold"]))
     except (TypeError, ValueError):
         settings["threshold"] = 0.55
+    settings["timeout"] = _normalize_vision_timeout(
+        saved.get("timeout") if isinstance(saved, dict) else settings.get("timeout"),
+        settings.get("timeout", 90.0),
+    )
 
     if include_secret:
         return settings
@@ -278,12 +290,14 @@ def save_vision_settings(data: dict) -> dict:
         "api_key": profile["api_key"],
         "profiles": profiles,
         "threshold": data.get("threshold", current.get("threshold", 0.55)),
+        "timeout": data.get("timeout", current.get("timeout", 90.0)),
     }
 
     try:
         updated["threshold"] = max(0.0, min(1.0, float(updated["threshold"])))
     except (TypeError, ValueError):
         updated["threshold"] = 0.55
+    updated["timeout"] = _normalize_vision_timeout(updated.get("timeout"), current.get("timeout", 90.0))
 
     write_json_file(vision_settings_path(), updated)
     reset_vision_fallback()
@@ -1749,12 +1763,13 @@ def api_correct(job_id):
     # 保存校正：兼容旧 fields 格式，同时支持人工新增字段和表格补丁
     existing = normalize_corrections_payload(job.get("corrections") or {})
     incoming = normalize_corrections_payload(data)
+    has_incoming_table_patch = isinstance(data, dict) and "table_patch" in data
     corrections = {
         "fields": dict(existing["fields"]),
         "field_labels": dict(existing["field_labels"]),
         "manual_fields": incoming["manual_fields"],
         "excluded_fields": incoming["excluded_fields"],
-        "table_patch": incoming["table_patch"],
+        "table_patch": incoming["table_patch"] if has_incoming_table_patch else existing["table_patch"],
     }
     corrections["fields"].update(incoming["fields"])
     corrections["field_labels"].update(incoming["field_labels"])
@@ -2440,6 +2455,11 @@ def api_fewshot_from_result():
             layout = normalize_table_layout_payload(final_result.get("table_layout"), headers=headers)
             if layout:
                 target_template["table_layout"] = copy.deepcopy(layout)
+            else:
+                warnings.append(
+                    "\u5f53\u524d\u8868\u683c\u6ca1\u6709\u6709\u6548 OCR \u533a\u57df\u5e03\u5c40\uff0c\u4ec5\u4fdd\u5b58\u4e86\u8868\u5934\uff1b"
+                    "\u4e0b\u6b21\u53ea\u80fd\u6309\u666e\u901a\u8868\u683c\u89c4\u5219\u8bc6\u522b\uff0c\u5efa\u8bae\u5728\u8868\u683c\u7f16\u8f91\u91cc\u9009\u62e9\u5b8c\u6574\u8868\u5934\u548c\u6570\u636e\u884c OCR \u5757\u540e\u91cd\u65b0\u53cd\u54fa"
+                )
         else:
             warnings.append("当前结果没有可保存的表头，未更新表格结构")
 
