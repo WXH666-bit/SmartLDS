@@ -81,6 +81,10 @@ GROUP_META: dict[str, dict[str, Any]] = {
 
 REQUESTED_TOP_LEVELS = ("synthetic_bol", "public_funsd", "real_scans", "fewshot_samples")
 LEGACY_DIRS = ("pdf", "json", "unknown_templates", "groups")
+REAL_SCAN_SEQUENCES = {
+    "real_scans/food_delivery": 181,
+    "real_scans/express": 188,
+}
 
 
 def group_for_number(number: int) -> str:
@@ -97,9 +101,9 @@ def group_for_number(number: int) -> str:
         return "public_funsd/retail_progress_report"
     if 177 <= number <= 180:
         return "public_funsd/challenge_singletons"
-    if 181 <= number <= 190:
+    if 181 <= number <= 187:
         return "real_scans/food_delivery"
-    if 191 <= number <= 200:
+    if 188 <= number <= 200:
         return "real_scans/express"
     if 201 <= number <= 205:
         return "fewshot_samples/customs_declaration"
@@ -144,6 +148,28 @@ def _destination_paths(root: Path, number: int) -> tuple[Path, Path]:
     return folder / f"{stem}.pdf", folder / f"{stem}.json"
 
 
+def _iter_real_scan_pairs(root: Path) -> list[tuple[int, Path, Path]]:
+    pairs: list[tuple[int, Path, Path]] = []
+    for group_key, start in REAL_SCAN_SEQUENCES.items():
+        folder = root / group_key
+        if not folder.exists():
+            continue
+        json_files = [
+            path for path in sorted(folder.glob("*.json"))
+            if path.name not in {"samples.json", "manifest.json"} and path.with_suffix(".pdf").exists()
+        ]
+        unnamed_index = 0
+        for json_path in json_files:
+            if json_path.stem.startswith("bol_"):
+                number = _sample_number(json_path.stem)
+            else:
+                number = start + unnamed_index
+                unnamed_index += 1
+            if number:
+                pairs.append((number, json_path.with_suffix(".pdf"), json_path))
+    return pairs
+
+
 def _iter_sample_pairs(root: Path) -> list[tuple[int, Path, Path]]:
     pairs: dict[int, tuple[Path, Path]] = {}
 
@@ -160,6 +186,10 @@ def _iter_sample_pairs(root: Path) -> list[tuple[int, Path, Path]]:
             pairs[number] = (pdf_path, json_path)
 
     for top in REQUESTED_TOP_LEVELS:
+        if top == "real_scans":
+            for number, pdf_path, json_path in _iter_real_scan_pairs(root):
+                pairs[number] = (pdf_path, json_path)
+            continue
         for json_path in sorted((root / top).glob("**/bol_*.json")):
             number = _sample_number(json_path.stem)
             pdf_path = json_path.with_suffix(".pdf")

@@ -475,6 +475,23 @@ def _field_feedback_anchors(field_name: str, info: dict) -> list[str]:
     return _merge_unique_strings([], anchors, limit=5)
 
 
+def _feedback_schema_field_name(field_name: str, info: dict) -> str:
+    """Use the user's corrected display name as the learned schema name when safe."""
+    original = str(field_name or "").strip()
+    label = str((info or {}).get("label") or "").strip()
+    if not label or label == original:
+        return original
+    if (info or {}).get("label_corrected"):
+        return label
+    source = str((info or {}).get("source") or "").strip()
+    status = str((info or {}).get("status") or "").strip()
+    anchor_text = str((info or {}).get("anchor_text") or (info or {}).get("anchor") or "").strip()
+    if source == "manual" or status == "manual_added":
+        if not anchor_text or label != anchor_text:
+            return label
+    return original
+
+
 def _field_has_reliable_anchor(field_name: str, info: dict) -> bool:
     if _normalize_rect_value((info or {}).get("anchor_rect")) and _normalize_rect_value((info or {}).get("value_rect")):
         return True
@@ -506,8 +523,9 @@ def _feedback_layout_signature(blocks, target_template, selected_fields, final_f
         if value_block:
             excluded.add(id(value_block))
     for field_name in selected_fields:
-        entry = fields.get(field_name) or {}
         info = final_fields.get(field_name) or {}
+        schema_name = _feedback_schema_field_name(field_name, info)
+        entry = fields.get(schema_name) or fields.get(field_name) or {}
         anchors = entry.get("anchors") or _field_feedback_anchors(field_name, info)
         anchor_block = _find_anchor_text_block(blocks, anchors)
         value = str(info.get("corrected") or info.get("cleaned") or info.get("value") or "").strip()
@@ -515,7 +533,7 @@ def _feedback_layout_signature(blocks, target_template, selected_fields, final_f
         anchor_rect = _block_rect(anchor_block)
         if not anchor_rect or anchor_block is value_block:
             continue
-        observations[field_name] = [{
+        observations[schema_name] = [{
             "sample_idx": 0,
             "anchor_text": str(anchor_block.get("text") or "").strip(),
             "anchor_rect": anchor_rect,
@@ -612,16 +630,29 @@ def apply_ocr_feedback_learning(
         info = final_fields.get(field_name)
         if not isinstance(info, dict):
             continue
+        schema_name = _feedback_schema_field_name(field_name, info)
         value = str(info.get("corrected") or info.get("cleaned") or info.get("value") or "").strip()
         if not value:
             continue
 
-        entry = target_fields.get(field_name)
+        if schema_name != field_name and field_name in target_fields and schema_name not in target_fields:
+            target_fields[schema_name] = target_fields.pop(field_name)
+        elif schema_name != field_name and field_name in target_fields and schema_name in target_fields:
+            old_entry = target_fields.pop(field_name)
+            if isinstance(old_entry, dict) and isinstance(target_fields.get(schema_name), dict):
+                target_fields[schema_name]["anchors"] = _merge_unique_strings(
+                    target_fields[schema_name].get("anchors", []),
+                    old_entry.get("anchors", []),
+                    limit=10,
+                )
+
+        entry = target_fields.get(schema_name)
         if not isinstance(entry, dict):
-            entry = {"label": info.get("label") or field_name, "anchors": _field_feedback_anchors(field_name, info)}
-            target_fields[field_name] = entry
+            entry = {"label": info.get("label") or schema_name, "anchors": _field_feedback_anchors(field_name, info)}
+            target_fields[schema_name] = entry
 
         anchors = _merge_unique_strings(entry.get("anchors", []), _field_feedback_anchors(field_name, info), limit=10)
+        entry["label"] = info.get("label") or schema_name
         entry["anchors"] = anchors
 
         anchor_rect = _normalize_rect_value(info.get("anchor_rect"))
@@ -661,8 +692,8 @@ def apply_ocr_feedback_learning(
             entry.pop("validator", None)
             warnings.append(f"字段 '{field_name}' 的旧 value_pattern 与人工值不匹配，已移除以免拦截后续识别")
 
-        if field_name not in changes["fields"]:
-            changes["fields"].append(field_name)
+        if schema_name not in changes["fields"]:
+            changes["fields"].append(schema_name)
         changes["applied"] = True
 
     return changes
@@ -2145,32 +2176,46 @@ def api_fewshot_from_result():
             warnings.append(f"字段 '{field_name}' 当前为空，已跳过")
             continue
 
+        schema_name = _feedback_schema_field_name(field_name, info)
         anchors = _field_feedback_anchors(field_name, info)
         if not _field_has_reliable_anchor(field_name, info):
             warnings.append(f"字段 '{field_name}' 缺少可靠 OCR 锚点，已保存字段结构但后续可能需要手动调锚点")
 
-        if field_name in target_fields and isinstance(target_fields[field_name], dict):
-            entry = target_fields[field_name]
-            entry["label"] = field_name if "__" in field_name else (entry.get("label") or info.get("label") or field_name)
+        if schema_name != field_name and field_name in target_fields and schema_name not in target_fields:
+            target_fields[schema_name] = target_fields.pop(field_name)
+        elif schema_name != field_name and field_name in target_fields and schema_name in target_fields:
+            old_entry = target_fields.pop(field_name)
+            if isinstance(old_entry, dict) and isinstance(target_fields.get(schema_name), dict):
+                target_fields[schema_name]["anchors"] = _merge_unique_strings(
+                    target_fields[schema_name].get("anchors", []),
+                    old_entry.get("anchors", []),
+                    limit=8,
+                )
+
+        if schema_name in target_fields and isinstance(target_fields[schema_name], dict):
+            entry = target_fields[schema_name]
+            entry["label"] = schema_name if "__" in schema_name else (info.get("label") or schema_name)
             entry["anchors"] = _merge_unique_strings(entry.get("anchors", []), anchors, limit=8)
             entry.setdefault("position", info.get("position") or "right")
             if info.get("canonical_key") and not entry.get("canonical_key"):
                 entry["canonical_key"] = info.get("canonical_key")
-            updated.append(field_name)
+            updated.append(schema_name)
         else:
             entry = {
-                "label": field_name if "__" in field_name else (info.get("label") or field_name),
+                "label": schema_name if "__" in schema_name else (info.get("label") or schema_name),
                 "anchors": anchors,
                 "position": info.get("position") or "right",
             }
             if info.get("canonical_key"):
                 entry["canonical_key"] = info.get("canonical_key")
-            target_fields[field_name] = entry
-            added.append(field_name)
+            target_fields[schema_name] = entry
+            added.append(schema_name)
 
-        if field_name not in output:
-            output.append(field_name)
-        merged.append(field_name)
+        if schema_name != field_name and field_name in output:
+            output[:] = [schema_name if item == field_name else item for item in output]
+        if schema_name not in output:
+            output.append(schema_name)
+        merged.append(schema_name)
 
     table_updated = False
     if include_table:

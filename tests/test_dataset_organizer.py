@@ -36,7 +36,7 @@ class DatasetOrganizerTest(unittest.TestCase):
             self._write_legacy_pair(root, "169", {"fields": {"subject": "B"}})
             self._write_legacy_pair(root, "177", {"fields": {"single": "C"}})
             self._write_legacy_pair(root, "181", {"template": "takeout_order", "order_no": "1"})
-            self._write_legacy_pair(root, "191", {"template": "courier_label", "tracking_no": "2"})
+            self._write_legacy_pair(root, "188", {"template": "courier_label", "tracking_no": "2"})
             self._write_legacy_pair(root, "201", {"template": "customs", "customs_no": "3"}, area="unknown")
             self._write_legacy_pair(root, "206", {"template": "receipt", "receipt_no": "4"}, area="unknown")
 
@@ -50,7 +50,7 @@ class DatasetOrganizerTest(unittest.TestCase):
                 "public_funsd/retail_progress_report/bol_169.pdf",
                 "public_funsd/challenge_singletons/bol_177.pdf",
                 "real_scans/food_delivery/bol_181.pdf",
-                "real_scans/express/bol_191.pdf",
+                "real_scans/express/bol_188.pdf",
                 "fewshot_samples/customs_declaration/bol_201.pdf",
                 "fewshot_samples/warehouse_receipt/bol_206.pdf",
             ]
@@ -61,6 +61,33 @@ class DatasetOrganizerTest(unittest.TestCase):
             self.assertFalse((root / "json").exists())
             self.assertFalse((root / "unknown_templates").exists())
             self.assertEqual(manifest["summary"]["total_samples"], 10)
+
+    def test_real_scan_do_named_samples_are_normalized_to_bol_sequence(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "dataset"
+            food = root / "real_scans" / "food_delivery"
+            express = root / "real_scans" / "express"
+            food.mkdir(parents=True, exist_ok=True)
+            express.mkdir(parents=True, exist_ok=True)
+
+            for stem in ("DO-FD-0181", "DO-FD-0192"):
+                (food / f"{stem}.pdf").write_bytes(b"%PDF-1.4\n")
+                (food / f"{stem}.json").write_text(json.dumps({"fields": {"单证编号": stem}}, ensure_ascii=False), encoding="utf-8")
+            for stem in ("DO-EXP-0185", "DO-EXP-0199"):
+                (express / f"{stem}.pdf").write_bytes(b"%PDF-1.4\n")
+                (express / f"{stem}.json").write_text(json.dumps({"fields": {"单证编号": stem}}, ensure_ascii=False), encoding="utf-8")
+
+            manifest = dataset_organizer.write_dataset_index(root, migrate=True)
+            by_id = {sample["id"]: sample for sample in manifest["samples"]}
+
+            self.assertTrue((food / "bol_181.pdf").exists())
+            self.assertTrue((food / "bol_182.pdf").exists())
+            self.assertTrue((express / "bol_188.pdf").exists())
+            self.assertTrue((express / "bol_189.pdf").exists())
+            self.assertFalse((food / "DO-FD-0181.pdf").exists())
+            self.assertFalse((express / "DO-EXP-0185.pdf").exists())
+            self.assertEqual(by_id["bol_181"]["pdf"], "real_scans/food_delivery/bol_181.pdf")
+            self.assertEqual(by_id["bol_189"]["json"], "real_scans/express/bol_189.json")
 
     def test_manifest_uses_new_group_keys_and_resolves_sample_paths(self):
         with tempfile.TemporaryDirectory() as tmp:

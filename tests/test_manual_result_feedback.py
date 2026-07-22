@@ -244,6 +244,156 @@ class ManualResultFeedbackTest(unittest.TestCase):
         self.assertEqual(result["field_labels"], {"提单号": "海运提单号"})
         self.assertEqual(build_field_values(result["fields"]), {"海运提单号": "BL999"})
 
+    def test_feedback_uses_corrected_label_as_template_field_name(self):
+        job_id = "abc001abc001"
+        old_config_yaml_path = app_module.config_yaml_path
+        old_get_extractor = app_module.get_extractor
+
+        class FakeExtractor:
+            def reload_config(self):
+                self.reloaded = True
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            config_path = os.path.join(tmp_dir, "config.yaml")
+            with open(config_path, "w", encoding="utf-8") as f:
+                yaml.safe_dump(
+                    {
+                        "templates": {
+                            "target_tpl": {
+                                "keywords": ["TARGET"],
+                                "has_table": False,
+                                "fields": {
+                                    "old_name": {
+                                        "label": "Old Name",
+                                        "anchors": ["Old Name"],
+                                        "position": "right",
+                                        "canonical_key": "old_name",
+                                    }
+                                },
+                                "output": ["old_name"],
+                            }
+                        }
+                    },
+                    f,
+                    allow_unicode=True,
+                    sort_keys=False,
+                )
+
+            app_module.config_yaml_path = lambda: config_path
+            app_module.get_extractor = lambda: FakeExtractor()
+            app_module._jobs[job_id] = {
+                "id": job_id,
+                "status": "done",
+                "result": {
+                    "template": "target_tpl",
+                    "fields": {
+                        "old_name": {
+                            "label": "Old Name",
+                            "value": "ABC",
+                            "cleaned": "ABC",
+                            "confidence": 0.9,
+                            "status": "extracted",
+                            "anchor": "Old Name",
+                            "rect": [120, 10, 170, 30],
+                            "canonical_key": "old_name",
+                        }
+                    },
+                    "table": {},
+                    "meta": {},
+                },
+                "corrections": {
+                    "field_labels": {"old_name": "Renamed Field"},
+                },
+            }
+
+            try:
+                client = app_module.app.test_client()
+                response = client.post(
+                    "/api/fewshot/from-result",
+                    json={
+                        "job_id": job_id,
+                        "template_name": "target_tpl",
+                        "field_names": ["old_name"],
+                        "include_table": False,
+                        "mode": "merge",
+                    },
+                )
+
+                self.assertEqual(response.status_code, 200, response.get_json())
+                data = response.get_json()
+                self.assertIn("Renamed Field", data["fields_updated"])
+
+                with open(config_path, "r", encoding="utf-8") as f:
+                    saved = yaml.safe_load(f)
+                template = saved["templates"]["target_tpl"]
+                self.assertNotIn("old_name", template["fields"])
+                self.assertIn("Renamed Field", template["fields"])
+                self.assertEqual(template["fields"]["Renamed Field"]["label"], "Renamed Field")
+                self.assertEqual(template["fields"]["Renamed Field"]["canonical_key"], "old_name")
+                self.assertEqual(template["output"], ["Renamed Field"])
+            finally:
+                app_module._jobs.pop(job_id, None)
+                app_module.config_yaml_path = old_config_yaml_path
+                app_module.get_extractor = old_get_extractor
+
+    def test_feedback_uses_renamed_manual_field_label_as_template_field_name(self):
+        job_id = "abc002abc002"
+        old_config_yaml_path = app_module.config_yaml_path
+        old_get_extractor = app_module.get_extractor
+
+        class FakeExtractor:
+            def reload_config(self):
+                self.reloaded = True
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            config_path = os.path.join(tmp_dir, "config.yaml")
+            with open(config_path, "w", encoding="utf-8") as f:
+                yaml.safe_dump({"templates": {"target_tpl": {"fields": {}, "output": []}}}, f, allow_unicode=True)
+
+            app_module.config_yaml_path = lambda: config_path
+            app_module.get_extractor = lambda: FakeExtractor()
+            app_module._jobs[job_id] = {
+                "id": job_id,
+                "status": "done",
+                "result": {"template": "unknown", "fields": {}, "table": {}, "meta": {}},
+                "corrections": {
+                    "manual_fields": [{
+                        "key": "Draft Name",
+                        "label": "Final Name",
+                        "value": "ABC",
+                        "anchor_text": "Draft Name",
+                        "anchor_rect": [10, 10, 80, 30],
+                        "value_rect": [120, 10, 180, 30],
+                    }],
+                },
+            }
+
+            try:
+                client = app_module.app.test_client()
+                response = client.post(
+                    "/api/fewshot/from-result",
+                    json={
+                        "job_id": job_id,
+                        "template_name": "target_tpl",
+                        "field_names": ["Draft Name"],
+                        "include_table": False,
+                        "mode": "merge",
+                    },
+                )
+
+                self.assertEqual(response.status_code, 200, response.get_json())
+                with open(config_path, "r", encoding="utf-8") as f:
+                    saved = yaml.safe_load(f)
+                template = saved["templates"]["target_tpl"]
+                self.assertNotIn("Draft Name", template["fields"])
+                self.assertIn("Final Name", template["fields"])
+                self.assertEqual(template["fields"]["Final Name"]["anchors"], ["Draft Name", "Final Name"])
+                self.assertEqual(template["output"], ["Final Name"])
+            finally:
+                app_module._jobs.pop(job_id, None)
+                app_module.config_yaml_path = old_config_yaml_path
+                app_module.get_extractor = old_get_extractor
+
     def test_ocr_feedback_learning_links_manual_value_to_ocr_offset(self):
         target_template = {
             "fields": {

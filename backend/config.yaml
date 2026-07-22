@@ -652,43 +652,34 @@ templates:
     - 订单号
     - 合计金额
     - 快递公司
-  DO-EXP-0185_learned:
+  bol_188_learned:
     keywords: []
     source: fewshot
-    has_table: false
+    has_table: true
     fields:
       单证编号:
         label: 单证编号
         anchors:
         - 单证编号
+        - DO-EXP-0185
         position: below
         canonical_key: 单证编号
         validator: auto_单证编号
-        value_pattern: ^DO\-EXP\-018\d$
+        value_pattern: ^DO-EXP-\d+$
         learned_value_offset:
           dx: 64.0
           dy: 39.0
           tolerance_x: 415.8
           tolerance_y: 61.2
         learned_sample_value: DO-EXP-0185
-      名称:
-        label: 名称
-        anchors:
-        - 名称
-        position: right
-        canonical_key: 发货方 SHIPPER 名称
-        learned_value_offset:
-          dx: 824.5
-          dy: 1.0
-          tolerance_x: 108.0
-          tolerance_y: 70.2
-        learned_sample_value: 陈珊
       地址:
         label: 地址
         anchors:
         - 地址
+        - 河北省石家庄市栾城区柳林镇
         position: right
         canonical_key: 发货方 SHIPPER 地址
+        multi_line: true
         learned_value_offset:
           dx: 1056.5
           dy: 0.0
@@ -699,22 +690,24 @@ templates:
         label: 承运商
         anchors:
         - 承运商
+        - 申通快递
         position: right
         canonical_key: 承运商
         learned_value_offset:
-          dx: 366.0
-          dy: -1.0
-          tolerance_x: 154.8
+          dx: 1183.0
+          dy: -282.5
+          tolerance_x: 349.2
           tolerance_y: 63.0
-        learned_sample_value: 运单编号
+        learned_sample_value: '770325800536124'
       电话:
         label: 电话
         anchors:
         - 电话
+        - '19333996009'
         position: right
         canonical_key: 发货方 SHIPPER 电话
         validator: auto_发货方 SHIPPER 电话
-        value_pattern: ^1\d\d\d\d\d\d\d\d\d\d$
+        value_pattern: ^1\d{10}$
         learned_value_offset:
           dx: 162.0
           dy: 0.0
@@ -722,7 +715,7 @@ templates:
           tolerance_y: 66.6
         learned_sample_value: '19333996009'
       名称__2:
-        label: 名称__2
+        label: 名称
         anchors:
         - 名称
         - 名称__2
@@ -733,9 +726,24 @@ templates:
           tolerance_x: 151.2
           tolerance_y: 70.2
         learned_sample_value: 张子硕
+        canonical_key: 名称__2
+      '1111':
+        label: '1111'
+        anchors:
+        - 名称
+        - 张子硕
+        - '1111'
+        position: right
+        canonical_key: 发货方 SHIPPER 名称
+        learned_value_offset:
+          dx: 824.5
+          dy: 1.0
+          tolerance_x: 108.0
+          tolerance_y: 70.2
+        learned_sample_value: 陈珊
     output:
     - 单证编号
-    - 名称
+    - '1111'
     - 地址
     - 承运商
     - 电话
@@ -800,3 +808,10 @@ templates:
         y: 0.1986
         weight: 1.4
         role: stable_text
+    table_headers:
+    - 序号
+    - 品名名称
+    - 规格
+    - 数量
+    - 单价
+    - 金额
