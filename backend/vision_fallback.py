@@ -1053,7 +1053,7 @@ class VisionFallbackClient:
 
         return {
             "success": False,
-            "warning": f"视觉兜底失败，已回退本地规则结果：{last_error}",
+            "warning": self.failure_warning(last_error),
             "retryable": True,
         }
 
@@ -1119,6 +1119,16 @@ class VisionFallbackClient:
             body = exc.read().decode("utf-8", errors="replace")
             raise ValueError(f"HTTP Error {exc.code}: {body[:1000]}") from exc
         return json.loads(body)
+
+    def failure_warning(self, last_error: str) -> str:
+        detail = str(last_error or "模型未返回有效结果").strip()
+        if self.provider == "ollama":
+            return (
+                f"视觉兜底失败，已回退本地规则结果：{detail}。"
+                "Ollama 本地模型依赖显卡/内存性能，单证图片结构化建议使用高性能电脑或服务器；"
+                "普通电脑可改用云端视觉模型。"
+            )
+        return f"视觉兜底失败，已回退本地规则结果：{detail}"
 
     def _build_payload(self, prompt: str, image_path: str) -> dict[str, Any]:
         image_url = _data_url(image_path)

@@ -103,6 +103,24 @@ class VisionFallbackRoutingTest(unittest.TestCase):
         finally:
             os.remove(image_path)
 
+    def test_ollama_failure_warning_explains_local_compute_limits(self):
+        client = VisionFallbackClient(
+            enabled=True,
+            settings={
+                "provider": "ollama",
+                "model": "qwen3-vl:8b",
+                "base_url": "http://localhost:11434",
+                "api_key": "",
+            },
+        )
+
+        warning = client.failure_warning("timed out")
+
+        self.assertIn("Ollama", warning)
+        self.assertIn("本地模型", warning)
+        self.assertIn("高性能电脑或服务器", warning)
+        self.assertIn("timed out", warning)
+
     def test_custom_provider_accepts_full_chat_completions_endpoint(self):
         client = VisionFallbackClient(
             api_key="local-key",

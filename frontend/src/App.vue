@@ -643,6 +643,14 @@
       <el-form-item v-else label="API Key">
         <div class="form-hint">Ollama 本地模型不需要 API Key，系统会直接调用本机服务。</div>
       </el-form-item>
+      <el-alert
+        v-if="visionUsesOllama"
+        type="warning"
+        :closable="false"
+        show-icon
+        title="本地视觉结构化依赖显卡和内存性能，建议用于高性能电脑或服务器；普通电脑可改用云端视觉模型。"
+        style="margin-bottom:16px"
+      />
       <el-form-item label="接口地址">
         <el-input v-model="visionSettings.base_url" clearable />
         <div class="form-hint">{{ visionBaseUrlHint }}</div>

@@ -537,6 +537,7 @@ assert.match(appVue, /backendWarning/, '模型检测失败时应显示后端 war
 assert.match(appVue, /模型响应超时/, 'AI 长任务超时时应提示模型响应超时')
 assert.match(appVue, /反哺失败: ' \+ formatApiError\(e\)/, '反哺失败提示应使用友好错误文案')
 assert.match(appVue, /请求失败: ' \+ formatApiError\(e\)/, 'Few-shot 学习失败提示应使用友好错误文案')
+assert.match(appVue, /高性能电脑或服务器/, 'Ollama mode should explain local vision extraction needs a powerful computer or server')
 assert.doesNotMatch(appVue, /result-preview-collapse/, '不应再显示导出预览增强面板')
 assert.doesNotMatch(appVue, /resultPreviewTab/, '不应再保留字段键值预览的切换状态')
 assert.doesNotMatch(appVue, /导出预览 \/ JSON/, '不应再显示导出预览标题')

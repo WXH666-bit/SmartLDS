@@ -950,7 +950,12 @@ def ai_enhance_feedback_template(
     try:
         file_path, file_type = find_original_file(job_id)
         with tempfile.TemporaryDirectory(prefix="smartlds_ai_feedback_") as tmp_dir:
-            image_path = render_first_page_for_vision(file_path, file_type, tmp_dir)
+            image_path = render_first_page_for_vision(
+                file_path,
+                file_type,
+                tmp_dir,
+                dpi=vision_render_dpi(getattr(client, "provider", "")),
+            )
             result = client.enhance_template_config(
                 image_path=image_path,
                 blocks=load_blocks(job_id),
@@ -1127,7 +1132,12 @@ def ai_enhance_fewshot_learning(samples: list[tuple[str, dict]], learned_result:
         sample_path, sample_gt = samples[0]
         file_type = os.path.splitext(sample_path)[1].lstrip(".").lower() or "pdf"
         with tempfile.TemporaryDirectory(prefix="smartlds_fewshot_ai_") as tmp_dir:
-            image_path = render_first_page_for_vision(sample_path, file_type, tmp_dir)
+            image_path = render_first_page_for_vision(
+                sample_path,
+                file_type,
+                tmp_dir,
+                dpi=vision_render_dpi(getattr(client, "provider", "")),
+            )
             blocks = []
             try:
                 if file_type == "pdf":
@@ -1453,14 +1463,21 @@ def is_pdf(filename: str) -> bool:
     return filename.rsplit(".", 1)[1].lower() == "pdf" if "." in filename else False
 
 
-def render_first_page_for_vision(file_path: str, file_type: str, tmp_dir: str) -> str:
+def vision_render_dpi(provider: str | None = None) -> int:
+    """Choose a practical PDF render DPI for the configured vision backend."""
+    if str(provider or "").strip().lower() == "ollama":
+        return 120
+    return 200
+
+
+def render_first_page_for_vision(file_path: str, file_type: str, tmp_dir: str, dpi: int = 200) -> str:
     """Return an image path suitable for vision fallback; render PDF page 1 when needed."""
     if file_type == "pdf":
         import fitz
         from PIL import Image
 
         doc = fitz.open(file_path)
-        pix = doc[0].get_pixmap(dpi=200)
+        pix = doc[0].get_pixmap(dpi=dpi)
         img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
         doc.close()
 
@@ -1546,6 +1563,7 @@ def run_recognition_pipeline(job: dict):
                     file_path,
                     job.get("file_type", "pdf"),
                     tmp_dir,
+                    dpi=vision_render_dpi(getattr(fallback, "provider", "")),
                 )
                 fallback_result = fallback.extract(
                     vision_image_path,

@@ -75,6 +75,11 @@ class ManualResultFeedbackTest(unittest.TestCase):
         self.assertIn("完全陌生确认书", texts)
         self.assertNotIn("ABC-001", texts)
 
+    def test_ollama_vision_render_dpi_is_lighter_than_cloud_models(self):
+        self.assertEqual(app_module.vision_render_dpi("ollama"), 120)
+        self.assertEqual(app_module.vision_render_dpi("qwen"), 200)
+        self.assertEqual(app_module.vision_render_dpi("custom"), 200)
+
     def test_legacy_flat_corrections_still_update_existing_fields(self):
         result = apply_corrections(self.make_result(), {"提单号": "BL999"})
 
@@ -1103,7 +1108,7 @@ class ManualResultFeedbackTest(unittest.TestCase):
         try:
             app_module.get_vision_fallback = lambda: FakeClient()
             app_module.find_original_file = lambda job_id: ("sample.pdf", "pdf")
-            app_module.render_first_page_for_vision = lambda file_path, file_type, tmp_dir: "sample.png"
+            app_module.render_first_page_for_vision = lambda file_path, file_type, tmp_dir, dpi=200: "sample.png"
             app_module.load_blocks = lambda job_id: []
 
             changes = app_module.ai_enhance_feedback_template(
@@ -1155,7 +1160,7 @@ class ManualResultFeedbackTest(unittest.TestCase):
 
         try:
             app_module.get_vision_fallback = lambda: FakeClient()
-            app_module.render_first_page_for_vision = lambda file_path, file_type, tmp_dir: "sample.png"
+            app_module.render_first_page_for_vision = lambda file_path, file_type, tmp_dir, dpi=200: "sample.png"
 
             changes = app_module.ai_enhance_fewshot_learning(
                 [("sample.txt", {"Field A": "ABC"})],
