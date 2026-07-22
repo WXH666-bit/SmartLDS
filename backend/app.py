@@ -2671,6 +2671,7 @@ def api_fewshot_learn():
     files = request.files.getlist("files")
     gt_strs = request.form.getlist("gts")
     ai_enhance = str(request.form.get("ai_enhance") or "").strip().lower() in {"1", "true", "yes", "on"}
+    normalize_json = str(request.form.get("normalize_json", "1") or "").strip().lower() not in {"0", "false", "no", "off"}
 
     if len(files) != len(gt_strs):
         return jsonify({"error": "files 和 gts 数量不匹配"}), 400
@@ -2691,7 +2692,7 @@ def api_fewshot_learn():
             samples.append((tmp_path, gt))
 
         learner = FewShotLearner()
-        result = learner.learn(samples)
+        result = learner.learn(samples, normalize_json=normalize_json)
         result.setdefault("ai_enhanced", False)
         result.setdefault("ai_changes", {"applied": False, "keywords": [], "fields": [], "table_headers": []})
         warnings = []

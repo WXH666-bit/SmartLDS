@@ -12,6 +12,7 @@ Few-shot 版式自适应 — 给定 1~5 份新版式 PDF + GT JSON，自动生�
 import re
 import os
 import json
+import copy
 from difflib import SequenceMatcher
 from collections import Counter
 
@@ -19,6 +20,105 @@ from ocr_engine import OCREngine
 from field_extractor import FieldExtractor
 from layout_parser import LayoutParser
 from template_signature import build_anchor_layout_signature, normalized_center
+
+
+_GT_METADATA_KEYS = {
+    "source",
+    "source_scan",
+    "category",
+    "platform",
+    "items",
+    "field_details",
+    "ocr_blocks",
+    "filled_fields",
+    "tables",
+    "table",
+    "table_headers",
+    "table_rows",
+    "has_table",
+}
+_GT_DISPLAY_ONLY_FIELDS = {"类别"}
+_TABLE_PLACEHOLDERS = {"", "-", "—", "N/A", "NA", "无", "空"}
+
+
+def _clean_text(value):
+    return str(value).strip() if isinstance(value, str) else ""
+
+
+def _first_table(raw):
+    tables = raw.get("tables")
+    if isinstance(tables, list) and tables:
+        return next((item for item in tables if isinstance(item, dict)), None)
+    table = raw.get("table")
+    return table if isinstance(table, dict) else None
+
+
+def _normalize_fewshot_table(raw):
+    table = _first_table(raw)
+    if not table:
+        return [], []
+    headers = [_clean_text(header) for header in (table.get("headers") or [])]
+    rows = table.get("rows") or []
+    if not headers or not isinstance(rows, list):
+        return [], []
+
+    active_indexes = []
+    for index, header in enumerate(headers):
+        if not header:
+            continue
+        has_value = False
+        for row in rows:
+            if not isinstance(row, list) or index >= len(row):
+                continue
+            cell = _clean_text(row[index])
+            if cell.upper() not in _TABLE_PLACEHOLDERS:
+                has_value = True
+                break
+        if has_value:
+            active_indexes.append(index)
+
+    if not active_indexes:
+        return [], []
+    clean_headers = [headers[index] for index in active_indexes]
+    clean_rows = []
+    for row in rows:
+        if not isinstance(row, list):
+            continue
+        clean_row = [_clean_text(row[index]) if index < len(row) else "" for index in active_indexes]
+        if any(cell.upper() not in _TABLE_PLACEHOLDERS for cell in clean_row):
+            clean_rows.append(clean_row)
+    return clean_headers, clean_rows
+
+
+def normalize_fewshot_gt(gt):
+    """Return an in-memory GT shape that is easier for ordinary Few-shot to learn."""
+    if not isinstance(gt, dict):
+        return gt
+    raw = copy.deepcopy(gt)
+    normalized = {}
+
+    template = _clean_text(raw.get("template"))
+    if template:
+        normalized["template"] = template
+
+    source_fields = raw.get("fields") if isinstance(raw.get("fields"), dict) else raw
+    for key, value in source_fields.items():
+        name = _clean_text(key)
+        text = _clean_text(value)
+        if not name or not text:
+            continue
+        if name in _GT_METADATA_KEYS or name in _GT_DISPLAY_ONLY_FIELDS:
+            continue
+        normalized[name] = text
+
+    table_headers, table_rows = _normalize_fewshot_table(raw)
+    if table_headers:
+        normalized["has_table"] = True
+        normalized["table_headers"] = table_headers
+        if table_rows:
+            normalized["table_rows"] = table_rows
+
+    return normalized
 
 
 class FewShotLearner:
@@ -33,7 +133,7 @@ class FewShotLearner:
     # 主入口
     # ================================================================
 
-    def learn(self, samples):
+    def learn(self, samples, normalize_json=True):
         """
         从样本中学习版式配置
 
@@ -52,11 +152,12 @@ class FewShotLearner:
         # Step 0: 对每份样本跑 OCR
         all_data = []
         for pdf_path, gt in samples:
+            prepared_gt = normalize_fewshot_gt(gt) if normalize_json else gt
             ocr_result = self.engine.recognize_pdf(pdf_path)[0]
             blocks = ocr_result["blocks"]
             all_data.append({
                 "blocks": blocks,
-                "gt": gt,
+                "gt": prepared_gt,
                 "img_size": ocr_result["image_size"],
             })
 
@@ -218,6 +319,7 @@ class FewShotLearner:
             [d["img_size"] for d in all_data],
             excluded_block_ids=excluded_value_ids,
         )
+        table_headers = self._select_table_headers([d["gt"] for d in all_data])
 
         # Step 4: 生成版式名
         template_name = self._generate_template_name(all_data)
@@ -227,6 +329,8 @@ class FewShotLearner:
             template_name,
             keywords,
             fields_config,
+            has_table=bool(table_headers),
+            table_headers=table_headers,
             detection=detection,
             source="fewshot",
         )
@@ -237,6 +341,9 @@ class FewShotLearner:
             "fields": fields_config,
             "validators": validators,
             "source": "fewshot",
+            "has_table": bool(table_headers),
+            "table_headers": table_headers,
+            "json_normalized": bool(normalize_json),
             "detection": detection,
             "yaml_text": yaml_text,
         }
@@ -253,7 +360,7 @@ class FewShotLearner:
             "container", "seal", "qty", "pkg", "package", "description", "desc",
             "gross", "weight", "measurement", "cbm", "marks", "no", "item",
         }
-        ignored_fields = {"template", "source", "category", "platform", "items", "field_details", "ocr_blocks"}
+        ignored_fields = _GT_METADATA_KEYS | {"template"} | _GT_DISPLAY_ONLY_FIELDS
         prepared = {}
 
         def as_text(value):
@@ -304,6 +411,30 @@ class FewShotLearner:
             add(key, value, allow_suffix=suffix_kind)
 
         return prepared
+
+    @staticmethod
+    def _select_table_headers(gts):
+        candidates = []
+        for gt in gts or []:
+            if not isinstance(gt, dict):
+                continue
+            headers = [_clean_text(header) for header in (gt.get("table_headers") or [])]
+            headers = [header for header in headers if header]
+            if headers:
+                candidates.append(headers)
+        if not candidates:
+            return []
+        first = candidates[0]
+        if all(headers == first for headers in candidates):
+            return first
+        merged = []
+        seen = set()
+        for headers in candidates:
+            for header in headers:
+                if header and header not in seen:
+                    merged.append(header)
+                    seen.add(header)
+        return merged
 
     @staticmethod
     def _select_consistent_anchor(observations, required_observations, used_anchors=None):

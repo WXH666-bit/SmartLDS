@@ -7,7 +7,7 @@ import sys
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT_DIR, "backend"))
 from field_extractor import FieldExtractor, validate_and_clean
-from fewshot import FewShotLearner
+from fewshot import FewShotLearner, normalize_fewshot_gt
 
 
 def block(text, x1, y1, x2, y2, confidence=0.95):
@@ -774,6 +774,92 @@ class EnhancedFieldExtractorTest(unittest.TestCase):
 
         self.assertNotIn("quantity_unit", prepared)
         self.assertIn("total_price", prepared)
+
+    def test_normalize_fewshot_gt_flattens_real_scan_json_without_mutating_source(self):
+        raw = {
+            "template": "logistics_document",
+            "source_scan": "bol_185.pdf",
+            "fields": {
+                "单证编号": "DO-EXP-0188",
+                "类别": "快递运单",
+                "承运商": "中国邮政EMS",
+                "备注 NOTES": "支付方式:到付",
+            },
+            "tables": [{
+                "headers": ["序号", "品名名称", "规格", "数量", "单价", "金额"],
+                "rows": [["1", "狗牙儿不凡滋脆玉米片88g", "-", "1", "-", "-"]],
+            }],
+            "filled_fields": ["备注 NOTES", "表格 1 数量"],
+        }
+
+        normalized = normalize_fewshot_gt(raw)
+
+        self.assertEqual(raw["source_scan"], "bol_185.pdf")
+        self.assertIn("source_scan", raw)
+        self.assertNotIn("source_scan", normalized)
+        self.assertNotIn("filled_fields", normalized)
+        self.assertNotIn("类别", normalized)
+        self.assertEqual(normalized["单证编号"], "DO-EXP-0188")
+        self.assertEqual(normalized["承运商"], "中国邮政EMS")
+        self.assertEqual(normalized["table_headers"], ["序号", "品名名称", "数量"])
+        self.assertEqual(normalized["table_rows"], [["1", "狗牙儿不凡滋脆玉米片88g", "1"]])
+
+    def test_fewshot_learn_uses_normalized_real_scan_table_headers(self):
+        first = {
+            "template": "logistics_document",
+            "source_scan": "wrong.pdf",
+            "fields": {
+                "单证编号": "DO-EXP-0188",
+                "承运商": "中国邮政EMS",
+            },
+            "tables": [{
+                "headers": ["序号", "品名名称", "规格", "数量"],
+                "rows": [["1", "狗牙儿不凡滋脆玉米片88g", "-", "1"]],
+            }],
+            "filled_fields": ["表格 1 数量"],
+        }
+        second = {
+            "template": "logistics_document",
+            "source_scan": "wrong2.pdf",
+            "fields": {
+                "单证编号": "DO-EXP-0189",
+                "承运商": "京东物流",
+            },
+            "tables": [{
+                "headers": ["序号", "品名名称", "规格", "数量"],
+                "rows": [["1", "药品", "-", "2"]],
+            }],
+            "filled_fields": ["表格 1 品名名称"],
+        }
+        learner = object.__new__(FewShotLearner)
+        learner.engine = _FewShotFixtureEngine({
+            "first.pdf": {
+                "blocks": [
+                    block("单证编号", 10, 10, 70, 30),
+                    block("DO-EXP-0188", 100, 10, 200, 30),
+                    block("承运商", 10, 50, 70, 70),
+                    block("中国邮政EMS", 100, 50, 220, 70),
+                ],
+                "image_size": [400, 400],
+            },
+            "second.pdf": {
+                "blocks": [
+                    block("单证编号", 10, 10, 70, 30),
+                    block("DO-EXP-0189", 100, 10, 200, 30),
+                    block("承运商", 10, 50, 70, 70),
+                    block("京东物流", 100, 50, 180, 70),
+                ],
+                "image_size": [400, 400],
+            },
+        })
+
+        learned = learner.learn([("first.pdf", first), ("second.pdf", second)])
+
+        self.assertTrue(learned["has_table"])
+        self.assertEqual(learned["table_headers"], ["序号", "品名名称", "数量"])
+        self.assertIn("table_headers: [\"序号\", \"品名名称\", \"数量\"]", learned["yaml_text"])
+        self.assertNotIn("source_scan", learned["fields"])
+        self.assertNotIn("类别", learned["fields"])
 
     def test_maersk_builtin_uses_source_document_fields(self):
         extractor = FieldExtractor()

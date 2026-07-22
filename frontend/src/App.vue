@@ -753,6 +753,11 @@
       <el-input v-model="fsTemplateName" size="small" placeholder="自动生成" style="flex:1;max-width:240px" clearable />
       <div style="flex:1"></div>
       <el-switch
+        v-model="fsNormalizeJson"
+        size="small"
+        active-text="JSON 结构优化"
+      />
+      <el-switch
         v-model="fsAiEnhance"
         size="small"
         active-text="AI 增强"
@@ -1610,6 +1615,7 @@ const fsUnpaired = ref([])    // [{name, type}]
 const fsDragOver = ref(false)
 const fsTemplateName = ref('')
 const fsAiEnhance = ref(false)
+const fsNormalizeJson = ref(true)
 const fsLearning = ref(false)
 const fsResult = ref(null)
 const fsProgress = computed(() => fsLearning.value ? (fsAiEnhance.value ? 72 : 46) : 0)
@@ -1698,6 +1704,7 @@ async function doFewshotLearn() {
     const fd = new FormData()
     valid.forEach(s => { fd.append('files', s.pdf); fd.append('gts', s.jsonContent) })
     fd.append('ai_enhance', fsAiEnhance.value ? '1' : '0')
+    fd.append('normalize_json', fsNormalizeJson.value ? '1' : '0')
     const { data } = await api.fewshotLearn(fd, visionSettings.timeout)
     if (data.success) {
       fsResult.value = data.result
@@ -1747,6 +1754,7 @@ async function fsApplyResult() {
     fsUnpaired.value = []
     fsTemplateName.value = ''
     fsAiEnhance.value = false
+    fsNormalizeJson.value = true
   } catch (e) { ElMessage.error('应用失败: ' + (e.response?.data?.error || e.message)) }
 }
 
@@ -1755,6 +1763,7 @@ function startFewshot() {
   fsUnpaired.value = []
   fsTemplateName.value = ''
   fsAiEnhance.value = false
+  fsNormalizeJson.value = true
   fsResult.value = null
   showFewshot.value = true
 }
