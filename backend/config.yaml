@@ -48,6 +48,51 @@ templates:
     - MAERSK LINE
     - BILL OF LADING
     - 海运提单
+    detection:
+      mode: anchor_layout
+      min_score: 0.55
+      min_matches: 3
+      features:
+      - text: MAERSK
+        x: 0.4617
+        y: 0.0478
+        weight: 1.4
+        role: stable_text
+      - text: BILL OF LADING
+        x: 0.441
+        y: 0.0859
+        weight: 1.4
+        role: stable_text
+      - text: Shipper
+        x: 0.0919
+        y: 0.1329
+        weight: 1.0
+        role: field_anchor
+      - text: B/L No.
+        x: 0.5378
+        y: 0.1329
+        weight: 1.0
+        role: field_anchor
+      - text: Port of Loading
+        x: 0.1102
+        y: 0.181
+        weight: 1.0
+        role: field_anchor
+      - text: Vessel
+        x: 0.0868
+        y: 0.2041
+        weight: 1.0
+        role: field_anchor
+      - text: CARGO DETAILS
+        x: 0.1272
+        y: 0.2637
+        weight: 1.2
+        role: stable_text
+      - text: Container No.
+        x: 0.1752
+        y: 0.294
+        weight: 1.0
+        role: field_anchor
     has_table: true
     fields:
       Shipper:
@@ -210,6 +255,46 @@ templates:
     - COSCO SHIPPING
     - 订舱委托书
     - Booking Note
+    detection:
+      mode: anchor_layout
+      min_score: 0.55
+      min_matches: 3
+      features:
+      - text: COSCO SHIPPING
+        x: 0.4872
+        y: 0.0405
+        weight: 1.4
+        role: stable_text
+      - text: 订舱委托书
+        x: 0.4029
+        y: 0.0783
+        weight: 1.4
+        role: stable_text
+      - text: 托运人
+        x: 0.074
+        y: 0.1421
+        weight: 1.0
+        role: field_anchor
+      - text: 订舱号
+        x: 0.5346
+        y: 0.1421
+        weight: 1.0
+        role: field_anchor
+      - text: 收货人
+        x: 0.074
+        y: 0.1804
+        weight: 1.0
+        role: field_anchor
+      - text: 装货港
+        x: 0.074
+        y: 0.2434
+        weight: 1.0
+        role: field_anchor
+      - text: 货物信息
+        x: 0.3993
+        y: 0.3315
+        weight: 1.2
+        role: stable_text
     has_table: false
     fields:
       托运人 Shipper:
@@ -343,6 +428,46 @@ templates:
     keywords:
     - SHIPPING ORDER
     - 货运委托书
+    detection:
+      mode: anchor_layout
+      min_score: 0.55
+      min_matches: 3
+      features:
+      - text: SHIPPING ORDER
+        x: 0.5871
+        y: 0.0314
+        weight: 1.4
+        role: stable_text
+      - text: 基本信息
+        x: 0.4425
+        y: 0.0748
+        weight: 1.2
+        role: stable_text
+      - text: Shipper
+        x: 0.0725
+        y: 0.0958
+        weight: 1.0
+        role: field_anchor
+      - text: B/L No.
+        x: 0.5465
+        y: 0.0958
+        weight: 1.0
+        role: field_anchor
+      - text: POL
+        x: 0.0549
+        y: 0.1367
+        weight: 1.0
+        role: field_anchor
+      - text: Container
+        x: 0.0813
+        y: 0.1777
+        weight: 1.0
+        role: field_anchor
+      - text: Description
+        x: 0.0901
+        y: 0.1981
+        weight: 1.0
+        role: field_anchor
     has_table: false
     fields:
       Shipper:
@@ -652,166 +777,167 @@ templates:
     - 订单号
     - 合计金额
     - 快递公司
-  bol_188_learned:
+  bol_201_learned:
     keywords: []
     source: fewshot
-    has_table: true
+    has_table: false
     fields:
-      单证编号:
-        label: 单证编号
+      净重:
+        label: 净重
         anchors:
-        - 单证编号
-        - DO-EXP-0185
-        position: below
-        canonical_key: 单证编号
-        validator: auto_单证编号
-        value_pattern: ^DO-EXP-\d+$
-        learned_value_offset:
-          dx: 64.0
-          dy: 39.0
-          tolerance_x: 415.8
-          tolerance_y: 61.2
-        learned_sample_value: DO-EXP-0185
-      地址:
-        label: 地址
-        anchors:
-        - 地址
-        - 河北省石家庄市栾城区柳林镇
+        - 净重
         position: right
-        canonical_key: 发货方 SHIPPER 地址
-        multi_line: true
-        learned_value_offset:
-          dx: 1056.5
-          dy: 0.0
-          tolerance_x: 957.6
-          tolerance_y: 66.6
-        learned_sample_value: 辽宁省大连市金州区大连理工大学开发区校区融苑
-      承运商:
-        label: 承运商
+        canonical_key: net_weight
+      原产国:
+        label: 原产国
         anchors:
-        - 承运商
-        - 申通快递
+        - 原产国
         position: right
-        canonical_key: 承运商
-        learned_value_offset:
-          dx: 1183.0
-          dy: -282.5
-          tolerance_x: 349.2
-          tolerance_y: 63.0
-        learned_sample_value: '770325800536124'
-      电话:
-        label: 电话
+        canonical_key: origin
+      商品名称:
+        label: 商品名称
         anchors:
-        - 电话
-        - '19333996009'
+        - 商品名称
         position: right
-        canonical_key: 发货方 SHIPPER 电话
-        validator: auto_发货方 SHIPPER 电话
-        value_pattern: ^1\d{10}$
-        learned_value_offset:
-          dx: 162.0
-          dy: 0.0
-          tolerance_x: 261.0
-          tolerance_y: 66.6
-        learned_sample_value: '19333996009'
-      名称__2:
-        label: 名称
+        canonical_key: goods_name
+      总价:
+        label: 总价
         anchors:
-        - 名称
-        - 名称__2
+        - 总价
         position: right
-        learned_value_offset:
-          dx: 125.5
-          dy: 1.0
-          tolerance_x: 151.2
-          tolerance_y: 70.2
-        learned_sample_value: 张子硕
-        canonical_key: 名称__2
-      '1111':
-        label: '1111'
+        canonical_key: total_price
+      收货单位:
+        label: 收货单位
         anchors:
-        - 名称
-        - 张子硕
-        - '1111'
+        - 收货单位
         position: right
-        canonical_key: 发货方 SHIPPER 名称
-        learned_value_offset:
-          dx: 824.5
-          dy: 1.0
-          tolerance_x: 108.0
-          tolerance_y: 70.2
-        learned_sample_value: 陈珊
+        canonical_key: receiver
+      数量及单位:
+        label: 数量及单位
+        anchors:
+        - 数量及单位
+        position: right
+        canonical_key: quantity_unit
+      毛重:
+        label: 毛重
+        anchors:
+        - 毛重
+        position: right
+        canonical_key: gross_weight
+      海关编号:
+        label: 海关编号
+        anchors:
+        - 海关编号
+        position: right
+        canonical_key: customs_no
+        validator: bl_no
+        value_pattern: '[A-Z]{2,4}\d{6,10}'
+      申报日期:
+        label: 申报日期
+        anchors:
+        - 申报日期
+        position: right
+        canonical_key: declare_date
+        validator: date
+        value_pattern: \d{1,4}[/-]\d{1,2}[/-]\d{1,4}
+      经营单位:
+        label: 经营单位
+        anchors:
+        - 经营单位
+        position: right
+        canonical_key: company
+      运输方式:
+        label: 运输方式
+        anchors:
+        - 运输方式
+        position: right
+        canonical_key: transport
+      进口口岸:
+        label: 进口口岸
+        anchors:
+        - 进口口岸
+        position: right
+        canonical_key: import_port
     output:
-    - 单证编号
-    - '1111'
-    - 地址
-    - 承运商
-    - 电话
-    - 名称__2
+    - 净重
+    - 原产国
+    - 商品名称
+    - 总价
+    - 收货单位
+    - 数量及单位
+    - 毛重
+    - 海关编号
+    - 申报日期
+    - 经营单位
+    - 运输方式
+    - 进口口岸
     detection:
       mode: anchor_layout
       min_score: 0.55
-      min_matches: 4
+      min_matches: 5
       features:
-      - text: 单证编号
-        x: 0.0982
-        y: 0.1377
+      - text: 海关编号
+        x: 0.4115
+        y: 0.0551
         weight: 1.0
         role: field_anchor
-      - text: 承运商
-        x: 0.1043
-        y: 0.31
+      - text: 申报日期
+        x: 0.5936
+        y: 0.0551
         weight: 1.0
         role: field_anchor
-      - text: 名称
-        x: 0.0982
-        y: 0.2251
+      - text: 进口口岸
+        x: 0.0791
+        y: 0.0854
         weight: 1.0
         role: field_anchor
-      - text: 电话
-        x: 0.0976
-        y: 0.2401
+      - text: 运输方式
+        x: 0.5417
+        y: 0.0839
         weight: 1.0
         role: field_anchor
-      - text: 地址
-        x: 0.0976
-        y: 0.2546
+      - text: 经营单位
+        x: 0.0797
+        y: 0.1106
         weight: 1.0
         role: field_anchor
-      - text: 本单证由原始扫描凭证数字化生成，作为物流交接核对之参考凭证
-        x: 0.2494
-        y: 0.9442
+      - text: 收货单位
+        x: 0.5423
+        y: 0.1104
+        weight: 1.0
+        role: field_anchor
+      - text: 商品名称
+        x: 0.0791
+        y: 0.1349
+        weight: 1.0
+        role: field_anchor
+      - text: 数量及单位
+        x: 0.5519
+        y: 0.1349
+        weight: 1.0
+        role: field_anchor
+      - text: 总价
+        x: 0.0619
+        y: 0.1599
+        weight: 1.0
+        role: field_anchor
+      - text: 原产国
+        x: 0.535
+        y: 0.1599
+        weight: 1.0
+        role: field_anchor
+      - text: 毛重
+        x: 0.0613
+        y: 0.1855
+        weight: 1.0
+        role: field_anchor
+      - text: 净重
+        x: 0.5251
+        y: 0.1855
+        weight: 1.0
+        role: field_anchor
+      - text: 中华人民共和国海关进口货物报关单
+        x: 0.5
+        y: 0.0325
         weight: 1.4
         role: stable_text
-      - text: EXPRESSDELIVERYHANDOVERDOCU
-        x: 0.4852
-        y: 0.1139
-        weight: 1.4
-        role: stable_text
-      - text: 生成时间2026-07-2122:31:39
-        x: 0.8446
-        y: 0.9442
-        weight: 1.4
-        role: stable_text
-      - text: 单证编号 DO-EXP-0185
-        x: 0.14
-        y: 0.9277
-        weight: 1.4
-        role: stable_text
-      - text: 收货方 CONSIGNEE
-        x: 0.5768
-        y: 0.1979
-        weight: 1.4
-        role: stable_text
-      - text: 发货方SHIPPER
-        x: 0.136
-        y: 0.1986
-        weight: 1.4
-        role: stable_text
-    table_headers:
-    - 序号
-    - 品名名称
-    - 规格
-    - 数量
-    - 单价
-    - 金额

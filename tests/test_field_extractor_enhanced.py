@@ -510,6 +510,55 @@ class EnhancedFieldExtractorTest(unittest.TestCase):
 
         self.assertEqual(result["template"], "unknown")
 
+    def test_template_detection_falls_back_to_keywords_when_layout_signature_misses(self):
+        extractor = FieldExtractor()
+        extractor.config = {
+            "validators": {},
+            "field_defaults": extractor.config["field_defaults"],
+            "templates": {
+                "maersk_with_layout": {
+                    "keywords": ["MAERSK", "BILL OF LADING"],
+                    "detection": {
+                        "mode": "anchor_layout",
+                        "min_score": 0.9,
+                        "min_matches": 2,
+                        "features": [
+                            {"text": "Shipper", "x": 0.9, "y": 0.9, "weight": 1.0},
+                            {"text": "Consignee", "x": 0.8, "y": 0.8, "weight": 1.0},
+                        ],
+                    },
+                    "fields": {},
+                    "output": [],
+                }
+            },
+        }
+        blocks = [
+            block("MAERSK", 0, 0, 80, 20),
+            block("BILL OF LADING", 0, 25, 160, 45),
+        ]
+
+        result = extractor.extract({"header": blocks, "body": [], "table": []}, [400, 400], blocks=blocks)
+
+        self.assertEqual(result["template"], "maersk_with_layout")
+        self.assertEqual(result["debug"]["extraction"]["template_scores"]["maersk_with_layout"]["mode"], "keywords")
+
+    def test_builtin_templates_have_layout_signatures(self):
+        extractor = FieldExtractor()
+        for template_name in ("maersk_style", "cosco_style", "simple_style"):
+            template = extractor.config["templates"][template_name]
+            detection = template.get("detection", {})
+            self.assertEqual(detection.get("mode"), "anchor_layout", template_name)
+            blocks = []
+            for feature in detection.get("features", [])[:4]:
+                x = float(feature["x"]) * 1000
+                y = float(feature["y"]) * 1000
+                blocks.append(block(feature["text"], x - 30, y - 10, x + 30, y + 10))
+
+            detected = extractor._detect_template(blocks, image_size=[1000, 1000])
+
+            self.assertEqual(detected, template_name)
+            self.assertEqual(extractor._last_template_scores[template_name]["mode"], "anchor_layout")
+
     def test_fewshot_suffix_value_matching_rejects_non_exact_numbers(self):
         learner = object.__new__(FewShotLearner)
         blocks = [

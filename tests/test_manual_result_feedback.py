@@ -878,6 +878,112 @@ class ManualResultFeedbackTest(unittest.TestCase):
         self.assertIn("B/L No.", learned["yaml_text"])
         self.assertIn("AI 增强：表头来自 AI 增强", warnings)
 
+    def test_fewshot_ai_enhancement_can_add_gt_whitelisted_missing_field(self):
+        learned = {
+            "template_name": "customs_learned",
+            "keywords": [],
+            "source": "fewshot",
+            "detection": {
+                "mode": "anchor_layout",
+                "features": [
+                    {"text": "海关编号", "x": 0.1, "y": 0.2, "weight": 1.0, "role": "field_anchor"},
+                ],
+            },
+            "fields": {
+                "海关编号": {
+                    "label": "海关编号",
+                    "canonical_key": "customs_no",
+                    "anchors": ["海关编号"],
+                    "position": "right",
+                }
+            },
+            "yaml_text": "old yaml",
+        }
+        warnings = []
+
+        changes = apply_ai_fewshot_enhancement(
+            learned,
+            {
+                "fields": [
+                    {
+                        "field": "收货单位",
+                        "label": "收货单位",
+                        "anchors": ["收货单位", "Consignee"],
+                        "position": "right",
+                        "confidence": 0.9,
+                    },
+                    {
+                        "field": "AI臆造字段",
+                        "label": "AI臆造字段",
+                        "anchors": ["页面标题"],
+                        "position": "below",
+                        "confidence": 0.9,
+                    },
+                ],
+                "warnings": [],
+            },
+            warnings,
+            allowed_new_fields={
+                "收货单位": {
+                    "label": "收货单位",
+                    "canonical_key": "receiver",
+                    "value": "中商国际贸易公司",
+                }
+            },
+        )
+
+        self.assertTrue(changes["applied"])
+        self.assertIn("收货单位", changes["fields"])
+        self.assertIn("收货单位", learned["fields"])
+        self.assertEqual(learned["fields"]["收货单位"]["canonical_key"], "receiver")
+        self.assertIn("Consignee", learned["fields"]["收货单位"]["anchors"])
+        self.assertNotIn("AI臆造字段", learned["fields"])
+        self.assertIn("收货单位", learned["yaml_text"])
+        self.assertNotIn("AI臆造字段", learned["yaml_text"])
+        self.assertTrue(any("未选字段 'AI臆造字段'" in item for item in warnings))
+
+    def test_feedback_ai_enhancement_maps_anchor_name_to_user_field_without_renaming(self):
+        target_template = {
+            "keywords": [],
+            "detection": {"mode": "anchor_layout"},
+            "fields": {
+                "111": {
+                    "label": "111",
+                    "anchors": ["名称"],
+                    "position": "right",
+                }
+            },
+        }
+        warnings = []
+
+        changes = apply_ai_template_enhancement(
+            target_template,
+            {
+                "fields": [
+                    {
+                        "field": "名称",
+                        "label": "姓名",
+                        "anchors": ["名称", "姓名", "Name"],
+                        "position": "right",
+                        "confidence": 0.88,
+                    }
+                ]
+            },
+            selected_fields=["111"],
+            include_table=False,
+            warnings=warnings,
+            allow_keywords=False,
+        )
+
+        self.assertTrue(changes["applied"])
+        self.assertIn("111", changes["fields"])
+        self.assertIn("111", target_template["fields"])
+        self.assertNotIn("名称", target_template["fields"])
+        self.assertEqual(target_template["fields"]["111"]["label"], "111")
+        self.assertIn("姓名", target_template["fields"]["111"]["anchors"])
+        self.assertIn("Name", target_template["fields"]["111"]["anchors"])
+        self.assertEqual(warnings, [])
+
 
     def test_ai_template_enhancement_malformed_model_payload_warns_without_raising(self):
         target_template = {

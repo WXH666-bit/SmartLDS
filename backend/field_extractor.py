@@ -777,7 +777,6 @@ class FieldExtractor:
                 scores[tpl] = info
                 if info.get("accepted"):
                     candidates[tpl] = info
-                continue
 
             keywords = template_cfg.get("keywords", [])
             if not keywords:
@@ -797,14 +796,16 @@ class FieldExtractor:
 
             if matched:
                 confidence = matched_weight / max(total_weight, 1.0)
-                scores[tpl] = {
+                keyword_info = {
                     "score": round(confidence, 4),
                     "matched": matched,
                     "matched_count": len(matched),
                     "keywords_count": len(keywords),
                     "mode": "keywords",
                 }
-                candidates[tpl] = scores[tpl]
+                if tpl not in candidates:
+                    scores[tpl] = keyword_info
+                    candidates[tpl] = keyword_info
 
         self._last_template_scores = scores
         if not candidates:

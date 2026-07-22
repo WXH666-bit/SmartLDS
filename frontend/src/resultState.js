@@ -111,6 +111,19 @@ export function inferManualFieldBinding(anchorBlock = null, valueBlock = null) {
   return binding
 }
 
+export function applyManualFieldBindingDraft(fieldDraft = {}, binding = {}) {
+  if (binding.label && !String(fieldDraft.label ?? '').trim()) {
+    fieldDraft.label = binding.label
+  }
+  if (binding.value) fieldDraft.value = binding.value
+  fieldDraft.anchorText = binding.anchorText || ''
+  fieldDraft.anchorRect = binding.anchorRect || null
+  fieldDraft.valueRect = binding.valueRect || null
+  fieldDraft.position = binding.position || ''
+  fieldDraft.learnedValueOffset = binding.learnedValueOffset || null
+  return fieldDraft
+}
+
 export function buildManualFieldPayload(row = {}) {
   const payload = {
     key: row.name,
@@ -321,5 +334,35 @@ export function buildFieldValueRows(fieldRows = []) {
       value: String(row.display ?? ''),
       status: row.status || '',
       confidence: row.confidence || '',
+    }))
+}
+
+export function appendSessionLog(logs = [], entry = {}, limit = 80) {
+  const level = ['success', 'warning', 'error', 'info'].includes(entry.level) ? entry.level : 'info'
+  logs.push({
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    time: new Date().toLocaleTimeString(),
+    level,
+    source: String(entry.source || '系统'),
+    title: String(entry.title || ''),
+    detail: String(entry.detail || ''),
+    jobId: entry.jobId || '',
+    template: entry.template || '',
+  })
+  while (logs.length > limit) logs.shift()
+  return logs
+}
+
+export function buildWarningLogEntries(warnings = [], source = '系统', context = {}) {
+  return (warnings || [])
+    .map(warning => String(warning || '').trim())
+    .filter(Boolean)
+    .map(warning => ({
+      level: 'warning',
+      source,
+      title: warning,
+      detail: warning,
+      jobId: context.jobId || '',
+      template: context.template || '',
     }))
 }

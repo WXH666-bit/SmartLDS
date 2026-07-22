@@ -51,6 +51,7 @@
     </div>
     <el-button size="small" text @click="showFewshot=true">Few-shot 学习</el-button>
     <el-button size="small" text @click="showHistory=true; loadHistory()" style="margin-left:12px">历史</el-button>
+    <el-button size="small" text @click="showSessionLog=true">日志</el-button>
     <el-button size="small" text @click="showConfig=true; loadConfig()">版式管理</el-button>
     <el-button size="small" type="primary" plain @click="showVisionSettings=true; loadVisionSettings()">模型设置</el-button>
   </header>
@@ -521,7 +522,32 @@
     </template>
   </el-dialog>
 
-  <!-- ============ History Drawer ============ -->
+  <!-- ============ Session Log Drawer ============ -->
+  <el-drawer v-model="showSessionLog" size="520px" direction="rtl">
+    <template #header>
+      <div class="log-drawer-head">
+        <span>运行日志</span>
+        <el-button v-if="sessionLogs.length" size="small" text type="danger" @click="sessionLogs=[]">清空</el-button>
+      </div>
+    </template>
+    <div v-if="!sessionLogs.length" class="empty-log">暂无日志</div>
+    <div v-else class="session-log-list">
+      <div v-for="entry in [...sessionLogs].reverse()" :key="entry.id" class="session-log-entry" :class="entry.level">
+        <div class="log-entry-top">
+          <el-tag size="small" :type="logTagType(entry.level)" effect="light">{{ logLevelText(entry.level) }}</el-tag>
+          <span class="log-source">{{ entry.source }}</span>
+          <span class="log-time">{{ entry.time }}</span>
+        </div>
+        <div class="log-title">{{ entry.title }}</div>
+        <div v-if="entry.detail && entry.detail !== entry.title" class="log-detail">{{ entry.detail }}</div>
+        <div v-if="entry.jobId || entry.template" class="log-context">
+          <span v-if="entry.jobId">job: {{ entry.jobId }}</span>
+          <span v-if="entry.template">template: {{ entry.template }}</span>
+        </div>
+      </div>
+    </div>
+  </el-drawer>
+
   <el-drawer v-model="showHistory" size="480px" direction="rtl">
     <template #header>
       <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
@@ -775,6 +801,9 @@ import {
   buildExcludedFieldRows,
   buildFeedbackFieldOptions,
   buildManualFieldPayload,
+  applyManualFieldBindingDraft,
+  appendSessionLog,
+  buildWarningLogEntries,
   findJsonPreviewTargetLine,
   buildResultPreviewJson,
   buildVisibleFieldRows,
@@ -872,6 +901,28 @@ const ocrBlockOptions = computed(() =>
 const showConfig = ref(false)
 const configLoading = ref(false)
 const configTemplates = ref([])
+
+const showSessionLog = ref(false)
+const sessionLogs = ref([])
+
+function addLog(entry) {
+  appendSessionLog(sessionLogs.value, entry)
+}
+
+function addWarningLogs(warnings, source, context = {}) {
+  buildWarningLogEntries(warnings, source, context).forEach(addLog)
+}
+
+function logTagType(level) {
+  if (level === 'success') return 'success'
+  if (level === 'warning') return 'warning'
+  if (level === 'error') return 'danger'
+  return 'info'
+}
+
+function logLevelText(level) {
+  return ({ success: '成功', warning: '警告', error: '错误', info: '信息' })[level] || '信息'
+}
 
 // Vision fallback settings
 const showVisionSettings = ref(false)
@@ -1051,11 +1102,13 @@ async function probeVisionModels() {
     const count = visionDetectedModels.value.length
     const warning = data.warnings?.length ? `，${data.warnings.length} 条提示` : ''
     visionProbeMessage.value = `检测到 ${count} 个模型${warning}`
+    addWarningLogs(data.warnings || [], '模型设置')
     ElMessage.success('模型检测完成')
   } catch (e) {
     visionDetectedModels.value = []
     visionProbeError.value = true
     visionProbeMessage.value = formatApiError(e)
+    addLog({ level: 'error', source: '模型设置', title: '模型检测失败', detail: formatApiError(e) })
     ElMessage.error('模型检测失败: ' + formatApiError(e))
   } finally {
     visionProbeLoading.value = false
@@ -1236,6 +1289,7 @@ async function addFiles(files) {
     } catch(e) {
       const idx = fileList.value.findIndex(x=>x.filename===f.name && x.status==='uploading')
       if (idx>=0) fileList.value.splice(idx, 1)
+      addLog({ level: 'error', source: '上传', title: `${f.name} 上传失败`, detail: formatApiError(e) })
       ElMessage.error(f.name + ' 上传失败')
     }
   }
@@ -1258,6 +1312,7 @@ async function uploadZip(file) {
     ElMessage.success(`已添加 ${data.jobs.length} 个文件`)
   } catch(e) {
     fileList.value = fileList.value.filter(x=>x.filename!==file.name || x.status!=='uploading')
+    addLog({ level: 'error', source: '上传', title: 'ZIP 上传失败', detail: formatApiError(e) })
     ElMessage.error('ZIP 上传失败')
   }
 }
@@ -1286,7 +1341,11 @@ async function viewJob(f) {
         progress: 100 })
       window.open(`?job=${f.job_id}`, '_blank')
       phase.value='idle'
-    } catch(e) { f.status='error'; f.progress=100; phase.value='idle'; ElMessage.error('识别失败') }
+    } catch(e) {
+      f.status='error'; f.progress=100; phase.value='idle'
+      addLog({ level: 'error', source: '识别', title: '识别失败', detail: formatApiError(e), jobId: f.job_id })
+      ElMessage.error('识别失败')
+    }
     return
   }
 }
@@ -1299,7 +1358,10 @@ onMounted(async () => {
     try {
       const {data} = await api.result(urlJobId)
       showResult(data)
-    } catch(e) { ElMessage.error('加载失败'); phase.value='idle' }
+    } catch(e) {
+      addLog({ level: 'error', source: '识别', title: '加载结果失败', detail: formatApiError(e), jobId: urlJobId })
+      ElMessage.error('加载失败'); phase.value='idle'
+    }
   }
 })
 
@@ -1357,6 +1419,10 @@ function showResult(data) {
   const blocks = data.blocks || []
   ocrBlocks.value = blocks
   ocrPreview.value = tpl === 'unknown' ? blocks : []
+  addWarningLogs(data.meta?.warnings || [], '识别', {
+    jobId: data.job_id || viewingJobId.value,
+    template: tpl,
+  })
 }
 
 function clearJsonHighlightTimer() {
@@ -1521,6 +1587,9 @@ async function doFewshotLearn() {
       }
       const warningCount = data.result?.warnings?.length || 0
       const warningText = warningCount ? `，${warningCount} 条警告` : ''
+      addWarningLogs(data.result?.warnings || [], 'Few-shot', {
+        template: data.result?.template_name || fsTemplateName.value,
+      })
       if (fsAiEnhance.value && !data.result?.ai_enhanced) {
         ElMessage.success(`学习完成，AI 增强未完成${warningText}`)
       } else if (data.result?.ai_enhanced) {
@@ -1530,7 +1599,10 @@ async function doFewshotLearn() {
       }
     }
     else { ElMessage.error(data.error || '学习失败') }
-  } catch(e) { ElMessage.error('请求失败: ' + formatApiError(e)) }
+  } catch(e) {
+    addLog({ level: 'error', source: 'Few-shot', title: '学习请求失败', detail: formatApiError(e) })
+    ElMessage.error('请求失败: ' + formatApiError(e))
+  }
   finally { fsLearning.value = false }
 }
 
@@ -1646,13 +1718,7 @@ function applyManualFieldBinding() {
   const anchorBlock = ocrBlockByIndex(newField.anchorIndex)
   const valueBlock = ocrBlockByIndex(newField.valueIndex)
   const binding = inferManualFieldBinding(anchorBlock, valueBlock)
-  if (binding.label) newField.label = binding.label
-  if (binding.value) newField.value = binding.value
-  newField.anchorText = binding.anchorText || ''
-  newField.anchorRect = binding.anchorRect || null
-  newField.valueRect = binding.valueRect || null
-  newField.position = binding.position || ''
-  newField.learnedValueOffset = binding.learnedValueOffset || null
+  applyManualFieldBindingDraft(newField, binding)
 }
 
 function addManualField() {
@@ -1837,6 +1903,10 @@ async function submitFeedback() {
       mode: feedback.mode
     })
     const warn = data.warnings?.length ? `，${data.warnings.length} 条警告` : ''
+    addWarningLogs(data.warnings || [], '反哺', {
+      jobId: viewingJobId.value,
+      template: data.template,
+    })
     const ai = data.ai_enhanced
       ? '，AI 已增强'
       : (feedback.ai_enhance ? '，AI 增强未完成' : '')
@@ -1845,6 +1915,7 @@ async function submitFeedback() {
     showFeedback.value = false
     await loadConfig()
   } catch (e) {
+    addLog({ level: 'error', source: '反哺', title: '反哺失败', detail: formatApiError(e), jobId: viewingJobId.value })
     ElMessage.error('反哺失败: ' + formatApiError(e))
   } finally {
     feedback.loading = false
@@ -1919,8 +1990,12 @@ async function doCorrect(options = {}) {
     const { data } = await api.result(viewingJobId.value)
     showResult(data)
   } catch (e) {
-    if (!options.silent) ElMessage.error('\u4fdd\u5b58\u5931\u8d25')
-    else throw e
+    if (!options.silent) {
+      addLog({ level: 'error', source: '校正', title: '保存校正失败', detail: formatApiError(e), jobId: viewingJobId.value })
+      ElMessage.error('\u4fdd\u5b58\u5931\u8d25')
+    } else {
+      throw e
+    }
   }
 }
 
@@ -1976,6 +2051,20 @@ function confirmExport() {
 .step-line{width:32px;height:2px;background:#f3f4f6;margin:0 2px;transition:all .3s}
 .step-line.done{background:#10b981}
 .step-line.pulse{background:linear-gradient(90deg,#10b981 50%,#e5e7eb 50%);animation:pulse .8s infinite}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+.log-drawer-head{display:flex;align-items:center;justify-content:space-between;width:100%}
+.empty-log{text-align:center;color:#888;padding:40px}
+.session-log-list{display:flex;flex-direction:column;gap:10px}
+.session-log-entry{border:1px solid #e5e7eb;border-radius:8px;background:#fff;padding:12px}
+.session-log-entry.warning{border-color:#fde68a;background:#fffbeb}
+.session-log-entry.error{border-color:#fecaca;background:#fff5f5}
+.session-log-entry.success{border-color:#bbf7d0;background:#f0fdf4}
+.log-entry-top{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.log-source{font-size:12px;color:#475569;font-weight:700}
+.log-time{margin-left:auto;font-size:12px;color:#94a3b8}
+.log-title{font-size:13px;font-weight:700;color:#0f172a;line-height:1.5}
+.log-detail{margin-top:6px;font-size:12px;color:#475569;line-height:1.5;word-break:break-word}
+.log-context{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:11px;color:#64748b}
 
 .body{flex:1;overflow:hidden;display:flex}
 

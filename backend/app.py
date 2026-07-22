@@ -717,6 +717,23 @@ def _ai_array(value, name: str, warnings: list[str]) -> list:
     return []
 
 
+def _ai_field_aliases(target_fields: dict, selected: set[str]) -> dict[str, str]:
+    aliases = {}
+    for field_name in selected:
+        aliases[field_name] = field_name
+        entry = target_fields.get(field_name)
+        if not isinstance(entry, dict):
+            continue
+        label = str(entry.get("label") or "").strip()
+        if label:
+            aliases.setdefault(label, field_name)
+        for anchor in entry.get("anchors") or []:
+            text = str(anchor or "").strip()
+            if text:
+                aliases.setdefault(text, field_name)
+    return aliases
+
+
 def apply_ai_template_enhancement(
     target_template: dict,
     enhancement: dict,
@@ -724,9 +741,15 @@ def apply_ai_template_enhancement(
     include_table: bool,
     warnings: list[str],
     allow_keywords: bool = True,
+    allowed_new_fields: dict | None = None,
 ) -> dict:
     """把 AI 返回的版式增强建议安全合并到目标模板。"""
     selected = {str(name).strip() for name in selected_fields if str(name).strip()}
+    allowed_new_fields = {
+        str(name).strip(): meta
+        for name, meta in (allowed_new_fields or {}).items()
+        if str(name).strip() and isinstance(meta, dict)
+    }
     changes = _empty_ai_changes()
     if not isinstance(enhancement, dict):
         warnings.append("AI 增强未返回有效配置对象")
@@ -743,21 +766,45 @@ def apply_ai_template_enhancement(
         changes["keywords"] = [item for item in target_template["keywords"] if item not in before]
 
     target_fields = target_template.setdefault("fields", {})
+    aliases = _ai_field_aliases(target_fields, selected)
     for item in _ai_array(enhancement.get("fields"), "fields", warnings):
         if not isinstance(item, dict):
             continue
         field_name = str(item.get("field") or item.get("label") or "").strip()
         if not field_name:
             continue
-        if selected and field_name not in selected:
+        resolved_name = field_name
+        allowed_meta = None
+        if selected and resolved_name not in selected:
+            alias_name = aliases.get(resolved_name)
+            if alias_name in selected:
+                resolved_name = alias_name
+            elif resolved_name in allowed_new_fields:
+                allowed_meta = allowed_new_fields[resolved_name]
+            else:
+                label_name = str(item.get("label") or "").strip()
+                if label_name in allowed_new_fields:
+                    resolved_name = label_name
+                    allowed_meta = allowed_new_fields[label_name]
+                else:
+                    warnings.append(f"AI 增强跳过未选字段 '{field_name}'")
+                    continue
+        elif resolved_name in allowed_new_fields:
+            allowed_meta = allowed_new_fields[resolved_name]
+        if selected and resolved_name not in selected and resolved_name not in allowed_new_fields:
             warnings.append(f"AI 增强跳过未选字段 '{field_name}'")
             continue
 
-        entry = target_fields.setdefault(field_name, {"label": item.get("label") or field_name})
+        entry = target_fields.setdefault(
+            resolved_name,
+            {"label": (allowed_meta or {}).get("label") or item.get("label") or resolved_name},
+        )
         if not isinstance(entry, dict):
-            entry = {"label": item.get("label") or field_name}
-            target_fields[field_name] = entry
-        entry["label"] = entry.get("label") or item.get("label") or field_name
+            entry = {"label": (allowed_meta or {}).get("label") or item.get("label") or resolved_name}
+            target_fields[resolved_name] = entry
+        entry["label"] = entry.get("label") or (allowed_meta or {}).get("label") or item.get("label") or resolved_name
+        if allowed_meta and allowed_meta.get("canonical_key") and not entry.get("canonical_key"):
+            entry["canonical_key"] = allowed_meta.get("canonical_key")
 
         anchors = [
             str(anchor).strip()
@@ -783,8 +830,8 @@ def apply_ai_template_enhancement(
         if isinstance(confidence, (int, float)):
             entry["ai_enhance_confidence"] = max(0.0, min(1.0, float(confidence)))
 
-        if field_name not in changes["fields"]:
-            changes["fields"].append(field_name)
+        if resolved_name not in changes["fields"]:
+            changes["fields"].append(resolved_name)
 
     if include_table:
         headers = [
@@ -857,7 +904,11 @@ def ai_enhance_feedback_template(
     )
 
 
-def _fewshot_final_result_from_sample(sample_gt: dict, learned_result: dict) -> dict:
+def _fewshot_final_result_from_sample(
+    sample_gt: dict,
+    learned_result: dict,
+    extra_fields: dict | None = None,
+) -> dict:
     fields = {}
     for field_name, cfg in (learned_result.get("fields") or {}).items():
         if not isinstance(cfg, dict):
@@ -875,6 +926,19 @@ def _fewshot_final_result_from_sample(sample_gt: dict, learned_result: dict) -> 
             "status": "extracted" if value else "not_found",
             "anchors": cfg.get("anchors", []),
             "canonical_key": canonical_key,
+        }
+    for field_name, meta in (extra_fields or {}).items():
+        if field_name in fields or not isinstance(meta, dict):
+            continue
+        value = str(meta.get("value") or "").strip()
+        fields[field_name] = {
+            "label": meta.get("label") or field_name,
+            "value": value,
+            "cleaned": value,
+            "confidence": 0.0,
+            "status": "missing_from_local_fewshot",
+            "anchors": [],
+            "canonical_key": meta.get("canonical_key") or field_name,
         }
     return {
         "template": learned_result.get("template_name") or "fewshot_learned",
@@ -903,6 +967,7 @@ def apply_ai_fewshot_enhancement(
     learned_result: dict,
     enhancement: dict,
     warnings: list[str],
+    allowed_new_fields: dict | None = None,
 ) -> dict:
     """把 AI 版式建议合并回 /api/fewshot/learn 的结果，并重生成 YAML。"""
     target_template = {
@@ -920,6 +985,7 @@ def apply_ai_fewshot_enhancement(
         include_table=True,
         warnings=warnings,
         allow_keywords=False,
+        allowed_new_fields=allowed_new_fields,
     )
 
     learned_result["keywords"] = []
@@ -930,6 +996,44 @@ def apply_ai_fewshot_enhancement(
     learned_result["ai_enhanced"] = bool(changes.get("applied"))
     learned_result["ai_changes"] = changes
     return changes
+
+
+def _fewshot_missing_field_candidates(samples: list[tuple[str, dict]], learned_result: dict) -> dict:
+    """Return GT-backed fields that ordinary Few-shot did not turn into template fields."""
+    from fewshot import FewShotLearner
+
+    learned_fields = learned_result.get("fields") or {}
+    learned_names = {str(name).strip() for name in learned_fields}
+    learned_canonical = {
+        str(cfg.get("canonical_key") or name).strip()
+        for name, cfg in learned_fields.items()
+        if isinstance(cfg, dict)
+    }
+    candidates = {}
+    for _path, gt in samples or []:
+        for field_name, spec in FewShotLearner._prepare_sample_fields(gt).items():
+            canonical_key = str(spec.get("canonical_key") or field_name).strip()
+            if field_name in learned_names or canonical_key in learned_canonical:
+                continue
+            value = str(spec.get("value") or "").strip()
+            if not value:
+                continue
+            entry = candidates.setdefault(field_name, {
+                "label": field_name,
+                "canonical_key": canonical_key,
+                "values": [],
+            })
+            if value not in entry["values"]:
+                entry["values"].append(value)
+
+    return {
+        field_name: {
+            "label": meta["label"],
+            "canonical_key": meta["canonical_key"],
+            "value": meta["values"][0] if meta["values"] else "",
+        }
+        for field_name, meta in candidates.items()
+    }
 
 
 def ai_enhance_fewshot_learning(samples: list[tuple[str, dict]], learned_result: dict, warnings: list[str]) -> dict:
@@ -945,6 +1049,7 @@ def ai_enhance_fewshot_learning(samples: list[tuple[str, dict]], learned_result:
         return {"applied": False, "keywords": [], "fields": [], "table_headers": []}
 
     try:
+        missing_candidates = _fewshot_missing_field_candidates(samples, learned_result)
         sample_path, sample_gt = samples[0]
         file_type = os.path.splitext(sample_path)[1].lstrip(".").lower() or "pdf"
         with tempfile.TemporaryDirectory(prefix="smartlds_fewshot_ai_") as tmp_dir:
@@ -964,7 +1069,11 @@ def ai_enhance_fewshot_learning(samples: list[tuple[str, dict]], learned_result:
             result = client.enhance_template_config(
                 image_path=image_path,
                 blocks=blocks,
-                final_result=_fewshot_final_result_from_sample(sample_gt, learned_result),
+                final_result=_fewshot_final_result_from_sample(
+                    sample_gt,
+                    learned_result,
+                    extra_fields=missing_candidates,
+                ),
                 template_name=learned_result.get("template_name") or "fewshot_learned",
                 target_template={
                     "keywords": learned_result.get("keywords", []),
@@ -973,7 +1082,7 @@ def ai_enhance_fewshot_learning(samples: list[tuple[str, dict]], learned_result:
                     "fields": learned_result.get("fields", {}),
                     "output": list((learned_result.get("fields") or {}).keys()),
                 },
-                selected_fields=list((learned_result.get("fields") or {}).keys()),
+                selected_fields=list((learned_result.get("fields") or {}).keys()) + list(missing_candidates.keys()),
                 include_table=True,
             )
     except Exception as exc:
@@ -984,7 +1093,12 @@ def ai_enhance_fewshot_learning(samples: list[tuple[str, dict]], learned_result:
         warnings.append(f"AI 增强未执行：{result.get('warning') or '模型未返回有效建议'}")
         return {"applied": False, "keywords": [], "fields": [], "table_headers": []}
 
-    return apply_ai_fewshot_enhancement(learned_result, result.get("result", {}), warnings)
+    return apply_ai_fewshot_enhancement(
+        learned_result,
+        result.get("result", {}),
+        warnings,
+        allowed_new_fields=missing_candidates,
+    )
 
 
 def find_original_file(job_id: str):

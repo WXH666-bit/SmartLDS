@@ -1313,6 +1313,8 @@ class VisionFallbackClient:
         return (
             "You are helping improve a SmartLDS few-shot template configuration. "
             "Do not extract arbitrary new fields. Only suggest improvements for selected fields. "
+            "Some selected fields may be marked missing_from_local_fewshot; for those fields, "
+            "you may propose anchors and position only if the field value and printed label are visible. "
             "Use visible text and OCR hints as evidence. Prefer original printed labels as anchors. "
             "Return multiple useful anchors per field when possible. "
             "Use position right/below/inline, set multi_line only for company/address-like long fields, "
