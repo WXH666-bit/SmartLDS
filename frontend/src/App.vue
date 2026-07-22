@@ -261,7 +261,7 @@
                 v-if="!row.labelEditing"
                 class="fc-label"
                 title="双击修改字段名"
-                @dblclick="row.labelEditing=true; row.labelEditVal=row.label"
+                @dblclick="startFieldLabelEdit(row)"
               >{{ row.label }}</div>
               <el-input
                 v-else
@@ -275,7 +275,7 @@
               />
               <el-tag v-if="row.manual" size="small" type="success" effect="plain">人工</el-tag>
               <div class="fc-value" v-if="!row.editing"
-                   @dblclick="row.editing=true; row.editVal=row.display"
+                   @dblclick="startFieldValueEdit(row)"
                    :class="{ empty: !row.display }">{{ row.display || '(空)' }}</div>
               <el-input v-else v-model="row.editVal" size="small" @input="previewFieldValueInJson(row)" @blur="finishFieldEditAndSync(row)" @keyup.enter="finishFieldEditAndSync(row)" autofocus />
               <div class="fc-conf" v-if="row.confidence">{{ row.confidence }}</div>
@@ -813,7 +813,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, nextTick, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, computed, nextTick, onMounted, onUnmounted, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Loading, View, Hide } from '@element-plus/icons-vue'
 import api from './api/index.js'
@@ -827,6 +827,7 @@ import {
   appendSessionLog,
   buildWarningLogEntries,
   findJsonPreviewTargetLine,
+  getActiveFieldEditJsonTarget,
   buildResultPreviewJson,
   buildVisibleFieldRows,
   finishFieldEdit,
@@ -1497,6 +1498,16 @@ async function revealJsonTarget(target) {
     block.scrollTop = Math.max(0, targetTop)
   }
   jsonHighlightTimer = setTimeout(() => {
+    const activeEditTarget = getActiveFieldEditJsonTarget(fieldRows.value)
+    if (
+      activeEditTarget
+      && activeEditTarget.type === target.type
+      && activeEditTarget.fieldKey === target.fieldKey
+      && activeEditTarget.prop === target.prop
+    ) {
+      jsonHighlightTimer = null
+      return
+    }
     activeJsonLine.value = -1
     jsonHighlightTimer = null
   }, 1800)
@@ -1509,22 +1520,39 @@ function syncJsonPreview(target = null) {
 }
 
 function previewFieldValueInJson(row) {
-  syncJsonPreview({ type: 'field', fieldKey: row.name, prop: 'value' })
+  syncJsonPreview({ type: 'field', fieldKey: row.name, fieldLabel: row.label, fieldValue: row.editVal, prop: 'value' })
 }
 
 function previewFieldLabelInJson(row) {
-  syncJsonPreview({ type: 'field', fieldKey: row.name, prop: 'label' })
+  syncJsonPreview({ type: 'field', fieldKey: row.name, fieldLabel: row.label, prop: 'label' })
+}
+
+function startFieldValueEdit(row) {
+  row.editing = true
+  row.editVal = row.display
+  syncJsonPreview({ type: 'field', fieldKey: row.name, fieldLabel: row.label, fieldValue: row.editVal, prop: 'value' })
+}
+
+function startFieldLabelEdit(row) {
+  row.labelEditing = true
+  row.labelEditVal = row.label
+  syncJsonPreview({ type: 'field', fieldKey: row.name, fieldLabel: row.label, prop: 'label' })
 }
 
 function finishFieldEditAndSync(row) {
   finishFieldEdit(row)
-  syncJsonPreview({ type: 'field', fieldKey: row.name, prop: 'value' })
+  syncJsonPreview({ type: 'field', fieldKey: row.name, fieldLabel: row.label, fieldValue: row.display, prop: 'value' })
 }
 
 function finishFieldLabelEditAndSync(row) {
   finishFieldLabelEdit(row)
-  syncJsonPreview({ type: 'field', fieldKey: row.name, prop: 'label' })
+  syncJsonPreview({ type: 'field', fieldKey: row.name, fieldLabel: row.label, prop: 'label' })
 }
+
+watch(fieldRows, () => {
+  const target = getActiveFieldEditJsonTarget(fieldRows.value)
+  if (target) syncJsonPreview(target)
+}, { deep: true, flush: 'post' })
 
 // Few-shot dialog
 const showFewshot = ref(false)

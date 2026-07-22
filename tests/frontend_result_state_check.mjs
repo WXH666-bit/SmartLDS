@@ -11,6 +11,7 @@ import {
   buildWarningLogEntries,
   buildResultPreviewJson,
   buildVisibleFieldRows,
+  getActiveFieldEditJsonTarget,
   inferManualFieldBinding,
   findJsonPreviewTargetLine,
   finishFieldEdit,
@@ -219,6 +220,52 @@ const savedCorrectionValueLine = findJsonPreviewTargetLine(savedCorrectionPrevie
 })
 assert.ok(savedCorrectionValueLine >= 0, '保存修正后字段带嵌套元数据时仍应定位到 value 行')
 assert.match(splitJsonPreviewLines(savedCorrectionPreviewJson)[savedCorrectionValueLine], /"value": "新值"/)
+
+assert.deepEqual(
+  getActiveFieldEditJsonTarget([
+    { name: 'saved_field', label: '保存字段', editing: true, labelEditing: false },
+  ]),
+  { type: 'field', fieldKey: 'saved_field', fieldLabel: '保存字段', prop: 'value' },
+  '字段值进入编辑态后应能持续定位 JSON value 行'
+)
+
+assert.deepEqual(
+  getActiveFieldEditJsonTarget([
+    { name: 'saved_field', label: '保存字段', editing: false, labelEditing: true },
+  ]),
+  { type: 'field', fieldKey: 'saved_field', fieldLabel: '保存字段', prop: 'label' },
+  '字段名进入编辑态后应能持续定位 JSON label 行'
+)
+
+const labelFallbackPreviewJson = buildResultPreviewJson({
+  fields: {
+    '单证编号': {
+      label: '单证编号',
+      value: 'DO-EXP-0187',
+      cleaned: 'DO-EXP-0187',
+      status: 'extracted',
+    },
+  },
+  meta: {},
+}, [])
+const labelFallbackValueLine = findJsonPreviewTargetLine(labelFallbackPreviewJson, {
+  type: 'field',
+  fieldKey: 'document_no',
+  fieldLabel: '单证编号',
+  prop: 'value',
+})
+assert.ok(labelFallbackValueLine >= 0, '字段 key 与 JSON key 不一致时应能用字段名定位 value 行')
+assert.match(splitJsonPreviewLines(labelFallbackPreviewJson)[labelFallbackValueLine], /"value": "DO-EXP-0187"/)
+
+const valueFallbackLine = findJsonPreviewTargetLine(labelFallbackPreviewJson, {
+  type: 'field',
+  fieldKey: 'document_no',
+  fieldLabel: 'wrong label',
+  fieldValue: 'DO-EXP-0187',
+  prop: 'value',
+})
+assert.ok(valueFallbackLine >= 0, '字段 key/label 都无法匹配时应能用当前字段值兜底定位 value 行')
+assert.match(splitJsonPreviewLines(labelFallbackPreviewJson)[valueFallbackLine], /"value": "DO-EXP-0187"/)
 
 const boundManualRow = {
   name: 'gross_weight',

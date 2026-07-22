@@ -231,6 +231,20 @@ export function buildVisibleFieldRows(fieldRows = []) {
   return (fieldRows || []).filter(row => !row?.excluded)
 }
 
+export function getActiveFieldEditJsonTarget(fieldRows = []) {
+  const activeRow = (fieldRows || []).find(row => row?.labelEditing || row?.editing)
+  if (!activeRow?.name) return null
+  const target = {
+    type: 'field',
+    fieldKey: activeRow.name,
+    fieldLabel: activeRow.label || activeRow.labelEditVal || '',
+    prop: activeRow.labelEditing ? 'label' : 'value',
+  }
+  const fieldValue = activeRow.editing ? activeRow.editVal : activeRow.display
+  if (fieldValue !== undefined) target.fieldValue = fieldValue
+  return target
+}
+
 export function buildExcludedFieldRows(fieldRows = []) {
   return (fieldRows || []).filter(row => !!row?.excluded)
 }
@@ -397,16 +411,49 @@ function findFieldObjectLine(lines, fieldKey) {
   return -1
 }
 
+function findFieldKeyByLabel(jsonText, fieldLabel) {
+  const label = String(fieldLabel ?? '').trim()
+  if (!label) return ''
+  try {
+    const parsed = JSON.parse(String(jsonText ?? '{}'))
+    const fields = parsed?.fields && typeof parsed.fields === 'object' ? parsed.fields : {}
+    const entry = Object.entries(fields).find(([key, info]) =>
+      key === label
+      || String(info?.label ?? '').trim() === label
+      || String(info?.canonical_key ?? '').trim() === label
+    )
+    return entry?.[0] || ''
+  } catch {
+    return ''
+  }
+}
+
+function findPropertyValueLine(lines, prop, value) {
+  if (value === undefined || value === null) return -1
+  const propToken = `${JSON.stringify(String(prop))}:`
+  const valueText = JSON.stringify(String(value))
+  return lines.findIndex(line => {
+    const trimmed = line.trim()
+    return trimmed.startsWith(propToken) && trimmed.includes(valueText)
+  })
+}
+
 export function findJsonPreviewTargetLine(jsonText = '', target = {}) {
   const lines = splitJsonPreviewLines(jsonText)
   if (!lines.length || !target?.type) return -1
 
   if (target.type === 'field') {
-    const fieldIndex = findFieldObjectLine(lines, target.fieldKey)
-    if (fieldIndex < 0) return -1
+    let fieldIndex = findFieldObjectLine(lines, target.fieldKey)
+    if (fieldIndex < 0 && target.fieldLabel) {
+      const labelKey = findFieldKeyByLabel(jsonText, target.fieldLabel)
+      if (labelKey) fieldIndex = findFieldObjectLine(lines, labelKey)
+    }
+    if (fieldIndex < 0) return findPropertyValueLine(lines, target.prop, target.fieldValue)
     if (!target.prop) return fieldIndex
     const propIndex = findPropertyLine(lines, fieldIndex, target.prop)
-    return propIndex >= 0 ? propIndex : fieldIndex
+    if (propIndex >= 0) return propIndex
+    const valueIndex = findPropertyValueLine(lines, target.prop, target.fieldValue)
+    return valueIndex >= 0 ? valueIndex : fieldIndex
   }
 
   if (target.type === 'table') {
