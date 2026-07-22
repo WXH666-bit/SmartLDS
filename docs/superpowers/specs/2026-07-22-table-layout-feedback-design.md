@@ -1,93 +1,93 @@
-# Table Layout Feedback Learning Design
+# 表格布局反哺学习设计
 
-## Goal
+## 目标
 
-When normal OCR detects table text but fails to reconstruct a table, a user can manually add or correct the table once, feed it back, and later recognitions of the same layout can rebuild the table from similar OCR block positions.
+当普通 OCR 已经识别出表格区域里的文字，但没有成功还原成结构化表格时，用户可以手动添加或校正一次表格，然后通过反哺让系统学习这个版式。之后再识别相似版式时，系统可以根据类似的 OCR 块坐标稳定重建表格。
 
-This feature learns table structure, not table row content. It depends on OCR text blocks still being present in the table area.
+这个功能学习的是表格结构，不学习具体行内容。它仍然依赖 OCR 能识别出表格区域里的文字块。
 
-## Scope
+## 范围
 
-In scope:
+本次包含：
 
-- Save a learned table layout from manual table correction.
-- Store normalized table region coordinates, column x ranges, headers, and optional anchor texts in the template.
-- Use the learned layout as a fallback when the normal table extractor returns no usable table or misses table headers.
-- Keep the UI lightweight by reusing OCR block selection where possible.
+- 从手动表格校正中保存可复用的表格布局。
+- 在模板里保存归一化后的表格区域坐标、列 x 范围、表头和可选锚点文本。
+- 当普通表格抽取没有得到可用表格，或表头明显不完整时，使用已学习的表格布局作为兜底。
+- 前端保持轻量，尽量复用现有 OCR 块选择能力。
 
-Out of scope:
+本次不包含：
 
-- Training a new OCR model.
-- Learning exact row contents.
-- Supporting multi-page table continuation.
-- Complex merged-cell reconstruction.
+- 训练新的 OCR 模型。
+- 学习具体表格行内容。
+- 支持跨页连续表格。
+- 复杂合并单元格还原。
 
-## User Flow
+## 用户流程
 
-1. The user recognizes a document.
-2. If the table is missing or wrong, the user opens the table editor.
-3. The user enters or fixes table headers and rows.
-4. The user binds the table area by selecting OCR blocks that belong to the table. The frontend computes a bounding region from those blocks.
-5. The user starts feedback and keeps "include table" enabled.
-6. The backend saves the manual table patch and learned layout into the target template.
-7. Future recognition first tries the normal table extractor. If it fails, the learned table layout reconstructs the table from OCR blocks in the learned region.
+1. 用户识别一份文档。
+2. 如果表格缺失或错误，用户打开表格编辑器。
+3. 用户输入或修正表头和表格行。
+4. 用户绑定表格区域：选择属于表格的 OCR 块，前端根据这些块计算外接区域。
+5. 用户开始反哺，并保持“包含表格”开启。
+6. 后端保存手动表格补丁，并把学习到的布局写入目标模板。
+7. 之后识别同类版式时，系统先走普通表格抽取；如果失败，再用学习到的表格布局从 OCR 块中重建表格。
 
-## Template Shape
+## 模板结构
 
 ```yaml
 table_layout:
   mode: anchor_region
-  headers: ["Description", "Qty", "Weight"]
+  headers: ["品名", "数量", "重量"]
   region:
     x1: 0.08
     y1: 0.48
     x2: 0.92
     y2: 0.82
   columns:
-    - header: "Description"
+    - header: "品名"
       x1: 0.08
       x2: 0.46
-    - header: "Qty"
+    - header: "数量"
       x1: 0.46
       x2: 0.62
-    - header: "Weight"
+    - header: "重量"
       x1: 0.62
       x2: 0.92
   anchors:
-    - text: "Description"
+    - text: "品名"
       x: 0.1
       y: 0.5
 ```
 
-Coordinates are normalized to the page image size so the layout can tolerate different render resolutions.
+坐标全部按页面图片尺寸归一化到 0-1，这样不同渲染分辨率下仍然能使用。
 
-## Frontend Changes
+## 前端改动
 
-- Add a lightweight "bind table area" action in the table editor.
-- Let the user select OCR blocks for the table area.
-- Compute `table_layout.region` from the selected block rectangles.
-- Infer column ranges from selected header blocks when possible. If header blocks are not selected, infer ranges evenly from the current table headers.
-- Send the layout inside `table_patch.layout` during correction save.
-- Show a compact note when a table layout has been bound.
+- 在表格编辑器里增加一个轻量的“绑定表格区域”操作。
+- 让用户选择属于表格区域的 OCR 块。
+- 根据所选 OCR 块的矩形计算 `table_layout.region`。
+- 优先从选中的表头 OCR 块推断列范围；如果没有选中表头块，则根据当前表头数量平均推断列范围。
+- 保存校正时，把布局信息放进 `table_patch.layout`。
+- 表格编辑器里显示一个简短状态，提示当前表格已经绑定布局。
 
-## Backend Changes
+## 后端改动
 
-- Extend correction payload normalization to accept `table_patch.layout`.
-- Preserve the layout in `apply_corrections`.
-- In `/api/fewshot/from-result`, when `include_table` is true, merge `final_result.table_layout` into the template.
-- Add a `learned_table_layout` fallback in `field_extractor`.
-- The fallback filters OCR blocks to the learned region, clusters by y coordinate into rows, assigns cells by column x ranges, and returns a table with learned headers.
+- 扩展校正 payload 归一化逻辑，支持 `table_patch.layout`。
+- `apply_corrections` 保留并返回 `table_layout`。
+- `/api/fewshot/from-result` 在 `include_table` 为 true 时，把 `final_result.table_layout` 合并进模板。
+- `field_extractor` 增加 learned table layout 兜底逻辑。
+- 兜底逻辑按学习区域筛选 OCR 块，按 y 坐标聚类成行，再按列 x 范围分配单元格，最后返回带学习表头的结构化表格。
 
-## Error Handling
+## 错误处理
 
-- If no table headers exist, feedback still warns that there is no usable table structure.
-- If a layout is missing or invalid, recognition falls back to current behavior.
-- If the learned region has too few OCR blocks on a future document, recognition keeps the normal table result or returns no table.
-- Warnings should be surfaced in the existing session log.
+- 如果没有表头，反哺继续给出 warning：当前没有可用表格结构。
+- 如果布局缺失或格式非法，识别保持当前行为。
+- 如果未来文档在学习区域里 OCR 块太少，则保留普通表格结果，或返回无表格。
+- warning 会进入现有前端运行日志。
 
-## Testing
+## 测试
 
-- Unit test correction normalization keeps `table_patch.layout`.
-- API test feedback saves `table_layout` into the template.
-- Extractor test learned layout reconstructs a table from OCR blocks when normal table extraction fails.
-- Frontend state test table patch can carry layout metadata.
+- 单元测试：校正归一化会保留 `table_patch.layout`。
+- API 测试：反哺后模板会保存 `table_layout`。
+- 抽取器测试：普通表格抽取失败时，learned layout 可以从 OCR 块重建表格。
+- 前端状态测试：表格 patch 可以携带布局元数据。
