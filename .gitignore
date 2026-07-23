@@ -22,10 +22,14 @@ Thumbs.db
 # Temporary
 *.tmp
 *.log
+.tmp_ppt_*/
+batch_output/
 
 # Reports / generated documents
 final_report.md
 *.docx
+*.pptx
+SmartLDS-PPT-v*-audience/
 
 .cluade/
 .agents/

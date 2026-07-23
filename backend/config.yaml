@@ -26,7 +26,7 @@ validators:
     pattern: ^[A-Za-z\d][A-Za-z\d]\d\d\d\d\d\d\d\d\d\d\d.*$
   auto_单证编号:
     description: 单证编号 auto-generated
-    pattern: ^DO\-EXP\-018\d$
+    pattern: ^DO\-FD\-01\d\d$
   auto_发货方 SHIPPER 电话:
     description: 发货方 SHIPPER 电话 auto-generated
     pattern: ^1\d\d\d\d\d\d\d\d\d\d$
@@ -36,6 +36,12 @@ validators:
   auto_spec1:
     description: spec1 auto-generated
     pattern: ^[A-Za-z\d]\d[A-Za-z\d].*$
+  auto_下单时间:
+    description: 下单时间 auto-generated
+    pattern: ^\d\d[A-Za-z\d]\d[A-Za-z\d][A-Za-z\d]\d[A-Za-z\d][A-Za-z\d]\d[A-Za-z\d].*$
+  auto_商品合计:
+    description: 商品合计 auto-generated
+    pattern: ^¥\d\d\.\d\d$
 field_defaults:
   value: ''
   cleaned: ''
@@ -783,112 +789,240 @@ templates:
     - 订单号
     - 合计金额
     - 快递公司
-  bol_188_learned:
+  bol_201_learned:
     keywords: []
     source: fewshot
-    has_table: true
+    has_table: false
     fields:
-      单证编号:
-        label: 单证编号
+      原产国:
+        label: 原产国
         anchors:
-        - 单证编号
-        position: below
-        canonical_key: 单证编号
-        validator: auto_单证编号
-        value_pattern: ^DO\-EXP\-018\d$
-      名称:
-        label: 名称
-        anchors:
-        - 名称
+        - 原产国
         position: right
-        canonical_key: 发货方 SHIPPER 名称
-      地址:
-        label: 地址
+        canonical_key: origin
+        learned_value_offset:
+          dx: 261.0
+          dy: 1.0
+          tolerance_x: 111.6
+          tolerance_y: 70.2
+        learned_sample_value: 德国
+      商品名称:
+        label: 商品名称
         anchors:
-        - 地址
+        - 商品名称
         position: right
-        canonical_key: 发货方 SHIPPER 地址
-      承运商:
-        label: 承运商
+        canonical_key: goods_name
+        learned_value_offset:
+          dx: 288.0
+          dy: -0.5
+          tolerance_x: 259.2
+          tolerance_y: 84.6
+        learned_sample_value: 电子元器件
+      总价:
+        label: 总价
         anchors:
-        - 承运商
+        - 总价
         position: right
-        canonical_key: 承运商
-      电话:
-        label: 电话
+        canonical_key: total_price
+        learned_value_offset:
+          dx: 314.0
+          dy: 0.0
+          tolerance_x: 257.4
+          tolerance_y: 84.6
+        learned_sample_value: 21007 RMB
+      收货单位:
+        label: 收货单位
         anchors:
-        - 电话
+        - 收货单位
         position: right
-        canonical_key: 发货方 SHIPPER 电话
-        validator: auto_发货方 SHIPPER 电话
-        value_pattern: ^1\d\d\d\d\d\d\d\d\d\d$
+        canonical_key: receiver
+        learned_value_offset:
+          dx: 343.0
+          dy: 0.5
+          tolerance_x: 439.2
+          tolerance_y: 70.2
+        learned_sample_value: 华贸进出口有限公司
+      数量及单位:
+        label: 数量及单位
+        anchors:
+        - 数量及单位
+        position: right
+        canonical_key: quantity_unit
+        learned_value_offset:
+          dx: 240.5
+          dy: 1.0
+          tolerance_x: 156.6
+          tolerance_y: 79.2
+        learned_sample_value: 86件
+      毛重:
+        label: 毛重
+        anchors:
+        - 毛重
+        position: right
+        canonical_key: gross_weight
+        learned_value_offset:
+          dx: 300.0
+          dy: -1.5
+          tolerance_x: 196.2
+          tolerance_y: 70.2
+        learned_sample_value: 2399 KG
+      海关编号:
+        label: 海关编号
+        anchors:
+        - 海关编号
+        position: right
+        canonical_key: customs_no
+        validator: bl_no
+        value_pattern: '[A-Z]{2,4}\d{6,10}'
+        learned_value_offset:
+          dx: 0.0
+          dy: 0.0
+          tolerance_x: 478.8
+          tolerance_y: 61.2
+        learned_sample_value: CUS96608407
+      申报日期:
+        label: 申报日期
+        anchors:
+        - 申报日期
+        position: right
+        canonical_key: declare_date
+        validator: date
+        value_pattern: \d{1,4}[/-]\d{1,2}[/-]\d{1,4}
+        learned_value_offset:
+          dx: 0.0
+          dy: 0.0
+          tolerance_x: 460.8
+          tolerance_y: 61.2
+        learned_sample_value: 2024/11/20
+      经营单位:
+        label: 经营单位
+        anchors:
+        - 经营单位
+        position: right
+        canonical_key: company
+        learned_value_offset:
+          dx: 327.5
+          dy: 0.0
+          tolerance_x: 394.2
+          tolerance_y: 79.2
+        learned_sample_value: 中商国际贸易公司
+      运输方式:
+        label: 运输方式
+        anchors:
+        - 运输方式
+        position: right
+        canonical_key: transport
+        learned_value_offset:
+          dx: 247.5
+          dy: 4.0
+          tolerance_x: 120.6
+          tolerance_y: 73.8
+        learned_sample_value: 海运
+      进口口岸:
+        label: 进口口岸
+        anchors:
+        - 进口口岸
+        position: right
+        canonical_key: import_port
+        learned_value_offset:
+          dx: 274.0
+          dy: -1.0
+          tolerance_x: 208.8
+          tolerance_y: 79.2
+        learned_sample_value: 宁波海关
+      '1111':
+        label: '1111'
+        anchors:
+        - 净重
+        - '1111'
+        position: right
+        canonical_key: net_weight
+        learned_value_offset:
+          dx: 300.0
+          dy: -1.5
+          tolerance_x: 199.8
+          tolerance_y: 70.2
+        learned_sample_value: 3775 KG
     output:
-    - 单证编号
-    - 名称
-    - 地址
-    - 承运商
-    - 电话
+    - '1111'
+    - 原产国
+    - 商品名称
+    - 总价
+    - 收货单位
+    - 数量及单位
+    - 毛重
+    - 海关编号
+    - 申报日期
+    - 经营单位
+    - 运输方式
+    - 进口口岸
     detection:
       mode: anchor_layout
       min_score: 0.55
-      min_matches: 4
+      min_matches: 5
       features:
-      - text: 单证编号
-        x: 0.0982
-        y: 0.1377
+      - text: 海关编号
+        x: 0.4115
+        y: 0.0551
         weight: 1.0
         role: field_anchor
-      - text: 承运商
-        x: 0.1043
-        y: 0.31
+      - text: 申报日期
+        x: 0.5936
+        y: 0.0551
         weight: 1.0
         role: field_anchor
-      - text: 名称
-        x: 0.0982
-        y: 0.2251
+      - text: 进口口岸
+        x: 0.0791
+        y: 0.0854
         weight: 1.0
         role: field_anchor
-      - text: 电话
-        x: 0.0976
-        y: 0.2401
+      - text: 运输方式
+        x: 0.5417
+        y: 0.0839
         weight: 1.0
         role: field_anchor
-      - text: 地址
-        x: 0.0976
-        y: 0.2546
+      - text: 经营单位
+        x: 0.0797
+        y: 0.1106
         weight: 1.0
         role: field_anchor
-      - text: 本单证由原始扫描凭证数字化生成，作为物流交接核对之参考凭证
-        x: 0.2494
-        y: 0.9442
+      - text: 收货单位
+        x: 0.5423
+        y: 0.1104
+        weight: 1.0
+        role: field_anchor
+      - text: 商品名称
+        x: 0.0791
+        y: 0.1349
+        weight: 1.0
+        role: field_anchor
+      - text: 数量及单位
+        x: 0.5519
+        y: 0.1349
+        weight: 1.0
+        role: field_anchor
+      - text: 总价
+        x: 0.0619
+        y: 0.1599
+        weight: 1.0
+        role: field_anchor
+      - text: 原产国
+        x: 0.535
+        y: 0.1599
+        weight: 1.0
+        role: field_anchor
+      - text: 毛重
+        x: 0.0613
+        y: 0.1855
+        weight: 1.0
+        role: field_anchor
+      - text: 净重
+        x: 0.5251
+        y: 0.1855
+        weight: 1.0
+        role: field_anchor
+      - text: 中华人民共和国海关进口货物报关单
+        x: 0.5
+        y: 0.0325
         weight: 1.4
         role: stable_text
-      - text: EXPRESSDELIVERYHANDOVERDOCU
-        x: 0.4852
-        y: 0.1139
-        weight: 1.4
-        role: stable_text
-      - text: 生成时间2026-07-2122:31:39
-        x: 0.8446
-        y: 0.9442
-        weight: 1.4
-        role: stable_text
-      - text: 单证编号 DO-EXP-0185
-        x: 0.14
-        y: 0.9277
-        weight: 1.4
-        role: stable_text
-      - text: 收货方 CONSIGNEE
-        x: 0.5768
-        y: 0.1979
-        weight: 1.4
-        role: stable_text
-      - text: 发货方SHIPPER
-        x: 0.136
-        y: 0.1986
-        weight: 1.4
-        role: stable_text
-    table_headers:
-    - 序号
-    - 品名名称
-    - 数量
